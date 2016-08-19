@@ -1,0 +1,22 @@
+language: python
+
+sudo: false
+fast_finish: true
+
+python:
+  - "3.4"
+  - "3.5"
+
+install:
+  - pip install -r requirements.txt
+  - pip install .
+
+script:
+  - nosetests
+
+after_success:
+  - coveralls
+
+branches:
+  only:
+    - master

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QTPy-Lib Dashboard</title>
+
+    <meta name="robots" content="noindex, nofollow">
+
+    <link rel="stylesheet" type="text/css" href="/static/style.css" media="all">
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script>
+    $(document).ready(function() {
+        if (/constructor/i.test(window.HTMLElement)) {
+            $("body").addClass("safari");
+        }
+
+        $('#password').focus();
+        $('#password').blur(function(){
+            $('#password').focus();
+        });
+        $("#password").keyup(function(){
+            $(this).addClass("typing")
+        });
+
+        $('#login').submit(function(event){
+            event.preventDefault();
+            if ($("#password").val() == "") return
+            $.get( "/login/"+$("#password").val(), function( data ) {
+                if (data == "yes") {
+                    window.location.reload();
+                } else {
+                    alert("Please try again");
+                }
+            });
+        })
+    });
+    </script>
+</head>
+<body>
+
+<form id="login" autocomplete="off">
+    <span>Enter password:</span>
+    <input placeholder="&block;" type="password" name="password" id="password">
+</form>
+
+</body>
+</html>

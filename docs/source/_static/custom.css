@@ -1,0 +1,19 @@
+body {
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.005);
+}
+code, .pre, .code {
+    zoom: 1.1;
+    -webkit-font-smoothing: subpixel-antialiased;
+    -moz-osx-font-smoothing: subpixel-antialiased;
+}
+code, .pre {
+    line-height: 1;
+}
+
+.rst-content dl:not(.docutils) code {
+    font-weight: normal;
+}

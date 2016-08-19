@@ -1,0 +1,6 @@
+# Include the license file
+include LICENSE.txt
+
+# Include the data files
+include qtpylib/schema.sql
+recursive-include qtpylib/_webapp *

@@ -1,0 +1,205 @@
+@import url(https://fonts.googleapis.com/css?family=Space+Mono:400,700);
+
+/*@-webkit-keyframes blinker {
+  from {opacity: 1.0;}
+  to {opacity: 0.0;}
+}*/
+@-webkit-keyframes blinker {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+@-moz-keyframes blinker {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+@-o-keyframes blinker {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes blinker {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.blink {
+    text-decoration: blink;
+    -webkit-animation-name: blinker;
+    -webkit-animation-duration: 0.6s;
+    -webkit-animation-iteration-count:infinite;
+    -webkit-animation-timing-function: ease-in-out;
+    -webkit-animation-direction: alternate;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.005);
+    color: #fdfdfd;
+    background: #161616;
+    text-transform: uppercase;
+    margin: 0;
+}
+#login {
+    background: #333;
+    width: 280px;
+    padding: 20px;
+    border-radius: 5px;
+    text-transform: none;
+    font-weight: 400;
+    font-size: 14px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin: -50px 0 0 -170px;
+    text-align: center;
+
+    background: url(/static/logo.png) 50% 0 no-repeat;
+    background-size: 86px 40px;
+    padding-top: 50px;
+
+    font-family: "Space Mono", "Courier New", Courier;
+    color: green;
+}
+#login span {
+    float: left;
+    padding-right: 5px;
+    line-height: 24px;
+}
+@-moz-document url-prefix() {
+    .#login span {
+        line-height: 16px;
+    }
+}
+body.safari #login span {
+    line-height: 27px;
+}
+#login input {
+    float: left;
+    text-align: left;
+    width: 120px;
+    font-family: "Space Mono", "Courier New", Courier;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0;
+    border: none;
+    border-bottom: 0;
+    background: transparent;
+    color: transparent;
+    border-spacing: 0;
+    outline: none;
+    -webkit-animation: blinker 0.5s infinite alternate;
+    -moz-animation: blinker 0.5s infinite alternate;
+    -o-animation: blinker 0.5s infinite alternate;
+    animation: blinker 0.5s infinite alternate;
+}
+#login input.typing {
+    color: green;
+    -webkit-animation: none;
+    -moz-animation: none;
+    -o-animation: none;
+    animation: none;
+}
+#login input::-webkit-input-placeholder {
+    border-spacing: 0;
+    color: green;
+    font-family: "Space Mono", "Courier New", Courier;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1;
+    padding: 3px 0 0;
+}
+#login input.typing::-webkit-input-placeholder {
+    color: transparent;
+}
+
+nav {
+    background: url(/static/logo.png) 5px 50% no-repeat;
+    background-size: 86px 40px;
+    height: 50px;
+    text-decoration: right;
+    border-bottom: 1px solid #33343b;
+}
+nav select {
+    -webkit-appearance: none;
+    moz-appearance: none;
+    appearance: none;
+    border: 1px solid #33343b;
+    /*border-radius: 0;*/
+    padding: 10px 0 10px 12px;
+    float: right;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    line-height: 1;
+    font-weight: normal;
+    color: #fff;
+    background: transparent url(/static/select.png) right 5px top 50% no-repeat;
+    background-size: 10px;
+    width: 150px;
+    margin: 8px;
+}
+nav select:hover {
+    background-color: #33343b;
+}
+
+table {
+    font-family: "Space Mono", "Courier New", Courier;
+    border: 0;
+    border-spacing: 1px;
+    color: #fff;
+    width: 100%;
+}
+table th, table td {
+    text-align: left;
+    padding: 7px 5px 6px;
+    background: #33343b;
+}
+table th.float, table td.float {
+    text-align: right;
+}
+table td {
+    background: #038;
+}
+table tr td {
+    opacity: .8;
+}
+table tr:hover td {
+    opacity: 1;
+}
+table tr.section th {
+     background: #161616;
+}
+
+table tr.positive td {
+    /*background: #4a7b35;*/
+    background: #005a00;
+}
+table tr.negative td {
+    /*background: #932424;*/
+    background: #870000;
+}
+
+table tr.trade.positive td {
+    /*background: #395c2d;*/
+    background: #054505;
+    font-weight: 400;
+}
+table tr.trade.negative td {
+    /*background: #6c2f10;*/
+    background: #6f0000;
+    font-weight: 400;
+}
+
+
+.section h1 {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin: 10px 0 5px;
+}

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QTPy-Lib Dashboard</title>
+
+    <meta name="robots" content="noindex, nofollow">
+
+    <link rel="stylesheet" type="text/css" href="/static/style.css" media="all">
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+
+    <script src="/static/moment.min.js"></script>
+    <script src="/static/template.js"></script>
+    <script src="/static/template-modifiers.js"></script>
+    <script src="/static/common.js"></script>
+</head>
+
+<body>
+
+<nav>
+
+<select id="algos"><option value="">All Algos</option></select>
+<span id="daterage"></span>
+
+</nav>
+
+<table>
+    <thead>
+        <tr class="section">
+            <th colspan="12"><h1>Open Positions</h1></th>
+        </tr>
+        <tr>
+            <th>Algo</th>
+            <th>Symbol</th>
+            <th>Direction</th>
+            <th class="float">Qty</th>
+
+            <th>Entry</th>
+            <th class="float">Price</th>
+            <th class="float">Market</th>
+            <th class="float">Target</th>
+            <th class="float">Stop</th>
+
+            <th>Exit</th>
+            <th class="float">Last</th>
+            <th class="float">PNL</th>
+        </tr>
+    </thead>
+    <tbody>
+    <tr templatejs="positions" class="position {exit_reason|pos_status} {unrealized_pnl|pnl_status}">
+        <td>{algo|uncamel}</td>
+        <td>{symbol|finshort}</td>
+        <td>{direction|finshort}</td>
+        <td class="float">{quantity}</td>
+        <td>{entry_time|unix2date} {order_type|finshort}</td>
+        <td class="float">{entry_price|format_number}</td>
+        <td class="float">{market_price|format_number}</td>
+        <td class="float">{target|format_number|nozero}</td>
+        <td class="float">{stop|format_number|nozero}</td>
+        <td>-</td>
+        <td class="float">{last_price|format_number|nozero}</td>
+        <td class="float">{unrealized_pnl|format_number}</td>
+    </tr>
+    </tbody>
+
+
+    <thead>
+        <tr class="section">
+            <th colspan="12"><h1>Trades</h1></th>
+        </tr>
+        <tr>
+            <th>Algo</th>
+            <th>Symbol</th>
+            <th>Direction</th>
+            <th class="float">Qty</th>
+            <th>Entry</th>
+            <th class="float">Price</th>
+            <th class="float">Market</th>
+            <th class="float">Target</th>
+            <th class="float">Stop</th>
+            <th>Exit</th>
+            <th class="float">Price</th>
+            <th class="float">PNL</th>
+        </tr>
+    </thead>
+    <tbody>
+    <tr templatejs="trades" class="trade {exit_reason|pos_status} {realized_pnl|pnl_status}">
+        <td>{algo|uncamel}</td>
+        <td>{symbol|finshort}</td>
+        <td>{direction|finshort}</td>
+        <td class="float">{quantity}</td>
+        <td>{entry_time|unix2date} {order_type|finshort}</td>
+        <td class="float">{entry_price|format_number}</td>
+        <td class="float">{market_price|format_number}</td>
+        <td class="float">{target|format_number|nozero}</td>
+        <td class="float">{stop|format_number|nozero}</td>
+        <td>{exit_time|unix2date} {exit_reason|finshort}</td>
+        <td class="float">{exit_price|format_number|nozero}</td>
+        <td class="float">{realized_pnl|format_number}</td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>

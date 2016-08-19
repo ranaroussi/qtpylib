@@ -1,0 +1,343 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+#
+# QTPy-Lib: Quantitative Trading Python Library
+# https://github.com/ranaroussi/qtpylib
+#
+# Copyright 2016 Ran Aroussi
+#
+# Licensed under the GNU Lesser General Public License, v3.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.gnu.org/licenses/lgpl-3.0.en.html
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+import argparse
+import inspect
+import pandas as pd
+import sys
+
+from datetime import datetime
+
+from qtpylib.blotter import Blotter
+from qtpylib.broker import Broker
+from qtpylib.instrument import Instrument
+from qtpylib import (
+    tools, sms
+)
+
+# =============================================
+# parse args
+parser = argparse.ArgumentParser(description='QTPy Algo Framework')
+parser.add_argument('--ibport', default='4001', help='IB TWS/GW Port to use (default: 4001)', required=False)
+parser.add_argument('--ibclient', default='998', help='IB TWS/GW Client ID (default: 998)', required=False)
+parser.add_argument('--ibserver', default='localhost', help='IB TWS/GW Server hostname (default: localhost)', required=False)
+parser.add_argument('--sms', nargs='+', help='Numbers to text orders', required=False)
+parser.add_argument('--log', default=None, help='Path to store trade data (default: ~/qpy/trades/)', required=False)
+
+parser.add_argument('--backtest', help='Work in Backtest mode', action='store_true', required=False)
+parser.add_argument('--start', help='Backtest start date', required=False)
+parser.add_argument('--end', help='Backtest end date', required=False)
+parser.add_argument('--output', help='Path to save the recorded data', required=False)
+
+parser.add_argument('--blotter', help='Log trades to the MySQL server used by this Blotter', required=False)
+
+args, unknown = parser.parse_known_args()
+# =============================================
+#
+
+from abc import ABCMeta, abstractmethod
+
+class Algo(Broker):
+    """Algo class initilizer (sub-class of Broker)
+
+    :Parameters:
+
+        instruments : list
+            List of IB contract tuples
+        resolution : str
+            Desired bar resolution (using pandas resolution: 1T, 1H, etc). Use K for tick bars.
+        tick_window : int
+            Length of tick lookback window to keep. Defaults to 1
+        bar_window : int
+            Length of bar lookback window to keep. Defaults to 100
+        timezone : str
+            Convert IB timestamps to this timezone (eg. US/Central). Defaults to UTC
+        preload : str
+            Preload history when starting algo (using pandas resolution: 1H, 1D, etc). Use K for tick bars.
+        blotter : str
+            Log trades to MySQL server used by this Blotter (default is "auto detect")
+
+    """
+
+    __metaclass__ = ABCMeta
+
+    def __init__(self, instruments, resolution, \
+        tick_window=1, bar_window=100, timezone="UTC", preload=None, \
+        blotter=None, **kwargs):
+
+        # assign algo params
+        self.bars           = pd.DataFrame()
+        self.ticks          = pd.DataFrame()
+        self.tick_count     = 0
+        self.tick_bar_count = 0
+        self.bar_count      = 0
+        self.bar_hash       = 0
+
+        self.tick_window    = tick_window if tick_window > 0 else 1
+        self.bar_window     = bar_window if bar_window > 0 else 100
+        self.resolution     = resolution.replace("MIN", "T")
+        self.timezone       = timezone
+        self.preload        = preload
+
+        self.backtest       = args.backtest
+        self.backtest_start = args.start
+        self.backtest_end   = args.end
+
+        # -----------------------------------
+        self.sms_numbers    = [] if args.sms is None else args.sms
+        self.trade_log_dir  = args.log
+        self.blotter_name   = args.blotter if args.blotter is not None else blotter
+
+        # -----------------------------------
+        # load blotter settings && initilize Blotter
+        self.load_blotter_args(args.blotter)
+        self.blotter = Blotter(**self.blotter_args)
+
+        # -----------------------------------
+        # initiate broker/order manager
+        super().__init__(instruments, ibclient=int(args.ibclient), \
+            ibport=int(args.ibport), ibserver=str(args.ibserver))
+
+        # -----------------------------------
+        # initilize output file
+        self.record_ts = None
+        self.record_output = args.output
+        if self.record_output:
+            self.datastore = tools.DataStore(args.output)
+
+
+    # ---------------------------------------
+    def run(self):
+        """Starts the algo
+
+        Connects to the Blotter, processes market data and passes
+        tick data to the ``on_tick`` function and bar data to the
+        ``on_bar`` methods.
+        """
+
+        # -----------------------------------
+        # backtest mode?
+        if self.backtest:
+            if self.output is None:
+                print("ERROR: Must provide an output file for backtesting mode")
+                sys.exit(0)
+            if self.backtest_start is None:
+                print("ERROR: Must provide start date for backtesting mode")
+                sys.exit(0)
+            if self.backtest_end is None:
+                self.backtest_end = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+
+            # backtest history
+            self.blotter.drip(
+                symbols      = self.symbols,
+                start        = self.backtest_start,
+                end          = self.backtest_end,
+                resolution   = self.resolution,
+                tz           = self.timezone,
+                tick_handler = self._tick_handler,
+                bar_handler  = self._bar_handler
+            )
+
+        # -----------------------------------
+        # live data mode
+        else:
+            # preload history
+            if self.preload is not None:
+                try: # dbskip may be active
+                    self.bars = self.blotter.history(
+                        symbols    = self.symbols,
+                        start      = tools.backdate(self.preload),
+                        resolution = self.resolution,
+                        tz         = self.timezone
+                    )
+                except:
+                    pass
+                # print(self.bars)
+
+            # add instruments to blotter in case they do not exist
+            self.blotter.register(self.instruments)
+
+            # listen for RT data
+            self.blotter.listen(
+                symbols      = self.symbols,
+                tz           = self.timezone,
+                tick_handler = self._tick_handler,
+                bar_handler  = self._bar_handler
+            )
+
+    # ---------------------------------------
+    def record(self, *args, **kwargs):
+        """Records data for later analysis
+        Values will be logged to the file specified via
+        ``--output [file]`` (along with bar data) as
+        csv/pickle/h5 file.
+
+        Call from within your strategy:
+        ``self.record(key=value)``
+
+        :Parameters:
+            ** kwargs : mixed
+                The names and values to record
+
+        """
+        if self.record_output:
+            self.datastore.record(self.record_ts, *args, **kwargs)
+
+    # ---------------------------------------
+    def sms(self, text):
+        """Sends an SMS message
+        Relies on properly setting up an SMS provider (refer to the
+        SMS section of the documentation for more information about this)
+
+        Call from within your strategy:
+        ``self.sms("message text")``
+
+        :Parameters:
+            text : string
+                The body of the SMS message to send
+
+        """
+        sms.send_text(text, self.sms_numbers)
+
+
+    # ---------------------------------------
+    def get_instrument(self, symbol):
+        """
+        A string subclass that provides easy access to misc
+        symbol-related methods and information using shorthand.
+        Refer to the `Instruments API <#instrument-api>`_
+        for available methods and properties
+
+        Call from within your strategy:
+        ``instrument = self.get_instrument(bar)``
+
+        :Parameters:
+
+            symbol : string
+                instrument symbol
+
+        """
+        instrument = Instrument(self._getsymbol_(symbol))
+        instrument._set_parent(self)
+        return instrument
+
+    # ---------------------------------------
+    @abstractmethod
+    def on_tick(self, tick):
+        raise NotImplementedError("Should implement on_tick()")
+
+    # ---------------------------------------
+    @abstractmethod
+    def on_bar(self, bar):
+        raise NotImplementedError("Should implement on_bar()")
+
+    # ---------------------------------------
+    def _caller(self, caller):
+        stack = [x[3] for x in inspect.stack()][1:-1]
+        return caller in stack
+
+    # ---------------------------------------
+    def _as_dict(self, df, ix=0):
+        dfdict = df.to_dict(orient='records')
+        if ix is not None:
+            dfdict = dfdict[ix]
+            dfdict['datetime'] = df.index[ix]
+
+        return dfdict
+
+    # ---------------------------------------
+    def _tick_handler(self, tick):
+        self._cancel_expired_pending_orders()
+
+        if "K" not in self.resolution:
+            self.ticks = self._update_window(self.ticks, tick, window=self.tick_window)
+        else:
+            self.ticks = self._update_window(self.ticks, tick)
+            bar = tools.resample(self.ticks, self.resolution)
+            if len(bar) > self.tick_bar_count > 0:
+                self._bar_handler(bar)
+
+                periods = int("".join([s for s in self.resolution if s.isdigit()]))
+                self.ticks = self.ticks[-periods:]
+
+            self.tick_bar_count = len(bar)
+
+            # record tick bar
+            self.record_ts = tick.index[0]
+            self.record(bar)
+
+        self.on_tick(self._as_dict(tick))
+
+
+    # ---------------------------------------
+    def _bar_handler(self, bar):
+
+        is_tick_bar = False
+        handle_bar  = True
+
+        if "K" in self.resolution:
+            if self._caller("_tick_handler"):
+                is_tick_bar = True
+                handle_bar  = True
+            else:
+                is_tick_bar = True
+                handle_bar = False
+
+        if is_tick_bar:
+            # just add a bar (used by tick bar bandler)
+            self.bars = self._update_window(self.bars, bar, window=self.bar_window)
+        else:
+            # add the bar and resample to resolution
+            self.bars = self._update_window(self.bars, bar, window=self.bar_window, resolution=self.resolution)
+
+        # new bar?
+        this_bar_hash = abs(hash(str(self.bars.index.values[-1]))) % (10 ** 8)
+        newbar = (self.bar_hash != this_bar_hash)
+        self.bar_hash = this_bar_hash
+
+        if newbar & handle_bar:
+            self.on_bar(self._as_dict(bar))
+
+            if "K" not in self.resolution:
+                self.record_ts = bar.index[0]
+                self.record(bar)
+        # else:
+        #     print("\n\nIGNORE BAR\n\n")
+
+
+    # ---------------------------------------
+    def _update_window(self, df, data, window=None, resolution=None):
+        if df is None:
+            df = data
+        else:
+            df = df.append(data)
+
+        if resolution is not None:
+            try:
+                tz = str(df.index.tz)
+            except:
+                tz = None
+            df = tools.resample(df, resolution=resolution, tz=tz)
+
+        if window is None:
+            return df
+
+        return df[-window:]

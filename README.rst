@@ -1,0 +1,232 @@
+QTPy-Lib, Pythonic Algorithmic Trading
+======================================
+
+QTPy-Lib (**Q**\ uantitative **T**\ rading **Py**\ thon **Lib**\ rary)
+is a simple, event-driven algorithmic trading system written in Python 3,
+that supports backtesting and live trading using
+`Interactive Brokers <https://www.interactivebrokers.com>`__
+for market data and order execution.
+
+I originally developed QTPy-Lib (QTPy for short) because I wanted for
+a simple (but powerful) trading library that will let me to focus on the
+trading logic itself and ignore everything else.
+
+`Documentation <http://www.qtpylib.io/>`__
+
+-----
+
+Features
+========
+
+- A continuously-running Blotter that lets you capture market data even when your algos aren't running.
+- Tick, Bar and Trade data is stored in MySQL for later analisys and backtesting.
+- Using pub/sub architecture using `ØMQ <http://zeromq.org>`__ (ZeroMQ) for communicating between the Algo and the Blotter allows for a single Blotter/multiple Algos running on the same machine.
+- Includes many common indicators that you can seamlessly use in your algorithm.
+- Ability to import any Python library (such as `scikit-learn <http://scikit-learn.org>`__ or `TA-Lib <http://ta-lib.org>`__) to use them in your algorithms.
+- Have orders delivered to your mobile via SMS (requires a `Nexmo <https://www.nexmo.com/>`__ or `Twilio <https://www.twilio.com/>`__ account)
+
+-----
+
+Quickstart
+==========
+
+There are 5 main components to QTPy:
+
+1. ``Blotter`` - handles market data retreival and processing.
+2. ``Broker`` - sends and proccess orders/positions (abstracted layer).
+3. ``Algo`` - (sub-class of ``Broker``) communicates with the ``Blotter`` to pass market data to your strategies, and proccess/positions orders via ``Broker``.
+4. ``Reports`` - provides real time monitoring of trades and open opsitions via Web App, as well as a simple REST API for trades, open positions and market data.
+5. Lastly, **Your Strategies**, which are sub-classes of ``Algo``, handle the trading logic/rules. This is where you'll write most of your code.
+
+
+1. Get Market Data
+------------------
+
+To get started, you need to first create a Blotter script:
+
+.. code:: python
+
+    # blotter.py
+    from qtpylib.blotter import Blotter
+
+    class MainBlotter(Blotter):
+        pass # we just need the name
+
+    if __name__ == "__main__":
+        blotter = MainBlotter()
+        blotter.run()
+
+Then, with IB TWS/GW running, run the Blotter from the command line:
+
+.. code:: bash
+
+    $ python blotter.py
+
+
+2. Write your Algorithm
+-----------------------
+
+While the Blotter running in the background, write and execute your algorithm:
+
+.. code:: python
+
+    # strategy.py
+    from qtpylib.algo import Algo
+
+    class CrossOver(Algo):
+
+        def on_tick(self, tick):
+            pass
+
+        def on_bar(self, bar):
+            instrument = self.get_instrument(bar)
+
+            # get instrument history
+            bars = instrument.get_bars(window=100)
+
+            # or get all instruments history
+            # bars = self.bars[-20:]
+
+            # skip first 20 days to get full windows
+            if len(bars) < 20:
+                return
+
+            # compute averages using internal rolling_mean
+            bars['short_ma'] = bars['close'].rolling_mean(window=10)
+            bars['long_ma']  = bars['close'].rolling_mean(window=20)
+
+            # get current position data
+            positions = instrument.get_positions()
+
+            # trading logic - entry signal
+            if bars['short_ma'].crossed_above(bars['long_ma'])[-1]:
+                if not instrument.pending_orders and positions["position"] == 0:
+
+                    # send a buy signal
+                    self.signal("BUY", instrument, 1)
+
+                    # record values for later analysis
+                    self.record(ma_cross=1)
+
+            # trading logic - exit signal
+            elif bars['short_ma'].crossed_below(bars['long_ma'])[-1]:
+                if positions["position"] != 0:
+
+                    # exit / flatten position
+                    self.signal("EXIT", instrument)
+
+                    # record values for later analysis
+                    self.record(ma_cross=-1)
+
+
+    if __name__ == "__main__":
+        strategy = CrossOver(
+            instruments = [ ("ES", "FUT", "GLOBEX", "USD", 201609, 0.0, "") ], # ib tuples
+            resolution  = "1T", # Pandas resolution (use "K" for tick bars)
+            tick_window = 20,
+            bar_window  = 5,
+            preload     = "1D",
+            timezone    = "US/Central"
+        )
+        strategy.run()
+
+
+To run your algo in a **live** enviroment, from the command line, type:
+
+.. code:: bash
+
+    $ python strategy.py --logpath ~/qtpy/
+
+
+The resulting trades be saved in ``~/qtpy/STRATEGY_YYYYMMDD.csv`` for later analysis.
+
+
+3. Viewing Live Trades
+----------------------
+
+While the Blotter running in the background, write the dashboard:
+
+.. code:: python
+
+    # dashboard.py
+    from qtpylib.dashboard import Dashboard
+
+    class MainDashboard(Dahboard):
+        pass # we just need the name
+
+    if __name__ == "__main__":
+        dashboard = MainDashboard(port = 5000)
+        dashboard.run()
+
+
+To run your dashboard, run it from the command line:
+
+.. code:: bash
+
+    $ python dashboard.py
+
+    >>> Dashboard password is: a0f36d95a9
+    >>> Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+
+Now, point your browser to http://localhost:5000 and use the password generated to access your dashboard.
+
+-----
+
+.. note::
+    Please refer to the `Full Documentation <http://www.qtpylib.io/>`__ to learn
+    how to enable SMS notifications, use the bundled Indicators, and more.
+
+
+
+Installation
+============
+
+First, install IbPy (for some reason I can't get this installed automatically):
+
+.. code:: bash
+
+    $ pip install git+https://github.com/blampe/IbPy/archive/master.zip --user
+
+Then, install QTPy using ``pip``:
+
+.. code:: bash
+
+    $ pip install qtpylib
+
+
+Requirements
+------------
+
+* `Python <https://www.python.org>`__ >=3.4
+* `Pandas <https://github.com/pydata/pandas>`__ (tested to work with >=0.18.1)
+* `Numpy <https://github.com/numpy/numpy>`__ (tested to work with >=1.11.1)
+* `ØMQ <https://github.com/zeromq/pyzmq>`__ (tested to with with >=15.2.1)
+* `PyMySQL <https://github.com/PyMySQL/PyMySQL>`__ (tested to with with >=0.7.6)
+* `pytz <http://pytz.sourceforge.net>`__ (tested to with with >=2016.6.1)
+* `dateutil <https://pypi.python.org/pypi/python-dateutil>`__ (tested to with with >=2.5.1)
+* `Nexmo <https://github.com/Nexmo/nexmo-python>`__ for SMS support (tested to with with >=1.2.0)
+* `Twilio <https://github.com/twilio/twilio-python>`__ for SMS support (tested to with with >=5.4.0)
+* `Flask <http://flask.pocoo.org>`__ for the Dashboard (tested to work with >=0.11)
+* `Requests <https://github.com/kennethreitz/requests>`__ (tested to with with >=2.10.0)
+* `Beautiful Soup <https://pypi.python.org/pypi/beautifulsoup4>`_ (tested to work with >=4.3.2)
+* `IbPy <https://github.com/blampe/IbPy>`__ (tested to work with >=0.7.2-9.00)
+* `ezIBpy <https://github.com/ranaroussi/ezibpy>`__ (IbPy wrapper, tested to with with >=1.12.1)
+* Latest Interactive Brokers’ `TWS <https://www.interactivebrokers.com/en/index.php?f=15875>`__ or `IB Gateway <https://www.interactivebrokers.com/en/index.php?f=16457>`__ installed and running on the machine
+
+-----
+
+Legal Stuff
+===========
+
+QTPy is distributed under the **GNU Lesser General Public License v3.0**. See the `LICENSE.txt <./LICENSE.txt>`__ file in the release for details.
+QTPy is not a product of Interactive Brokers, nor is it affiliated with Interactive Brokers.
+
+
+You can find other examples in the qtpylib/examples directory.
+
+P.S.
+----
+
+I'm very interested in your experience with QTPy. Please drop me an note with any feedback you have.
+
+**Ran Aroussi**

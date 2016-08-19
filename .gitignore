@@ -1,0 +1,7 @@
+__pycache__/*
+qrpylib/__pycache__/*
+demo
+dist
+build
+qtpylib.egg-info
+QTPy_Lib.egg-info
