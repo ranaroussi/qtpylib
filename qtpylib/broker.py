@@ -461,7 +461,7 @@ class Broker():
     # ---------------------------------------
     # shortcuts to self._create_order
     # ---------------------------------------
-    def signal(self, signal, symbol, quantity=0, **kwargs):
+    def order(self, signal, symbol, quantity=0, **kwargs):
         if signal.upper() == "EXIT" or signal.upper() == "FLATTEN":
             position = self.get_positions(symbol)
             if position['position'] == 0:
@@ -471,7 +471,7 @@ class Broker():
             kwargs['quantity']  = abs(position['position'])
             kwargs['direction'] = "BUY" if position['position'] < 0 else "SELL"
 
-            print("EXIT", kwargs)
+            # print("EXIT", kwargs)
 
             try: self.record(position=0)
             except: pass
@@ -487,7 +487,7 @@ class Broker():
             kwargs['quantity']  = abs(quantity)
             kwargs['direction'] = signal.upper()
 
-            print(signal.upper(), kwargs)
+            # print(signal.upper(), kwargs)
 
             # record
             try:
