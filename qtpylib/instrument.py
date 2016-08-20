@@ -104,27 +104,27 @@ class Instrument(str):
                 If using traling stop, pass the tick size for the instruments so you won't try to buy ES at 2200.128230 :)
 
         """
-        self.parent.signal(direction.upper(), self, quantity, **kwargs)
+        self.parent.order(direction.upper(), self, quantity, **kwargs)
 
     # ---------------------------------------
     def buy(self, quantity, **kwargs):
         """ Shortcut for ``self.order("BUY", ...)`` `(ref) <#qtpylib.instrument.Instrument.order>`_ """
-        self.parent.signal("BUY", self, quantity, **kwargs)
+        self.parent.order("BUY", self, quantity, **kwargs)
 
     # ---------------------------------------
-    def sell(self, signal, quantity, **kwargs):
+    def sell(self, quantity, **kwargs):
         """ Shortcut for ``self.order("SELL", ...)`` `(ref) <#qtpylib.instrument.Instrument.order>`_ """
-        self.parent.signal("SELL", self, quantity, **kwargs)
+        self.parent.order("SELL", self, quantity, **kwargs)
 
     # ---------------------------------------
-    def exit(self, signal, **kwargs):
+    def exit(self, **kwargs):
         """ Shortcut for ``self.order("EXIT", ...)`` `(ref) <#qtpylib.instrument.Instrument.order>`_ """
-        self.parent.signal("EXIT", self, quantity=0, **kwargs)
+        self.parent.order("EXIT", self, quantity=0, **kwargs)
 
     # ---------------------------------------
-    def flatten(self, signal, **kwargs):
+    def flatten(self, **kwargs):
         """ Shortcut for ``self.order("FLATTEN", ...)`` `(ref) <#qtpylib.instrument.Instrument.order>`_ """
-        self.parent.signal("FLATTEN", self, quantity=0, **kwargs)
+        self.parent.order("FLATTEN", self, quantity=0, **kwargs)
 
     # ---------------------------------------
     def get_contract(self):
