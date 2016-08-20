@@ -223,11 +223,11 @@ class Algo(Broker):
         """
         A string subclass that provides easy access to misc
         symbol-related methods and information using shorthand.
-        Refer to the `Instruments API <#instrument-api>`_
+        Refer to the `Instruments API <./api_instrument.html>`_
         for available methods and properties
 
         Call from within your strategy:
-        ``instrument = self.get_instrument(bar)``
+        ``instrument = self.get_instrument("SYMBOL")``
 
         :Parameters:
 
@@ -316,13 +316,35 @@ class Algo(Broker):
 
     # ---------------------------------------
     @abstractmethod
-    def on_tick(self, tick):
-        raise NotImplementedError("Should implement on_tick()")
+    def on_tick(self, instrument):
+        """
+        Invoked on every tick captured for the selected instrument.
+        This is where you'll write your strategy logic for tick events.
+
+        :Parameters:
+
+            symbol : string
+                `Instruments Object <./api_instrument.html>`_
+
+        """
+        # raise NotImplementedError("Should implement on_tick()")
+        pass
 
     # ---------------------------------------
     @abstractmethod
-    def on_bar(self, bar):
-        raise NotImplementedError("Should implement on_bar()")
+    def on_bar(self, instrument):
+        """
+        Invoked on every tick captured for the selected instrument.
+        This is where you'll write your strategy logic for tick events.
+
+        :Parameters:
+
+            instrument : object
+                `Instruments Object <./api_instrument.html>`_
+
+        """
+        # raise NotImplementedError("Should implement on_bar()")
+        pass
 
     # ---------------------------------------
     def _caller(self, caller):
@@ -359,7 +381,8 @@ class Algo(Broker):
             self.record_ts = tick.index[0]
             self.record(bar)
 
-        self.on_tick(self._as_dict(tick))
+        # self.on_tick(self._as_dict(tick))
+        self.on_tick(self.get_instrument(tick))
 
 
     # ---------------------------------------
@@ -389,7 +412,8 @@ class Algo(Broker):
         self.bar_hash = this_bar_hash
 
         if newbar & handle_bar:
-            self.on_bar(self._as_dict(bar))
+            # self.on_bar(self._as_dict(bar))
+            self.on_bar(self.get_instrument(bar))
 
             if "K" not in self.resolution:
                 self.record_ts = bar.index[0]
