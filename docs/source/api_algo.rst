@@ -18,8 +18,8 @@ For example:
     self.sms("message text")
 
     # get instrument object
-    instrument = self.get_instrument(bar)
+    instrument = self.get_instrument("SYMBOL")
 
 
 .. autoclass:: qtpylib.algo.Algo
-   :members: run, record, sms, get_instrument
+   :members: run, on_tick, on_bar, record, sms, get_instrument, order

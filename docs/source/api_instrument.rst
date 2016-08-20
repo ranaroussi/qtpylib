@@ -1,17 +1,17 @@
 Instrument API
-==============
+--------------
 
-**Do NOT initilize this class directly!** Instead, you should
-initilize it using ``self.get_instrument()`` from within your
-strategy.
-
-For example:
+The Instrument object is passed to the ``on_tick(...)``
+and ``on_bar(...)`` methods in your strategy:
 
 .. code:: python
 
     # startegy.py
-    instrument = self.get_instrument(bar)
-    instrument.MethodName(...)
+    def on_tick(self, instrument):
+        instrument.MethodName(...)
+
+    def on_bar(self, instrument):
+        instrument.MethodName(...)
 
 
 .. autoclass:: qtpylib.instrument.Instrument

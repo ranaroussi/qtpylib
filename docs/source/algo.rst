@@ -3,8 +3,10 @@ Writing Your Algorithm
 
 When creating your algorithm, there are two functions that handles
 incoming market data from the running Blotter. These are
-``on_tick()`` which handles IB tick data, and ``on_bars()``,
-which handles bar data in a pre-specified resolution.
+``on_tick()`` which is invoked on every tick captured, and
+``on_bar()``, which is invoked on every bar created in the
+pre-specified resolution. An `Instruments Object <./api_instrument.html>`_ is being passed
+to each method when called.
 
 If your algo does't need/work with tick data ommit the ``on_tick()``
 function from your code.
@@ -30,10 +32,7 @@ and sells when in position.
 
     class DumbAlgo(Algo):
 
-        def on_bar(self, bar):
-            # get the instrument object from the incoming bar
-            instrument = self.get_instrument(bar)
-
+        def on_bar(self, instrument):
             # buy if position = 0, sell if in position > 0
             if instrument.positions['position'] == 0:
                 instrument.buy(1)
@@ -84,11 +83,10 @@ While the Blotter running in the background, write and execute your algorithm:
 
     class CrossOver(Algo):
 
-        def on_tick(self, tick):
+        def on_tick(self, instrument):
             pass
 
-        def on_bar(self, bar):
-            instrument = self.get_instrument(bar)
+        def on_bar(self, instrument):
 
             # get instrument history
             bars = instrument.get_bars(window=20)
@@ -157,7 +155,7 @@ Using Multiple Instruments
 
     class BuyStockSellOil(Algo):
 
-        def on_bar(self, bar):
+        def on_bar(self, instrument):
 
             # get instrument object
             ES = self.get_instrument('ESU2016_FUT')
