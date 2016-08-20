@@ -458,48 +458,7 @@ class Broker():
         del locals['self']
         return locals
 
-    # ---------------------------------------
-    # shortcuts to self._create_order
-    # ---------------------------------------
-    def order(self, signal, symbol, quantity=0, **kwargs):
-        if signal.upper() == "EXIT" or signal.upper() == "FLATTEN":
-            position = self.get_positions(symbol)
-            if position['position'] == 0:
-                return
-
-            kwargs['symbol']    = symbol
-            kwargs['quantity']  = abs(position['position'])
-            kwargs['direction'] = "BUY" if position['position'] < 0 else "SELL"
-
-            # print("EXIT", kwargs)
-
-            try: self.record(position=0)
-            except: pass
-
-            if not self.backtest:
-                self._create_order(**kwargs)
-
-        else:
-            if quantity == 0:
-                return
-
-            kwargs['symbol']    = symbol
-            kwargs['quantity']  = abs(quantity)
-            kwargs['direction'] = signal.upper()
-
-            # print(signal.upper(), kwargs)
-
-            # record
-            try:
-                quantity = -quantity if kwargs['direction'] == "BUY" else quantity
-                self.record(position=quantity)
-            except:
-                pass
-
-            if not self.backtest:
-                self._create_order(**kwargs)
-
-    # ---------------------------------------
+     # ---------------------------------------
     def _create_order(self, symbol, direction, quantity, order_type="", \
         limit_price=0, expiry=0, orderId=0, ticksize=0.01, \
         target=0, initial_stop=0, trail_stop_at=0, trail_stop_by=0):

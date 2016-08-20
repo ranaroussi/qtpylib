@@ -240,6 +240,81 @@ class Algo(Broker):
         return instrument
 
     # ---------------------------------------
+    # shortcuts to broker._create_order
+    # ---------------------------------------
+    def order(self, signal, symbol, quantity=0, **kwargs):
+        """ Send an order for the selected instrument
+
+        :Parameters:
+
+            direction : string
+                Order Type (BUY/SELL, EXIT/FLATTEN)
+            symbol : string
+                instrument symbol
+            quantity : int
+                Order quantiry
+
+        :Optional:
+
+            limit_price : float
+                In case of a LIMIT order, this is the LIMIT PRICE
+            expiry : int
+                Cancel this order if not filled after *n* seconds (default 60 seconds)
+            order_type : string
+                Type of order: Market (default), LIMIT (default when limit_price is passed), MODIFY (required passing or orderId)
+            orderId : int
+                If modifying an order, the order id of the modified order
+            target : float
+                target (exit) price
+            initial_stop : float
+                price to set hard stop
+            trail_stop_at : float
+                price at which to start trailing the stop
+            trail_stop_by : float
+                % of trailing stop distance from current price
+            ticksize : float
+                If using traling stop, pass the tick size for the instruments so you won't try to buy ES at 2200.128230 :)
+
+        """
+        if signal.upper() == "EXIT" or signal.upper() == "FLATTEN":
+            position = self.get_positions(symbol)
+            if position['position'] == 0:
+                return
+
+            kwargs['symbol']    = symbol
+            kwargs['quantity']  = abs(position['position'])
+            kwargs['direction'] = "BUY" if position['position'] < 0 else "SELL"
+
+            # print("EXIT", kwargs)
+
+            try: self.record(position=0)
+            except: pass
+
+            if not self.backtest:
+                self._create_order(**kwargs)
+
+        else:
+            if quantity == 0:
+                return
+
+            kwargs['symbol']    = symbol
+            kwargs['quantity']  = abs(quantity)
+            kwargs['direction'] = signal.upper()
+
+            # print(signal.upper(), kwargs)
+
+            # record
+            try:
+                quantity = -quantity if kwargs['direction'] == "BUY" else quantity
+                self.record(position=quantity)
+            except:
+                pass
+
+            if not self.backtest:
+                self._create_order(**kwargs)
+
+
+    # ---------------------------------------
     @abstractmethod
     def on_tick(self, tick):
         raise NotImplementedError("Should implement on_tick()")
