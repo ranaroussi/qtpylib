@@ -299,7 +299,7 @@ def backdate(res, date=None, as_datetime=False, fmt='%Y-%m-%d', tz="UTC"):
         return new_date.strftime('%Y-%m-%d %H:%M:%S.%f')
 
 # -------------------------------------------
-def previousWeekday(day=None, fmt=None):
+def previous_weekday(day=None, as_datetime=False):
     if day is None:
         day = datetime.datetime.now()
     else:
@@ -309,9 +309,9 @@ def previousWeekday(day=None, fmt=None):
     while day.weekday() > 4: # Mon-Fri are 0-4
         day -= datetime.timedelta(days=1)
 
-    if isinstance(fmt, str):
-        return day.strftime(fmt)
-    return day
+    if as_datetime:
+        return day
+    return day.strftime("%Y-%m-%d")
 
 # -------------------------------------------
 def is_third_friday(day=None):
