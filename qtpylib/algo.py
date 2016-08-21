@@ -320,13 +320,13 @@ class Algo(Broker):
 
     # ---------------------------------------
     @abstractmethod
-    def initilize(self):
+    def initialize(self):
         """
-        Optioanl method for when the strategy needs to initilize
+        Optional method for when the strategy needs to initialize
         parameters on start
 
         """
-        # raise NotImplementedError("Should implement initilize()")
+        # raise NotImplementedError("Should implement initialize()")
         pass
 
     # ---------------------------------------

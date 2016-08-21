@@ -296,11 +296,11 @@ which gets updated in real-time.
 
 -----
 
-Initilizing Parameters
-----------------------
+Initializing Parameters
+-----------------------
 
 Sometimes you'd want to set some parameters when you initlize
-your Strategy. To do so, simply add an ``initilize()`` method
+your Strategy. To do so, simply add an ``initialize()`` method
 to your strategy, and set your parameters there. It will be
 invoked once when you strategy starts.
 
@@ -312,7 +312,7 @@ invoked once when you strategy starts.
 
     class MyStrategy(Algo):
 
-        def initilize(self):
+        def initialize(self):
             self.paramA = "a"
             self.paramB = "b"
             ...
