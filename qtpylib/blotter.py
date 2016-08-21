@@ -121,7 +121,7 @@ class Blotter():
             "ibclient": "999",
             "ibserver": "localhost",
             "zmqport": "12345",
-            "zmqtopic": "_qtpy_"+str(self.name.lower)+"_",
+            "zmqtopic": "_qtpy_"+str(self.name.lower())+"_",
             "dbhost": "localhost",
             "dbport": "3306",
             "dbname": "qtpy",
@@ -265,7 +265,7 @@ class Blotter():
 
         # override with cli args
         for arg in self.args:
-            if arg not in self.args_defaults or self.args[arg] != self.args_defaults[arg]:
+            if arg not in set_args or self.args[arg] != self.set_args[arg]:
                 set_args[arg] = self.args[arg]
 
         self.args = set_args
