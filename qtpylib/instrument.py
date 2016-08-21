@@ -36,7 +36,7 @@ class Instrument(str):
         :Parameters:
             lookback : int
                 Max number of bars to get (None = all available bars)
-            as_dict: bool
+            as_dict : bool
                 Return a dict or a pd.DataFrame object
 
         :Retruns:
@@ -63,7 +63,7 @@ class Instrument(str):
         :Parameters:
             lookback : int
                 Max number of ticks to get (None = all available ticks)
-            as_dict: bool
+            as_dict : bool
                 Return a dict or a pd.DataFrame object
 
         :Retruns:
