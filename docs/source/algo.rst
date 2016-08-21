@@ -8,8 +8,13 @@ incoming market data from the running Blotter. These are
 pre-specified resolution. An `Instruments Object <./api_instrument.html>`_ is being passed
 to each method when called.
 
-If your algo does't need/work with tick data ommit the ``on_tick()``
-function from your code.
+If you need to set some parameters when your strategy starts,
+simply add an ``on_start()`` method to your strategy, and set
+your parameters there.
+
+All three methods are optional. You can run logic on start *and/or*
+on every tick *and/or* on every bar event as needed. Unnecessary can
+either use ``pass`` or be ommited from your strategy code.
 
 
 .. warning::
@@ -32,7 +37,17 @@ and sells when in position.
 
     class DumbAlgo(Algo):
 
+        def on_start(self):
+            # optional method that gets called once upon start
+            pass
+
+        def on_tick(self, instrument):
+            # optional method that gets called on every tick received
+            pass
+
         def on_bar(self, instrument):
+            # optional method that gets called on every bar received
+
             # buy if position = 0, sell if in position > 0
             if instrument.positions['position'] == 0:
                 instrument.buy(100)
@@ -42,7 +57,7 @@ and sells when in position.
 
     if __name__ == "__main__":
 
-        # initilize the algo
+        # initialize the algo
         strategy = DumbAlgo(
             instruments = [ "AAPL" ],
             resolution  = "1T" # 1Min bar resolution (Pandas "resample" resolutions)
@@ -82,9 +97,6 @@ While the Blotter running in the background, write and execute your algorithm:
     from qtpylib.algo import Algo
 
     class CrossOver(Algo):
-
-        def on_tick(self, instrument):
-            pass
 
         def on_bar(self, instrument):
 
@@ -185,6 +197,31 @@ Using Multiple Instruments
         )
 
         strategy.run()
+
+
+-----
+
+Initializing Parameters
+-----------------------
+
+Sometimes you'd want to set some parameters when you initlize
+your Strategy. To do so, simply add an ``on_start()`` method
+to your strategy, and set your parameters there. It will be
+invoked once when you strategy starts.
+
+
+.. code:: python
+
+    # strategy.py
+    from qtpylib.algo import Algo
+
+    class MyStrategy(Algo):
+
+        def on_start(self):
+            self.paramA = "a"
+            self.paramB = "b"
+
+        ...
 
 -----
 
@@ -293,30 +330,7 @@ Then run your algo with the ``--output`` flag:
 The recorded data (and bar data) will be made availble in ``./path/to/recorded-file.csv``,
 which gets updated in real-time.
 
-
 -----
-
-Initializing Parameters
------------------------
-
-Sometimes you'd want to set some parameters when you initlize
-your Strategy. To do so, simply add an ``initialize()`` method
-to your strategy, and set your parameters there. It will be
-invoked once when you strategy starts.
-
-
-.. code:: python
-
-    # strategy.py
-    from qtpylib.algo import Algo
-
-    class MyStrategy(Algo):
-
-        def initialize(self):
-            self.paramA = "a"
-            self.paramB = "b"
-            ...
-
 
 Instruments Tuples
 ------------------

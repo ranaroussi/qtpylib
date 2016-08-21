@@ -124,8 +124,8 @@ class Algo(Broker):
             self.datastore = tools.DataStore(args.output)
 
         # -----------------------------------
-        # initiate strategy (optional)
-        self.initilize()
+        # initiate strategy
+        self.on_start()
 
 
     # ---------------------------------------
@@ -320,13 +320,13 @@ class Algo(Broker):
 
     # ---------------------------------------
     @abstractmethod
-    def initialize(self):
+    def on_start(self):
         """
-        Optional method for when the strategy needs to initialize
-        parameters on start
+        Invoked once when algo starts. Used for when the strategy
+        needs to initialize parameters upon starting.
 
         """
-        # raise NotImplementedError("Should implement initialize()")
+        # raise NotImplementedError("Should implement on_start()")
         pass
 
     # ---------------------------------------
