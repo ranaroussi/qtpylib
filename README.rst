@@ -75,6 +75,9 @@ While the Blotter running in the background, write and execute your algorithm:
 
     class CrossOver(Algo):
 
+        def on_start(self):
+            pass
+
         def on_tick(self, instrument):
             pass
 
