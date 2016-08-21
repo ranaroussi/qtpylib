@@ -6,7 +6,7 @@ Install QTPy using ``pip``
 
 .. code:: bash
 
-    $ pip install qtpylib
+    $ pip install qtpylib --upgrade
 
 
 .. note::

@@ -189,7 +189,7 @@ Then, install QTPy using ``pip``:
 
 .. code:: bash
 
-    $ pip install qtpylib
+    $ pip install qtpylib --upgrade
 
 
 Requirements
