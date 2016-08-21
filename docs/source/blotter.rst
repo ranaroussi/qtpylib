@@ -110,7 +110,7 @@ Available Arguments
 Below are all the parameters that can either be set via the ``Blotter()`` initilizer
 or via CLI:
 
-- ``--symdb`` CSV database of IB contracts for market data fetching (default: ``./symbols.csv``)
+- ``--symbols`` CSV database of IB contracts for market data fetching (default: ``./symbols.csv``)
 - ``--ibport`` TWS/IBGW Port to use (default: ``4001``)
 - ``--ibclient`` TWS/IBGW Client ID (default: ``999``)
 - ``--ibserver`` IB TWS/GW Server hostname (default: ``localhost``)
