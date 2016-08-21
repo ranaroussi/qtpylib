@@ -30,7 +30,7 @@ Features
 Quickstart
 ==========
 
-There are 5 main components to QTPy:
+There are 5 main components to QTPy-Lib:
 
 1. ``Blotter`` - handles market data retreival and processing.
 2. ``Broker`` - sends and proccess orders/positions (abstracted layer).
@@ -185,7 +185,7 @@ First, install IbPy (for some reason I can't get this installed automatically):
 
     $ pip install git+https://github.com/blampe/IbPy/archive/master.zip --user
 
-Then, install QTPy using ``pip``:
+Then, install QTPy-Lib using ``pip``:
 
 .. code:: bash
 
@@ -216,8 +216,8 @@ Requirements
 Legal Stuff
 ===========
 
-QTPy is distributed under the **GNU Lesser General Public License v3.0**. See the `LICENSE.txt <./LICENSE.txt>`__ file in the release for details.
-QTPy is not a product of Interactive Brokers, nor is it affiliated with Interactive Brokers.
+QTPy-Lib is distributed under the **GNU Lesser General Public License v3.0**. See the `LICENSE.txt <./LICENSE.txt>`__ file in the release for details.
+QTPy-Lib is not a product of Interactive Brokers, nor is it affiliated with Interactive Brokers.
 
 
 You can find other examples in the qtpylib/examples directory.
@@ -225,6 +225,6 @@ You can find other examples in the qtpylib/examples directory.
 P.S.
 ----
 
-I'm very interested in your experience with QTPy. Please drop me an note with any feedback you have.
+I'm very interested in your experience with QTPy-Lib. Please drop me an note with any feedback you have.
 
 **Ran Aroussi**

@@ -1,7 +1,7 @@
 SMS Notification
 ================
 
-QTPy supports both automatic trade notifications via SMS
+QTPy-Lib supports both automatic trade notifications via SMS
 and  custom messages (for example, when you want to SMS yourself
 signals without entering a trade).
 
@@ -98,4 +98,4 @@ SMS Using Twilio
     token = AUTH_TOKEN
     from  = FROM_NUMBER
 
-.. note:: If your ``sms.ini`` file contains both services, QTPy will use the first one listed.
+.. note:: If your ``sms.ini`` file contains both services, QTPy-Lib will use the first one listed.

@@ -244,10 +244,10 @@ Runtime (CLI) Parameters
 
 ----
 
-Back-Testing Using QTPy
------------------------
+Back-Testing Using QTPy-Lib
+---------------------------
 
-In addition to live/paper trading, QTPy can also be used for back-testing
+In addition to live/paper trading, QTPy-Lib can also be used for back-testing
 **without changing event one line of code**, simply by adding the
 following arguments when running your algo.
 
