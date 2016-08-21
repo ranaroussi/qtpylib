@@ -5,7 +5,7 @@ QTPyLib, Pythonic Algorithmic Trading
     :target: https://travis-ci.org/ranaroussi/qtpylib
     :alt: travis-ci build status
 
-.. image:: https://img.shields.io/pypi/pyversions/qtpylib.svg?maxAge=60
+.. image:: https://img.shields.io/pypi/pyversions/qtpylib.svg?maxAge=2592000
     :target: https://pypi.python.org/pypi/qtpylib
     :alt: python version
 
