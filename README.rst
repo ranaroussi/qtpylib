@@ -1,6 +1,24 @@
 QTPyLib, Pythonic Algorithmic Trading
 ======================================
 
+.. image:: https://img.shields.io/travis/ranaroussi/qtpylib/master.svg?
+    :target: https://travis-ci.org/ranaroussi/qtpylib
+
+.. image:: https://img.shields.io/pypi/pyversions/qtpylib.svg?maxAge=2592000
+    :target: https://pypi.python.org/pypi/qtpylib
+
+.. image:: https://img.shields.io/pypi/v/qtpylib.svg?maxAge=2592000
+    :target: https://pypi.python.org/pypi/qtpylib
+
+.. image:: https://img.shields.io/pypi/status/qtpylib.svg?maxAge=2592000
+    :target: https://pypi.python.org/pypi/qtpylib
+
+.. image:: https://img.shields.io/github/stars/ranaroussi/qtpylib.svg?style=social&label=Star&maxAge=2592000
+    :target: https://github.com/ranaroussi/qtpylib
+
+.. image:: https://img.shields.io/twitter/follow/aroussi.svg?style=social&label=Follow%20Me&maxAge=2592000
+   :target: https://twitter.com/aroussi
+
 QTPyLib (**Q**\ uantitative **T**\ rading **Py**\ thon **Lib**\ rary)
 is a simple, event-driven algorithmic trading system written in Python 3,
 that supports backtesting and live trading using
