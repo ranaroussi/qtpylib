@@ -265,7 +265,8 @@ class Blotter():
 
         # override with cli args
         for arg in self.args:
-            if arg not in set_args or self.args[arg] != self.set_args[arg]:
+            if arg not in set_args or (self.args[arg] != set_args[arg] and \
+                self.args[arg] != self.args_defaults[arg]):
                 set_args[arg] = self.args[arg]
 
         self.args = set_args
