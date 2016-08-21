@@ -22,7 +22,7 @@ function from your code.
 Basic Algo Structure
 --------------------
 
-Here's a code for an algo that buys the S&P E-Mini Futures when flat
+Here's a code for an algo that buys Apple Stock when flat
 and sells when in position.
 
 .. code:: python
@@ -35,9 +35,9 @@ and sells when in position.
         def on_bar(self, instrument):
             # buy if position = 0, sell if in position > 0
             if instrument.positions['position'] == 0:
-                instrument.buy(1)
+                instrument.buy(100)
             else:
-                instrument.exit(1)
+                instrument.exit()
 
 
     if __name__ == "__main__":
