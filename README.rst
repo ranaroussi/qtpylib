@@ -9,7 +9,7 @@ QTPyLib, Pythonic Algorithmic Trading
     :target: https://pypi.python.org/pypi/qtpylib
     :alt: python version
 
-.. image:: https://img.shields.io/pypi/v/qtpylib.svg?maxAge=2592000
+.. image:: https://img.shields.io/pypi/v/qtpylib.svg?maxAge=60
     :target: https://pypi.python.org/pypi/qtpylib
     :alt: pypi version
 
