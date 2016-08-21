@@ -299,9 +299,11 @@ which gets updated in real-time.
 Initilizing Parameters
 ----------------------
 
-Sometimes you'd want to set some parameters when you initlize your Strategy.
-To do so, simply add an ``__init__`` method to your strategy,
-set your parameters and then init the parent class.
+Sometimes you'd want to set some parameters when you initlize
+your Strategy. To do so, simply add an ``initilize()`` method
+to your strategy, and set your parameters there. It will be
+invoked once when you strategy starts.
+
 
 .. code:: python
 
@@ -310,15 +312,9 @@ set your parameters and then init the parent class.
 
     class MyStrategy(Algo):
 
-        def __init__(self, **kwargs):
-            """ for initating stuff before algo """
-
+        def initilize(self):
             self.paramA = "a"
             self.paramB = "b"
-
-            # initilize the parent class
-            super().__init__(**kwargs)
-
             ...
 
 

@@ -105,6 +105,7 @@ class Algo(Broker):
         self.sms_numbers    = [] if args.sms is None else args.sms
         self.trade_log_dir  = args.log
         self.blotter_name   = args.blotter if args.blotter is not None else blotter
+        self.record_output  = args.output
 
         # -----------------------------------
         # load blotter settings && initilize Blotter
@@ -119,9 +120,12 @@ class Algo(Broker):
         # -----------------------------------
         # initilize output file
         self.record_ts = None
-        self.record_output = args.output
         if self.record_output:
             self.datastore = tools.DataStore(args.output)
+
+        # -----------------------------------
+        # initiate strategy (optional)
+        self.initilize()
 
 
     # ---------------------------------------
@@ -313,6 +317,17 @@ class Algo(Broker):
             if not self.backtest:
                 self._create_order(**kwargs)
 
+
+    # ---------------------------------------
+    @abstractmethod
+    def initilize(self):
+        """
+        Optioanl method for when the strategy needs to initilize
+        parameters on start
+
+        """
+        # raise NotImplementedError("Should implement initilize()")
+        pass
 
     # ---------------------------------------
     @abstractmethod

@@ -22,4 +22,4 @@ For example:
 
 
 .. autoclass:: qtpylib.algo.Algo
-   :members: run, on_tick, on_bar, record, sms, get_instrument, order
+   :members: run, initilize, on_tick, on_bar, record, sms, get_instrument, order
