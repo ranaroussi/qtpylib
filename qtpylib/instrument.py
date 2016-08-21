@@ -30,46 +30,58 @@ class Instrument(str):
         self.parent = parent
 
     # ---------------------------------------
-    def get_bars(self, window=None):
+    def get_bars(self, window=None, as_dict=False):
         """ Get bars for this instrument
 
         :Parameters:
             window : int
                 Max number of bars to get (None = all available bars)
+            as_dict: bool
+                Return a dict or a pd.DataFrame object
 
         :Retruns:
-            bars : pd.DataFrame
+            bars : pd.DataFrame / dict
                 The bars for this instruments
         """
         bars = self.parent.bars[
             (self.parent.bars['symbol']==self) | (self.parent.bars['symbol_group']==self)
         ]
 
-        if window is None:
-            return bars
-        else:
-            return bars[-window:]
+        if window is not None:
+            bars = bars[-window:]
+
+        if as_dict:
+            bars.loc[:, 'datetime'] = bars.index
+            bars = bars.to_dict(orient='records')
+
+        return bars
 
     # ---------------------------------------
-    def get_ticks(self, window=None):
+    def get_ticks(self, window=None, as_dict=False):
         """ Get ticks for this instrument
 
         :Parameters:
             window : int
                 Max number of ticks to get (None = all available ticks)
+            as_dict: bool
+                Return a dict or a pd.DataFrame object
 
         :Retruns:
-            bars : pd.DataFrame
+            bars : pd.DataFrame / dict
                 The ticks for this instruments
         """
         ticks = self.parent.ticks[
             (self.parent.ticks['symbol']==self) | (self.parent.ticks['symbol_group']==self)
         ][-window:]
 
-        if window is None:
-            return ticks
-        else:
-            return ticks[-window:]
+        if window is not None:
+            ticks = ticks[-window:]
+
+        if as_dict:
+            ticks.loc[:, 'datetime'] = ticks.index
+            ticks = ticks.to_dict(orient='records')
+
+        return ticks
 
     # ---------------------------------------
     def order(self, direction, quantity, **kwargs):
