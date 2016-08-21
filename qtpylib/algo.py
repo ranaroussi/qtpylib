@@ -367,15 +367,6 @@ class Algo(Broker):
         return caller in stack
 
     # ---------------------------------------
-    def _as_dict(self, df, ix=0):
-        dfdict = df.to_dict(orient='records')
-        if ix is not None:
-            dfdict = dfdict[ix]
-            dfdict['datetime'] = df.index[ix]
-
-        return dfdict
-
-    # ---------------------------------------
     def _tick_handler(self, tick):
         self._cancel_expired_pending_orders()
 
@@ -396,7 +387,6 @@ class Algo(Broker):
             self.record_ts = tick.index[0]
             self.record(bar)
 
-        # self.on_tick(self._as_dict(tick))
         self.on_tick(self.get_instrument(tick))
 
 
@@ -427,7 +417,6 @@ class Algo(Broker):
         self.bar_hash = this_bar_hash
 
         if newbar & handle_bar:
-            # self.on_bar(self._as_dict(bar))
             self.on_bar(self.get_instrument(bar))
 
             if "K" not in self.resolution:

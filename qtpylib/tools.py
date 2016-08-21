@@ -28,6 +28,18 @@ from dateutil.relativedelta import relativedelta, FR
 from dateutil.parser import parse as parse_date
 from pytz import timezone
 
+
+# =============================================
+def as_dict(df, ix=":"):
+    slicer = slice(*[{True: lambda n: None, False: int}[x == ''](x) \
+        for x in (ix.split(':') + ['', '', ''])[:3]])
+
+    if isinstance(df.index, pd.DatetimeIndex):
+        df.loc[slicer, 'datetime'] = df[slicer].index
+
+    dfdict = df[slicer].to_dict(orient='records')
+    return dfdict
+
 # =============================================
 # utility to get the machine's timeozone
 # =============================================
