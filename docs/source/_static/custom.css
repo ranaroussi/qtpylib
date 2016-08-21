@@ -17,3 +17,7 @@ code, .pre {
 .rst-content dl:not(.docutils) code {
     font-weight: normal;
 }
+
+#qtpylib-pythonic-algorithmic-trading p:first-of-type {
+    display: none;
+}
