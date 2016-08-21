@@ -221,7 +221,7 @@ class Algo(Broker):
                 The body of the SMS message to send
 
         """
-        sms.send_text(text, self.sms_numbers)
+        sms.send_text(self.name +': '+ text, self.sms_numbers)
 
 
     # ---------------------------------------
