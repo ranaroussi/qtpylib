@@ -1,13 +1,13 @@
 Reporting Web App / API
 =======================
 
-QTPy-Lib comes with a basic reporting web app where you can monitor
+QTPyLib comes with a basic reporting web app where you can monitor
 your trade history and open positions. While the web app is running,
 it also exposes a simple REST API for fetching trades, market data,
 etc to create your own application.
 
 .. note::
-    Since QTPy-Lib relies on Interactive Brokers for pretty much
+    Since QTPyLib relies on Interactive Brokers for pretty much
     everything, it's recommended that you create a second user
     for your IB account and use it to login to TWS on your
     computer or Phone. There you can see the trades made by
@@ -53,7 +53,7 @@ Point your browser to ``http://localhost:5000``, enter the password, and you sho
 
 .. image:: _static/dashboard.png
     :align: center
-    :alt: QTPy-Lib Dashboard
+    :alt: QTPyLib Dashboard
 
 
 Initilizing via CLI

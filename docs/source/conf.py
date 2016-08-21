@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# QTPy-Lib documentation build configuration file, created by
+# QTPyLib documentation build configuration file, created by
 # sphinx-quickstart on Sun Aug 14 17:26:46 2016.
 #
 # This file is execfile()d with the current directory set to its
@@ -48,7 +48,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'QTPy-Lib'
+project = 'QTPyLib'
 copyright = '2016, Ran Aroussi'
 author = 'Ran Aroussi'
 
@@ -124,7 +124,7 @@ todo_include_todos = False
 
 # The name for this set of Sphinx documents.
 # "<project> v<release> documentation" by default.
-#html_title = 'QTPy-Lib v1.0.0'
+#html_title = 'QTPyLib v1.0.0'
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #html_short_title = None
@@ -228,7 +228,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'QTPy.tex', 'QTPy-Lib Documentation',
+    (master_doc, 'QTPy.tex', 'QTPyLib Documentation',
      'Ran Aroussi', 'manual'),
 ]
 
@@ -272,8 +272,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'QTPy', 'QTPy-Lib Documentation',
-     author, 'QTPy-Lib', 'Pythonic Algorithmic Trading Library',
+    (master_doc, 'QTPy', 'QTPyLib Documentation',
+     author, 'QTPyLib', 'Pythonic Algorithmic Trading Library',
      'Miscellaneous'),
 ]
 

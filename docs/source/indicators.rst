@@ -3,7 +3,7 @@ Technical Indicators
 
 Although you can import technical indicator libraries such as the
 excellent `TA-Lib <http://ta-lib.org>`_ and use them in your strategies,
-QTPy-Lib does comes bundled with some common indicators that work as Pandas Objects.
+QTPyLib does comes bundled with some common indicators that work as Pandas Objects.
 
 ATR
 ---

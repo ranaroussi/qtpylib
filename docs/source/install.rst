@@ -1,7 +1,7 @@
 Installation
 ============
 
-Install QTPy-Lib using ``pip``
+Install QTPyLib using ``pip``
 ------------------------------
 
 .. code:: bash
@@ -10,7 +10,7 @@ Install QTPy-Lib using ``pip``
 
 
 .. note::
-    QTPy-Lib requires `IbPy <https://github.com/blampe/IbPy>`_, which, for some reason,
+    QTPyLib requires `IbPy <https://github.com/blampe/IbPy>`_, which, for some reason,
     cannot be bundled with the pip installer and requires manual installation.
     **To install IbPy manually, run:**
 
@@ -18,10 +18,10 @@ Install QTPy-Lib using ``pip``
 
         $ pip install git+https://github.com/blampe/IbPy/archive/master.zip --user
 
-Uninstall QTPy-Lib
+Uninstall QTPyLib
 ~~~~~~~~~~~~~~~~~~
 
-To uninstall QTPy-Lib using ``pip``, simply use:
+To uninstall QTPyLib using ``pip``, simply use:
 
 .. code:: bash
 
@@ -52,7 +52,7 @@ Requirements
 Install IB TWS / Gateway
 ------------------------
 
-In order for QTPy-Lib to be able to subscribe to market data and submit orders,
+In order for QTPyLib to be able to subscribe to market data and submit orders,
 you must have the latest version of Interactive Brokers’
 `TWS <https://www.interactivebrokers.com/en/index.php?f=15875>`_ or
 `IB Gateway <https://www.interactivebrokers.com/en/index.php?f=16457>`_

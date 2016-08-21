@@ -1,7 +1,7 @@
 Library Structure
 =================
 
-There are 5 main components to QTPy-Lib:
+There are 5 main components to QTPyLib:
 
 1. ``Blotter`` - handles market data retreival and processing.
 2. ``Broker`` - sends and proccess orders/positions (abstracted layer).
@@ -17,4 +17,4 @@ Flow Chart
 .. image:: _static/diagram.png
     :width: 640px
     :align: center
-    :alt: QTPy-Lib Diagram
+    :alt: QTPyLib Diagram

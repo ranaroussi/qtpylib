@@ -2,19 +2,19 @@ Getting Market Data
 ===================
 
 Market Data retrieval is done by a piece of software called a
-**Blotter**. A Blotter connects to the broker (in QTPy-Lib's case,
+**Blotter**. A Blotter connects to the broker (in QTPyLib's case,
 Interactive Brokers via TWS/IB), handles incoming market data
 and passes it to the algo for processing.
 
 Blotters optionally (but usually) also take care of storing the market
 data in a Database for later analysis, back-testing new strategies, etc.
 
-In QTPy-Lib's case, the Blotter handle all of the above, while your
+In QTPyLib's case, the Blotter handle all of the above, while your
 algorithms subscribe to the Blotter's updates via pub/sub
 mechanism using ZeroMQ - a blazing fast Message Queue.
 
 .. note::
-    QTPy-Lib was designed with a **"One Blotter To Rule Them All"**
+    QTPyLib was designed with a **"One Blotter To Rule Them All"**
     design in mind. All your algorithms can listen to a single
     Blotter running in the background without a problem and without
     consuming any unnessecery system resources.

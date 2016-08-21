@@ -6,7 +6,7 @@
 .. image:: _static/qtpy-logo.png
     :target: https://github.com/ranaroussi/qtpylib
     :width: 250px
-    :alt: QTPy-Lib
+    :alt: QTPyLib
 
 
 .. include:: ../../README.rst

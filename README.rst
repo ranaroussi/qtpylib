@@ -1,14 +1,14 @@
-QTPy-Lib, Pythonic Algorithmic Trading
+QTPyLib, Pythonic Algorithmic Trading
 ======================================
 
-QTPy-Lib (**Q**\ uantitative **T**\ rading **Py**\ thon **Lib**\ rary)
+QTPyLib (**Q**\ uantitative **T**\ rading **Py**\ thon **Lib**\ rary)
 is a simple, event-driven algorithmic trading system written in Python 3,
 that supports backtesting and live trading using
 `Interactive Brokers <https://www.interactivebrokers.com>`__
 for market data and order execution.
 
-I originally developed QTPy-Lib (QTPy for short) because I wanted for
-a simple (but powerful) trading library that will let me to focus on the
+I originally developed QTPyLib because I wanted for a simple
+(but powerful) trading library that will let me to focus on the
 trading logic itself and ignore everything else.
 
 `Documentation <http://www.qtpylib.io/>`__
@@ -30,7 +30,7 @@ Features
 Quickstart
 ==========
 
-There are 5 main components to QTPy-Lib:
+There are 5 main components to QTPyLib:
 
 1. ``Blotter`` - handles market data retreival and processing.
 2. ``Broker`` - sends and proccess orders/positions (abstracted layer).
@@ -185,7 +185,7 @@ First, install IbPy (for some reason I can't get this installed automatically):
 
     $ pip install git+https://github.com/blampe/IbPy/archive/master.zip --user
 
-Then, install QTPy-Lib using ``pip``:
+Then, install QTPyLib using ``pip``:
 
 .. code:: bash
 
@@ -216,8 +216,8 @@ Requirements
 Legal Stuff
 ===========
 
-QTPy-Lib is distributed under the **GNU Lesser General Public License v3.0**. See the `LICENSE.txt <./LICENSE.txt>`__ file in the release for details.
-QTPy-Lib is not a product of Interactive Brokers, nor is it affiliated with Interactive Brokers.
+QTPyLib is distributed under the **GNU Lesser General Public License v3.0**. See the `LICENSE.txt <./LICENSE.txt>`__ file in the release for details.
+QTPyLib is not a product of Interactive Brokers, nor is it affiliated with Interactive Brokers.
 
 
 You can find other examples in the qtpylib/examples directory.
@@ -225,6 +225,6 @@ You can find other examples in the qtpylib/examples directory.
 P.S.
 ----
 
-I'm very interested in your experience with QTPy-Lib. Please drop me an note with any feedback you have.
+I'm very interested in your experience with QTPyLib. Please drop me an note with any feedback you have.
 
 **Ran Aroussi**
