@@ -331,13 +331,13 @@ def backdate(res, date=None, as_datetime=False, fmt='%Y-%m-%d', tz="UTC"):
             new_date = date - datetime.timedelta(days=periods)
 
         # not a week day:
-        while date.weekday() > 4: # Mon-Fri are 0-4
-            new_date = backdate(new_date, res)
+        while new_date.weekday() > 4: # Mon-Fri are 0-4
+            new_date = backdate(res=res, date=new_date, as_datetime=True)
 
     if as_datetime:
         return new_date
     else:
-        return new_date.strftime('%Y-%m-%d %H:%M:%S.%f')
+        return new_date.strftime(fmt)
 
 # -------------------------------------------
 def previous_weekday(day=None, as_datetime=False):
