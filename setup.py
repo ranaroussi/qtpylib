@@ -20,7 +20,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='QTPyLib',
-    version='1.2.4',
+    version='1.2.6',
     description='Quantitative Trading Python Library',
     long_description=long_description,
     url='https://github.com/ranaroussi/qtpylib',
