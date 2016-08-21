@@ -83,6 +83,8 @@ class Algo(Broker):
         tick_window=1, bar_window=100, timezone="UTC", preload=None, \
         blotter=None, **kwargs):
 
+        self.name = str(self.__class__).split('.')[-1].split("'")[0]
+
         # assign algo params
         self.bars           = pd.DataFrame()
         self.ticks          = pd.DataFrame()
