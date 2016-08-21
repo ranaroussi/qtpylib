@@ -30,11 +30,11 @@ class Instrument(str):
         self.parent = parent
 
     # ---------------------------------------
-    def get_bars(self, window=None, as_dict=False):
+    def get_bars(self, lookback=None, as_dict=False):
         """ Get bars for this instrument
 
         :Parameters:
-            window : int
+            lookback : int
                 Max number of bars to get (None = all available bars)
             as_dict: bool
                 Return a dict or a pd.DataFrame object
@@ -47,8 +47,8 @@ class Instrument(str):
             (self.parent.bars['symbol']==self) | (self.parent.bars['symbol_group']==self)
         ]
 
-        if window is not None:
-            bars = bars[-window:]
+        if lookback is not None:
+            bars = bars[-lookback:]
 
         if as_dict:
             bars.loc[:, 'datetime'] = bars.index
@@ -57,11 +57,11 @@ class Instrument(str):
         return bars
 
     # ---------------------------------------
-    def get_ticks(self, window=None, as_dict=False):
+    def get_ticks(self, lookback=None, as_dict=False):
         """ Get ticks for this instrument
 
         :Parameters:
-            window : int
+            lookback : int
                 Max number of ticks to get (None = all available ticks)
             as_dict: bool
                 Return a dict or a pd.DataFrame object
@@ -72,10 +72,10 @@ class Instrument(str):
         """
         ticks = self.parent.ticks[
             (self.parent.ticks['symbol']==self) | (self.parent.ticks['symbol_group']==self)
-        ][-window:]
+        ][-lookback:]
 
-        if window is not None:
-            ticks = ticks[-window:]
+        if lookback is not None:
+            ticks = ticks[-lookback:]
 
         if as_dict:
             ticks.loc[:, 'datetime'] = ticks.index
