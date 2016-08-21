@@ -56,6 +56,20 @@ def datetime_to_timezone(date, tz="UTC"):
         date = date.replace(tzinfo=timezone(get_timezone()))
     return date.astimezone(timezone(tz))
 
+
+def convert_timezone(date_str, tz_from, tz_to="UTC", fmt=None):
+    # get timezone as tz_offset
+    tz_offset = datetime_to_timezone(datetime.datetime.now(), tz=tz_from).strftime('%z')
+    tz_offset = tz_offset[:3]+':'+tz_offset[3:]
+
+    date = parse_date(date_str+tz_offset)
+    if tz_from != tz_to:
+        date = datetime_to_timezone(date, tz_to)
+
+    if isinstance(fmt, str):
+        return date.strftime(fmt)
+    return date
+
 # =============================================
 # utility to change the timeozone to specified one
 # =============================================
