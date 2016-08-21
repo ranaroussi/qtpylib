@@ -258,12 +258,12 @@ class make_object:
         self.__dict__.update(entries)
 
 # -------------------------------------------
-def roundClosestValid(val, res, decimals=2):
+def round_to_fraction(val, res, decimals=2):
     """ round to closest resolution """
     return round(round(val / res)*res, decimals)
 
 # -------------------------------------------
-def backdate(res, date=None, as_datetime=False):
+def backdate(res, date=None, as_datetime=False, fmt='%Y-%m-%d', tz="UTC"):
     if date is None:
         date = datetime.datetime.now()
     else:
