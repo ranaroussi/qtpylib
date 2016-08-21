@@ -332,7 +332,7 @@ def backdate(res, date=None, as_datetime=False, fmt='%Y-%m-%d', tz="UTC"):
 
         # not a week day:
         while new_date.weekday() > 4: # Mon-Fri are 0-4
-            new_date = backdate(res=res, date=new_date, as_datetime=True)
+            new_date = backdate(res="1D", date=new_date, as_datetime=True)
 
     if as_datetime:
         return new_date
