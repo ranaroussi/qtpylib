@@ -30,42 +30,11 @@ from pytz import timezone
 
 
 # =============================================
-def as_dict(df, ix=":"):
-
-    ix = str(ix).strip()
-    org_ix = str(ix)
-
-    try: ix = int(ix)
-    except: pass
-
-    start = ix
-    end = ''
-
-    if isinstance(ix, int):
-        if ix > 0:
-            start = ix
-            end = ix+1
-        elif ix < 0:
-            start = ix
-            if ix < -1: end = ix+1
-        else:
-            start = ''
-            end = 1
-
-        ix = str(start)+':'+str(end)
-
-    slicer = slice(*[{True: lambda n: None, False: int}[x == ''](x) \
-        for x in (ix.split(':') + ['', '', ''])[:3]])
-
+def as_dict(df, ix=':'):
+    """ converts df to dict and adds a datetime field if df is datetime """
     if isinstance(df.index, pd.DatetimeIndex):
-        df.loc[slicer, 'datetime'] = df[slicer].index
-
-    df_dict = df[slicer].to_dict(orient='records')
-
-    if ":" not in org_ix or len(df_dict) == 1:
-        return df_dict[0]
-
-    return df_dict
+        df['datetime'] = df.index
+    return df.to_dict(orient='records')[ix]
 
 # =============================================
 # utility to get the machine's timeozone

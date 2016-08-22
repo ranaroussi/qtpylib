@@ -51,7 +51,7 @@ class Instrument(str):
             bars = bars[-lookback:]
 
         if as_dict:
-            bars.loc[:, 'datetime'] = bars.index
+            bars['datetime'] = bars.index
             bars = bars.to_dict(orient='records')
 
         return bars
@@ -78,7 +78,7 @@ class Instrument(str):
             ticks = ticks[-lookback:]
 
         if as_dict:
-            ticks.loc[:, 'datetime'] = ticks.index
+            ticks['datetime'] = ticks.index
             ticks = ticks.to_dict(orient='records')
 
         return ticks
