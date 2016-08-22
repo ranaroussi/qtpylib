@@ -1,29 +1,33 @@
 QTPyLib, Pythonic Algorithmic Trading
 ======================================
 
-.. image:: https://img.shields.io/travis/ranaroussi/qtpylib/master.svg?
-    :target: https://travis-ci.org/ranaroussi/qtpylib
-    :alt: travis-ci build status
-
 .. image:: https://img.shields.io/pypi/pyversions/qtpylib.svg?maxAge=2592000
     :target: https://pypi.python.org/pypi/qtpylib
-    :alt: python version
+    :alt: Python version
+
+.. image:: https://img.shields.io/travis/ranaroussi/qtpylib/master.svg?
+    :target: https://travis-ci.org/ranaroussi/qtpylib
+    :alt: Travis-CI build status
 
 .. image:: https://img.shields.io/pypi/v/qtpylib.svg?maxAge=60
     :target: https://pypi.python.org/pypi/qtpylib
-    :alt: pypi version
+    :alt: PyPi version
 
 .. image:: https://img.shields.io/pypi/status/qtpylib.svg?maxAge=2592000
     :target: https://pypi.python.org/pypi/qtpylib
-    :alt: pypi status
+    :alt: PyPi status
+
+.. image:: https://readthedocs.org/projects/qtpy-lib/badge/?version=latest
+    :target: http://www.qtpylib.io/en/latest/?badge=latest
+    :alt: Documentation Status
 
 .. image:: https://img.shields.io/github/stars/ranaroussi/qtpylib.svg?style=social&label=Star&maxAge=2592000
     :target: https://github.com/ranaroussi/qtpylib
-    :alt: start this repo
+    :alt: Star this repo
 
 .. image:: https://img.shields.io/twitter/follow/aroussi.svg?style=social&label=Follow%20Me&maxAge=2592000
     :target: https://twitter.com/aroussi
-    :alt: follow me on twitter
+    :alt: Follow me on twitter
 
 \
 
@@ -37,7 +41,7 @@ I originally developed QTPyLib because I wanted for a simple
 (but powerful) trading library that will let me to focus on the
 trading logic itself and ignore everything else.
 
-`Documentation <http://www.qtpylib.io/>`__
+`Full Documentation » <http://www.qtpylib.io/>`__
 
 -----
 
