@@ -79,8 +79,14 @@ def create_continous_contract(df, resolution="1T"):
             except:
                 pass
 
-        return flags[['symbol', 'expiry', 'gap']]
+        flags = flags[flags['symbol'] == flags['symbol'].unique()]
 
+        # single row df won't resample
+        if len(flags) <= 1:
+            flags = pd.DataFrame(index=pd.date_range(start=flags[0:1].index[0],
+                periods=24, freq="1H"), data=flags[['symbol', 'expiry', 'gap']]).ffill()
+
+        return flags[['symbol', 'expiry', 'gap']]
 
     # gonna need this later
     df['datetime'] = df.index
