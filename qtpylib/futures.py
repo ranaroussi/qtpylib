@@ -79,7 +79,7 @@ def create_continous_contract(df, resolution="1T"):
             except:
                 pass
 
-        flags = flags[flags['symbol'] == flags['symbol'].unique()]
+        flags = flags[flags['symbol'].isin(flags['symbol'].unique())]
 
         # single row df won't resample
         if len(flags) <= 1:
@@ -105,9 +105,9 @@ def create_continous_contract(df, resolution="1T"):
 
     # resample back to original
     if "K" in resolution or "S" in resolution:
-        flags = flags.resample('S').last().ffill().loc[df.index.unique()]
+        flags = flags.resample('S').last().ffill().loc[df.index.unique()].ffill()
     else:
-        flags = flags.resample('T').last().ffill().loc[df.index.unique()]
+        flags = flags.resample('T').last().ffill().loc[df.index.unique()].ffill()
     flags['datetime'] = flags.index
 
     # build contract
