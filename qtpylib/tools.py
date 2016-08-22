@@ -58,7 +58,7 @@ def convert_timezone(date_str, tz_from, tz_to="UTC", fmt=None):
     tz_offset = datetime_to_timezone(datetime.datetime.now(), tz=tz_from).strftime('%z')
     tz_offset = tz_offset[:3]+':'+tz_offset[3:]
 
-    date = parse_date(date_str+tz_offset)
+    date = parse_date(str(date_str)+tz_offset)
     if tz_from != tz_to:
         date = datetime_to_timezone(date, tz_to)
 
