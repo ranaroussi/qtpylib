@@ -391,9 +391,9 @@ class Blotter():
                 if data["asset_class"] == "FUT":
                     try:
                         fut_symbol = symbol.split(data["symbol_group"].split('_')[0])[1]
-                        date = datetime.datetime(int(fut_symbol[-4:]), ibDataTypes['MONTH_CODES'].index(fut_symbol[0]), 1)
+                        date = datetime(int(fut_symbol[-4:]), ibDataTypes['MONTH_CODES'].index(fut_symbol[0]), 1)
                         day = 21 - (date.weekday() + 2) % 7
-                        expiry = datetime.datetime(date.year, date.month, day) #.strftime("%Y-%m-%d")
+                        expiry = datetime(date.year, date.month, day).strftime("%Y-%m-%d")
                     except:
                         pass
 
