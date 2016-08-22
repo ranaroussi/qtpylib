@@ -13,8 +13,8 @@ install:
   - pip install .
 
 script:
-  # - coverage run --source=qtpylib setup.py test
-  - nosetests
+  - coverage run setup.py test
+  # - nosetests
 
 after_success:
   - coveralls
