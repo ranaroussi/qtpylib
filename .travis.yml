@@ -8,13 +8,11 @@ python:
   - "3.5"
 
 install:
-  - pip install coveralls
   - pip install -r requirements.txt
   - pip install .
 
 script:
-  - coverage run setup.py test
-  # - nosetests
+  - nosetests
 
 after_success:
   - coveralls
