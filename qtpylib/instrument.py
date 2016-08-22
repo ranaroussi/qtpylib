@@ -163,6 +163,8 @@ class Instrument(str):
         """
         pos = self.parent.get_positions(self)
         try:
+            if attr is not None:
+                attr = attr.replace("quantity", "position")
             return pos[attr]
         except:
             return pos
