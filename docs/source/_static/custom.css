@@ -21,3 +21,7 @@ code, .pre {
 #qtpylib-pythonic-algorithmic-trading p:first-of-type {
     display: none;
 }
+
+#qtpylib-pythonic-algorithmic-trading p:last-of-type a.reference.external {
+    display: none;
+}
