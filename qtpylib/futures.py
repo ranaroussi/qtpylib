@@ -20,8 +20,11 @@
 #
 
 import datetime
+import os.path
 import pandas as pd
+import numpy as np
 import requests
+import time
 
 from bs4 import BeautifulSoup as bs
 from dateutil.parser import parse as parse_date
@@ -132,7 +135,6 @@ def create_continous_contract(df, resolution="1T"):
     return contract
 
 
-
 # -------------------------------------------
 def get_active_contract(symbol, url=None, n=1):
 
@@ -192,6 +194,85 @@ def get_contracts(url):
     return df[:13].dropna()
 
 # -------------------------------------------
+def get_ib_margin(cache_file, symbol=None, exchange=None):
+
+    if os.path.exists(cache_file):
+        if (int(time.time()) - int(os.path.getmtime(cache_file))) < 86400:
+            if ".csv" in cache_file:
+                df = pd.read_csv(cache_file)
+            elif ".h5" in cache_file:
+                df = pd.read_hdf(cache_file, 0)
+            elif (".pickle" in cache_file) | (".pkl" in cache_file):
+                df = pd.read_pickle(cache_file)
+
+
+            if symbol is not None and exchange is not None:
+                return df[(df['exchange']==exchange) & (df['symbol']==symbol)
+                ].to_dict(orient='records')[0]
+
+            return df
+
+
+    # else: fetch new...
+
+    html = requests.get('https://www.interactivebrokers.com/en/index.php?f=marginnew&p=fut')
+
+    # Parse HTML using BeautifulSoup
+    html = bs(html.text, 'html.parser')
+
+    records = []
+
+    def grab_row(row, what='td'):
+        row_data = []
+        cells = row.findAll(what, text=True)
+        for cell in cells:
+            row_data.append(cell.text)
+
+        return ",".join(row_data)
+
+    divs = html.findAll('div', attrs={'class':'table-responsive'})
+
+    for div in divs:
+        tables = div.findAll('table');
+        for table in tables:
+            rows = table.findAll('tr');
+            for row in rows:
+                records.append(grab_row(row, 'td'))
+
+
+    text = '\n'.join( filter(None, records) )
+
+    df = pd.read_csv( StringIO(text), names=['exchange','symbol','description','class',
+                                             'intraday_initial','intraday_maintenance',
+                                             'overnight_initial','overnight_maintenance',
+                                             'currency','has_options'] )
+
+    # fix data
+    df['intraday_initial'] = pd.to_numeric(df['intraday_initial'], errors='coerce')
+    df['intraday_maintenance'] = pd.to_numeric(df['intraday_maintenance'], errors='coerce')
+    df['overnight_initial'] = pd.to_numeric(df['overnight_initial'], errors='coerce')
+    df['overnight_maintenance'] = pd.to_numeric(df['overnight_maintenance'], errors='coerce')
+
+    df['currency'].fillna("USD", inplace=True)
+    df['has_options'] = np.where(df['has_options']=='No', False, True)
+
+    df.dropna(how='all', inplace=True)
+
+    # output
+    if ".csv" in cache_file:
+        df.to_csv(cache_file, index=False)
+    elif ".h5" in cache_file:
+        df.to_hdf(cache_file, 0)
+    elif (".pickle" in cache_file) | (".pkl" in cache_file):
+        df.to_pickle(cache_file)
+
+
+    if symbol is not None and exchange is not None:
+        return df[(df['exchange']==exchange) & (df['symbol']==symbol)
+        ].to_dict(orient='records')[0]
+
+    return df
+
 
 # -------------------------------------------
 futures_contracts = {
