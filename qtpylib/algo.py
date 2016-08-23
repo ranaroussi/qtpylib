@@ -23,6 +23,7 @@ import argparse
 import inspect
 import pandas as pd
 import sys
+import logging
 
 from datetime import datetime
 
@@ -221,7 +222,8 @@ class Algo(Broker):
                 The body of the SMS message to send
 
         """
-        sms.send_text(self.name +': '+ text, self.sms_numbers)
+        logging.info("SMS: "+str(text))
+        sms.send_text(self.name +': '+ str(text), self.sms_numbers)
 
 
     # ---------------------------------------
