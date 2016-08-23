@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-"""QTPy-Lib: Quantitative Trading Python Library
+"""QTPyLib: Quantitative Trading Python Library
 (https://github.com/ranaroussi/qtpylib)
 Simple, event-driven algorithmic trading system written in
 Python 3, that supports backtesting and live trading using
@@ -20,7 +20,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='QTPyLib',
-    version='1.2.7',
+    version='1.2.8',
     description='Quantitative Trading Python Library',
     long_description=long_description,
     url='https://github.com/ranaroussi/qtpylib',

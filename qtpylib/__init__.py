@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# QTPy-Lib: Quantitative Trading Python Library
+# QTPyLib: Quantitative Trading Python Library
 # https://github.com/ranaroussi/qtpylib
 #
 # Copyright 2016 Ran Aroussi
@@ -19,7 +19,7 @@
 # limitations under the License.
 #
 
-__version__ = '1.2.7a'
+__version__ = '1.2.8a'
 __author__ = 'Ran Aroussi'
 
 from . import *
