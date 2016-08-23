@@ -292,7 +292,7 @@ class Blotter():
                 "asksize":      int(kwargs['tick']['asksize']),
                 # "wap":          kwargs['tick']['wap']
             }
-            print('.', end="", flush=True)
+            # print('.', end="", flush=True)
             self.on_tick_received(data)
 
 
