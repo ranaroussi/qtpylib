@@ -81,7 +81,7 @@ Then, run the Blotter by passing the parameters via the command line:
 
 .. code:: bash
 
-    $ python dashboard.py --port 5000 --blotter MainBlotter
+    $ python dashboard.py --port 5000 --blotter MainBlotter --nopass
 
 
 Available Arguments
@@ -91,7 +91,9 @@ Below are the parameters that can either be set via the ``Reports()`` initilizer
 or via CLI:
 
 - ``--port`` HTTP port to use (default: ``5000``)
+- ``--host`` Host to bind the http process to (defaults to ``localhost``)
 - ``--blotter`` Use this Blotter\'s MySQL server settings (default: ``auto-detect``).
+- ``--nopass`` *[flag]* Skip password for web app
 
 -----
 
