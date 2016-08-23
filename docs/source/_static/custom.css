@@ -19,9 +19,32 @@ code, .pre {
 }
 
 #qtpylib-pythonic-algorithmic-trading p:first-of-type {
-    display: none;
+    display: block;
+    position: relative;
+    clear: both;
+    margin: 0 0 12px;
 }
 
 #qtpylib-pythonic-algorithmic-trading p:last-of-type a.reference.external {
     display: none;
+}
+
+#qtpylib-pythonic-algorithmic-trading a.image-reference img {
+    max-height: 20px;
+    margin: 0 2px 0 0;
+}
+#qtpylib-pythonic-algorithmic-trading a {
+    float: left;
+    height: 25px;
+}
+
+#qtpylib-pythonic-algorithmic-trading p a {
+    float: none;
+    height: auto;
+}
+
+@media only screen and (max-device-width: 768px) {
+    #qtpylib-pythonic-algorithmic-trading p:first-of-type {
+        margin: 0 0 12px;
+    }
 }
