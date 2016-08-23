@@ -27,6 +27,7 @@ Table of Contents
    sms
    indicators
    futures
+   daemons
    api
    legal
 
