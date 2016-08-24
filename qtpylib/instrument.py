@@ -309,7 +309,7 @@ class Instrument(str):
                 maximum contracts allowed to trade (returns ``None`` for non-futures)
         """
         timeframe = 'overnight_initial' if overnight else 'intraday_initial'
-        req_margin = self.get_futures_margin_requirement()
+        req_margin = self.get_margin_requirement()
         if req_margin[timeframe] is not None:
             if 'AvailableFunds' in self.parent.account:
                 return int(math.floor(self.parent.account['AvailableFunds']/req_margin[timeframe]))
