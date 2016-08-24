@@ -560,33 +560,38 @@ class Blotter():
         # work with symbol groups
         symbols = list(map(_gen_symbol_group, symbols))
 
+        # convert datetime to string for MySQL
+        try: start = start.strftime(ibDataTypes["DATE_TIME_FORMAT_LONG_MILLISECS"])
+        except: pass
+
+        if end is not None:
+            try: end = end.strftime(ibDataTypes["DATE_TIME_FORMAT_LONG_MILLISECS"])
+            except: pass
+
         # connect to mysql
         self.mysql_connect()
 
-        if end is None:
-            end = datetime.now().strftime(ibDataTypes["DATE_TIME_FORMAT_LONG_MILLISECS"])
-
-        # tick data
-        if ("K" in resolution) | ("S" in resolution):
-            table = 'ticks'
-        else:
-            table = 'bars'
+        # --- build query
+        table = 'ticks' if ("K" in resolution) | ("S" in resolution) else 'bars'
 
         query = """SELECT tbl.*,
             CONCAT(s.`symbol`, "_", s.`asset_class`) as symbol, s.symbol_group, s.asset_class, s.expiry
             FROM `{TABLE}` tbl LEFT JOIN `symbols` s ON tbl.symbol_id = s.id
-            WHERE (`datetime` >= "{START}" and `datetime` <= "{END}") """
+            WHERE (`datetime` >= "{START}"{END_SQL}) """.replace(
+            '{START}', start).replace('{TABLE}', table)
+
+        if end is not None:
+            query = query.replace('{END_SQL}', ' AND `datetime` <= "{END}"')
+            query = query.replace('{END}', end)
+        else:
+            query = query.replace('{END_SQL}', '')
 
         if symbols[0].strip() != "*":
-            # query += """ AND CONCAT(s.`symbol`, "_", s.`asset_class`) in ("{SYMBOLS}")"""
             query += """ AND ( s.`symbol_group` in ("{SYMBOLS}") OR s.`symbol` IN ("{SYMBOLS}") ) """
             query = query.replace('{SYMBOLS}', '","'.join(symbols))
+        # --- end build query
 
-        query = query.replace(
-            '{START}', start).replace(
-            '{END}', end).replace(
-            '{TABLE}', table)
-
+        # get data using pandas
         data = pd.read_sql(query, self.dbconn).dropna()
         data.set_index('datetime', inplace=True)
         data.index = pd.to_datetime(data.index, utc=True)
