@@ -94,7 +94,7 @@ class Instrument(str):
         return ticks
 
     # ---------------------------------------
-    def get_futures_margin_requirement(self):
+    def get_margin_requirement(self):
         """ Get margin requirements for intrument (futures only)
 
         :Retruns:
@@ -124,7 +124,7 @@ class Instrument(str):
 
 
     # ---------------------------------------
-    def get_max_futures_contracts_allowed(self, overnight=True):
+    def get_margin_max_contracts(self, overnight=True):
         """ Get maximum contracts allowed to trade
         baed on required margin per contract and
         current account balance (futures only)
@@ -360,14 +360,14 @@ class Instrument(str):
 
     # ---------------------------------------
     @property
-    def futures_margin_requirement(self):
-        """(Property) Shortcut to self.get_futures_margin_requirement()"""
-        return self.get_futures_margin_requirement()
+    def margin_requirement(self):
+        """(Property) Shortcut to self.get_margin_requirement()"""
+        return self.get_margin_requirement()
 
     # ---------------------------------------
     @property
-    def max_futures_contracts_allowed(self):
-        """(Property) Shortcut to self.get_max_futures_contracts_allowed()"""
-        return self.get_max_futures_contracts_allowed()
+    def margin_max_contracts(self):
+        """(Property) Shortcut to self.get_margin_max_contracts()"""
+        return self.get_margin_max_contracts()
 
 
