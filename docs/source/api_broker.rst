@@ -8,5 +8,6 @@ are available from within your strategy via
 
 
 .. autoclass:: qtpylib.broker.Broker
-   :members:
+    :members: run
+    :member-order: bysource
 

@@ -191,40 +191,47 @@ class Algo(Broker):
             )
 
     # ---------------------------------------
-    def record(self, *args, **kwargs):
-        """Records data for later analysis
-        Values will be logged to the file specified via
-        ``--output [file]`` (along with bar data) as
-        csv/pickle/h5 file.
-
-        Call from within your strategy:
-        ``self.record(key=value)``
-
-        :Parameters:
-            ** kwargs : mixed
-                The names and values to record
+    @abstractmethod
+    def on_start(self):
+        """
+        Invoked once when algo starts. Used for when the strategy
+        needs to initialize parameters upon starting.
 
         """
-        if self.record_output:
-            self.datastore.record(self.record_ts, *args, **kwargs)
+        # raise NotImplementedError("Should implement on_start()")
+        pass
 
     # ---------------------------------------
-    def sms(self, text):
-        """Sends an SMS message
-        Relies on properly setting up an SMS provider (refer to the
-        SMS section of the documentation for more information about this)
-
-        Call from within your strategy:
-        ``self.sms("message text")``
+    @abstractmethod
+    def on_tick(self, instrument):
+        """
+        Invoked on every tick captured for the selected instrument.
+        This is where you'll write your strategy logic for tick events.
 
         :Parameters:
-            text : string
-                The body of the SMS message to send
+
+            symbol : string
+                `Instruments Object <./api_instrument.html>`_
 
         """
-        logging.info("SMS: "+str(text))
-        sms.send_text(self.name +': '+ str(text), self.sms_numbers)
+        # raise NotImplementedError("Should implement on_tick()")
+        pass
 
+    # ---------------------------------------
+    @abstractmethod
+    def on_bar(self, instrument):
+        """
+        Invoked on every tick captured for the selected instrument.
+        This is where you'll write your strategy logic for tick events.
+
+        :Parameters:
+
+            instrument : object
+                `Instruments Object <./api_instrument.html>`_
+
+        """
+        # raise NotImplementedError("Should implement on_bar()")
+        pass
 
     # ---------------------------------------
     def get_instrument(self, symbol):
@@ -246,6 +253,32 @@ class Algo(Broker):
         instrument = Instrument(self._getsymbol_(symbol))
         instrument._set_parent(self)
         return instrument
+
+    # ---------------------------------------
+    def get_history(self, symbols, start, end=None, resolution="1T", tz="UTC"):
+        """Get historical market data.
+        Connects to Blotter and gets historical data from storage
+
+        :Parameters:
+            symbols : list
+                List of symbols to fetch history for
+            start : datetime / string
+                History time period start date (datetime or YYYY-MM-DD[ HH:MM[:SS]] string)
+
+        :Optional:
+            end : datetime / string
+                History time period end date (datetime or YYYY-MM-DD[ HH:MM[:SS]] string)
+            resolution : string
+                History resoluton (Pandas resample, defaults to 1T/1min)
+            tz : string
+                History timezone (defaults to UTC)
+
+        :Returns:
+            history : pd.DataFrame
+                Pandas DataFrame object with historical data for all symbols
+        """
+        return self.blotter.history(symbols, start, end, resolution, tz)
+
 
     # ---------------------------------------
     # shortcuts to broker._create_order
@@ -321,49 +354,41 @@ class Algo(Broker):
             if not self.backtest:
                 self._create_order(**kwargs)
 
-
     # ---------------------------------------
-    @abstractmethod
-    def on_start(self):
-        """
-        Invoked once when algo starts. Used for when the strategy
-        needs to initialize parameters upon starting.
+    def record(self, *args, **kwargs):
+        """Records data for later analysis.
+        Values will be logged to the file specified via
+        ``--output [file]`` (along with bar data) as
+        csv/pickle/h5 file.
 
-        """
-        # raise NotImplementedError("Should implement on_start()")
-        pass
-
-    # ---------------------------------------
-    @abstractmethod
-    def on_tick(self, instrument):
-        """
-        Invoked on every tick captured for the selected instrument.
-        This is where you'll write your strategy logic for tick events.
+        Call from within your strategy:
+        ``self.record(key=value)``
 
         :Parameters:
-
-            symbol : string
-                `Instruments Object <./api_instrument.html>`_
+            ** kwargs : mixed
+                The names and values to record
 
         """
-        # raise NotImplementedError("Should implement on_tick()")
-        pass
+        if self.record_output:
+            self.datastore.record(self.record_ts, *args, **kwargs)
+
 
     # ---------------------------------------
-    @abstractmethod
-    def on_bar(self, instrument):
-        """
-        Invoked on every tick captured for the selected instrument.
-        This is where you'll write your strategy logic for tick events.
+    def sms(self, text):
+        """Sends an SMS message.
+        Relies on properly setting up an SMS provider (refer to the
+        SMS section of the documentation for more information about this)
+
+        Call from within your strategy:
+        ``self.sms("message text")``
 
         :Parameters:
-
-            instrument : object
-                `Instruments Object <./api_instrument.html>`_
+            text : string
+                The body of the SMS message to send
 
         """
-        # raise NotImplementedError("Should implement on_bar()")
-        pass
+        logging.info("SMS: "+str(text))
+        sms.send_text(self.name +': '+ str(text), self.sms_numbers)
 
     # ---------------------------------------
     def _caller(self, caller):

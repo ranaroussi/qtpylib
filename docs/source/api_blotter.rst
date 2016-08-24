@@ -2,4 +2,5 @@ Blotter API
 ===========
 
 .. autoclass:: qtpylib.blotter.Blotter
-   :members: run
+    :members: run
+    :member-order: bysource

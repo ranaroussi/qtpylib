@@ -2,4 +2,5 @@ Reports API
 ===========
 
 .. autoclass:: qtpylib.reports.Reports
-   :members: run
+    :members: run
+    :member-order: bysource

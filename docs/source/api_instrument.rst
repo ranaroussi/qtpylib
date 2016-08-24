@@ -15,4 +15,5 @@ and ``on_bar(...)`` methods in your strategy:
 
 
 .. autoclass:: qtpylib.instrument.Instrument
-   :members:
+    :members:
+    :member-order: bysource

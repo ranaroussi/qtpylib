@@ -94,58 +94,6 @@ class Instrument(str):
         return ticks
 
     # ---------------------------------------
-    def get_margin_requirement(self):
-        """ Get margin requirements for intrument (futures only)
-
-        :Retruns:
-            margin : dict
-                margin requirements for instrument (all values are ``None`` for non-futures instruments)
-        """
-        cache_file = path['caller']+'/ib_margins.pkl'
-
-        contract = self.get_contract()
-
-        if contract.m_secType == "FUT":
-            return futures.get_ib_margin(cache_file, contract.m_symbol, contract.m_exchange)
-
-        # else...
-        return {
-            "exchange": None,
-            "symbol": None,
-            "description": None,
-            "class": None,
-            "intraday_initial": None,
-            "intraday_maintenance": None,
-            "overnight_initial": None,
-            "overnight_maintenance": None,
-            "currency": None,
-            "has_options": None
-        }
-
-
-    # ---------------------------------------
-    def get_margin_max_contracts(self, overnight=True):
-        """ Get maximum contracts allowed to trade
-        baed on required margin per contract and
-        current account balance (futures only)
-
-        :Parameters:
-            overnight : bool
-                Calculate based on Overnight margin (set to ``False`` to use Intraday margin req.)
-
-        :Retruns:
-            contracts : int
-                maximum contracts allowed to trade (returns ``None`` for non-futures)
-        """
-        timeframe = 'overnight_initial' if overnight else 'intraday_initial'
-        req_margin = self.get_futures_margin_requirement()
-        if req_margin[timeframe] is not None:
-            if 'AvailableFunds' in self.parent.account:
-                return int(math.floor(self.parent.account['AvailableFunds']/req_margin[timeframe]))
-
-        return None
-
-    # ---------------------------------------
     def order(self, direction, quantity, **kwargs):
         """ Send an order for this instrument
 
@@ -315,6 +263,58 @@ class Instrument(str):
         """
         return self.parent.modify_order(self, orderId, quantity, limit_price)
 
+
+    # ---------------------------------------
+    def get_margin_requirement(self):
+        """ Get margin requirements for intrument (futures only)
+
+        :Retruns:
+            margin : dict
+                margin requirements for instrument (all values are ``None`` for non-futures instruments)
+        """
+        cache_file = path['caller']+'/ib_margins.pkl'
+
+        contract = self.get_contract()
+
+        if contract.m_secType == "FUT":
+            return futures.get_ib_margin(cache_file, contract.m_symbol, contract.m_exchange)
+
+        # else...
+        return {
+            "exchange": None,
+            "symbol": None,
+            "description": None,
+            "class": None,
+            "intraday_initial": None,
+            "intraday_maintenance": None,
+            "overnight_initial": None,
+            "overnight_maintenance": None,
+            "currency": None,
+            "has_options": None
+        }
+
+
+    # ---------------------------------------
+    def get_margin_max_contracts(self, overnight=True):
+        """ Get maximum contracts allowed to trade
+        baed on required margin per contract and
+        current account balance (futures only)
+
+        :Parameters:
+            overnight : bool
+                Calculate based on Overnight margin (set to ``False`` to use Intraday margin req.)
+
+        :Retruns:
+            contracts : int
+                maximum contracts allowed to trade (returns ``None`` for non-futures)
+        """
+        timeframe = 'overnight_initial' if overnight else 'intraday_initial'
+        req_margin = self.get_futures_margin_requirement()
+        if req_margin[timeframe] is not None:
+            if 'AvailableFunds' in self.parent.account:
+                return int(math.floor(self.parent.account['AvailableFunds']/req_margin[timeframe]))
+
+        return None
 
     # ---------------------------------------
     @property
