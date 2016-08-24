@@ -89,6 +89,7 @@ def create_continous_contract(df, resolution="1T"):
             flags = pd.DataFrame(index=pd.date_range(start=flags[0:1].index[0],
                 periods=24, freq="1H"), data=flags[['symbol', 'expiry', 'gap']]).ffill()
 
+        flags['expiry'] = pd.to_datetime(flags['expiry'], utc=True)
         return flags[['symbol', 'expiry', 'gap']]
 
     # gonna need this later
@@ -114,7 +115,7 @@ def create_continous_contract(df, resolution="1T"):
     flags['datetime'] = flags.index
 
     # build contract
-    contract = pd.merge(df, flags, how='left', on=['datetime', 'symbol'])
+    contract = pd.merge(df, flags, how='left', on=['datetime', 'symbol']).ffill()
     contract.set_index('datetime', inplace=True)
 
     contract = contract[contract.expiry_y==contract.expiry_x]
