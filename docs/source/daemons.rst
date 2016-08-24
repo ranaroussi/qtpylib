@@ -1,5 +1,5 @@
-Run as a Service (Linux)
-========================
+Run as a Linux Service
+======================
 
 In many cases, it may be useful to run your code as a system service
 (aka "daemon"), so you can start/stop it using a Cron job, monitor

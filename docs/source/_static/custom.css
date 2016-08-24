@@ -49,3 +49,31 @@ code, .pre {
         margin: 0 0 12px;
     }
 }
+
+
+.wy-side-scroll {
+    padding-bottom: 60px;
+}
+#side-ext {
+    height: 40px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: #282626;
+    padding: 0 20px 0;
+    font-size: 13px;
+    line-height: 40px;
+    color: #666;
+}
+#side-ext a {
+    color: #ccc;
+    text-decoration: none;
+}
+#side-ext a:hover {
+    color: #fcfcfc;
+    text-decoration: none;
+}
+#side-ext a.fa:before {
+    margin-right: 6px;
+}

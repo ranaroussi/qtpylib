@@ -2,4 +2,8 @@
 {# Import the theme's layout. #}
 {% extends "!layout.html" %}
 
-{% set css_files = css_files + ['_static/custom.css?14.2'] %}
+{% set css_files = css_files + ['_static/custom.css?14.16'] %}
+
+{%- block extrahead %}
+<script type="text/javascript" src="{{ pathto("_static/custom.js?1.8", True) }}"></script>
+{% endblock %}
