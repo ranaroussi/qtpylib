@@ -16,7 +16,7 @@ Install QTPyLib using ``pip``
 
     .. code:: bash
 
-        $ pip install git+https://github.com/blampe/IbPy/archive/master.zip --user
+        $ pip install git+git://github.com/blampe/IbPy --user
 
 Uninstall QTPyLib
 ~~~~~~~~~~~~~~~~~~
