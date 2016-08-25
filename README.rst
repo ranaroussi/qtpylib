@@ -17,8 +17,8 @@ QTPyLib, Pythonic Algorithmic Trading
     :target: https://pypi.python.org/pypi/qtpylib
     :alt: PyPi status
 
-.. image:: https://readthedocs.org/projects/qtpy-lib/badge/?version=latest
-    :target: http://www.qtpylib.io/en/latest/?badge=latest
+.. image:: https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat
+    :target: http://qtpylib.io/docs/latest/?badge=latest
     :alt: Documentation Status
 
 .. image:: https://img.shields.io/github/stars/ranaroussi/qtpylib.svg?style=social&label=Star&maxAge=2592000
