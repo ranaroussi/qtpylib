@@ -2,8 +2,9 @@
 __pycache__/*
 qtpylib/__pycache__/*
 dist
-build
+/build
 /docs/build/doctrees/*
+/docs/build/html/*
 /docs/build/epub/*
 !/docs/build/epub/*.epub
 qtpylib.egg-info
