@@ -49,7 +49,9 @@ code, .pre {
         margin: 0 0 12px;
     }
 }
-
+.wy-side-nav-search .version {
+    display: none;
+}
 
 .wy-side-scroll {
     padding-bottom: 60px;
@@ -61,7 +63,7 @@ code, .pre {
     left: 0;
     width: 100%;
     background: #282626;
-    padding: 0 20px 0;
+    padding: 0 18px 0;
     font-size: 13px;
     line-height: 40px;
     color: #666;
