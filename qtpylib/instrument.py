@@ -102,7 +102,7 @@ class Instrument(str):
             direction : string
                 Order Type (BUY/SELL, EXIT/FLATTEN)
             quantity : int
-                Order quantiry
+                Order quantity
 
         :Optional:
 
@@ -129,24 +129,126 @@ class Instrument(str):
         self.parent.order(direction.upper(), self, quantity, **kwargs)
 
     # ---------------------------------------
+    def market_order(self, direction, quantity, **kwargs):
+        """ Shortcut for ``instrument.order(...)`` and accepts all of its
+        `optional parameters <#qtpylib.instrument.Instrument.order>`_
+
+        :Parameters:
+            direction : string
+                Order Type (BUY/SELL, EXIT/FLATTEN)
+            quantity : int
+                Order quantity
+        """
+        kwargs['limit_price'] = 0
+        kwargs['order_type'] = "MARKET"
+        self.parent.order(direction.upper(), self, quantity=quantity, **kwargs)
+
+    # ---------------------------------------
+    def limit_order(self, direction, quantity, price, **kwargs):
+        """ Shortcut for ``instrument.order(...)`` and accepts all of its
+        `optional parameters <#qtpylib.instrument.Instrument.order>`_
+
+        :Parameters:
+            direction : string
+                Order Type (BUY/SELL, EXIT/FLATTEN)
+            quantity : int
+                Order quantity
+            price : float
+                Limit price
+        """
+        kwargs['limit_price'] = price
+        kwargs['order_type'] = "LIMIT"
+        self.parent.order(direction.upper(), self, quantity=quantity, **kwargs)
+
+    # ---------------------------------------
     def buy(self, quantity, **kwargs):
-        """ Shortcut for ``self.order("BUY", ...)`` `(ref) <#qtpylib.instrument.Instrument.order>`_ """
-        self.parent.order("BUY", self, quantity, **kwargs)
+        """ Shortcut for ``instrument.order("BUY", ...)`` and accepts all of its
+        `optional parameters <#qtpylib.instrument.Instrument.order>`_
+
+        :Parameters:
+            quantity : int
+                Order quantity
+        """
+        self.parent.order("BUY", self, quantity=quantity, **kwargs)
+
+    # ---------------------------------------
+    def buy_market(self, quantity, **kwargs):
+        """ Shortcut for ``instrument.order("BUY", ...)`` and accepts all of its
+        `optional parameters <#qtpylib.instrument.Instrument.order>`_
+
+        :Parameters:
+            quantity : int
+                Order quantity
+        """
+        kwargs['limit_price'] = 0
+        kwargs['order_type'] = "MARKET"
+        self.parent.order("BUY", self, quantity=quantity, **kwargs)
+
+    # ---------------------------------------
+    def buy_limit(self, quantity, price, **kwargs):
+        """ Shortcut for ``instrument.order("BUY", ...)`` and accepts all of its
+        `optional parameters <#qtpylib.instrument.Instrument.order>`_
+
+        :Parameters:
+            quantity : int
+                Order quantity
+            price : float
+                Limit price
+        """
+        kwargs['limit_price'] = price
+        kwargs['order_type'] = "LIMIT"
+        self.parent.order("BUY", self, quantity=quantity, **kwargs)
 
     # ---------------------------------------
     def sell(self, quantity, **kwargs):
-        """ Shortcut for ``self.order("SELL", ...)`` `(ref) <#qtpylib.instrument.Instrument.order>`_ """
-        self.parent.order("SELL", self, quantity, **kwargs)
+        """ Shortcut for ``instrument.order("SELL", ...)`` and accepts all of its
+        `optional parameters <#qtpylib.instrument.Instrument.order>`_
+
+        :Parameters:
+            quantity : int
+                Order quantity
+        """
+        self.parent.order("SELL", self, quantity=quantity, **kwargs)
 
     # ---------------------------------------
-    def exit(self, **kwargs):
-        """ Shortcut for ``self.order("EXIT", ...)`` `(ref) <#qtpylib.instrument.Instrument.order>`_ """
-        self.parent.order("EXIT", self, quantity=0, **kwargs)
+    def sell_market(self, quantity, **kwargs):
+        """ Shortcut for ``instrument.order("SELL", ...)`` and accepts all of its
+        `optional parameters <#qtpylib.instrument.Instrument.order>`_
+
+        :Parameters:
+            quantity : int
+                Order quantity
+        """
+        kwargs['limit_price'] = 0
+        kwargs['order_type'] = "MARKET"
+        self.parent.order("SELL", self, quantity=quantity, **kwargs)
 
     # ---------------------------------------
-    def flatten(self, **kwargs):
-        """ Shortcut for ``self.order("FLATTEN", ...)`` `(ref) <#qtpylib.instrument.Instrument.order>`_ """
-        self.parent.order("FLATTEN", self, quantity=0, **kwargs)
+    def sell_limit(self, quantity, price, **kwargs):
+        """ Shortcut for ``instrument.order("SELL", ...)`` and accepts all of its
+        `optional parameters <#qtpylib.instrument.Instrument.order>`_
+
+        :Parameters:
+            quantity : int
+                Order quantity
+            price : float
+                Limit price
+        """
+        kwargs['limit_price'] = price
+        kwargs['order_type'] = "LIMIT"
+        self.parent.order("SELL", self, quantity=quantity, **kwargs)
+
+    # ---------------------------------------
+    def exit(self):
+        """ Shortcut for ``instrument.order("EXIT", ...)``
+        (accepts no parameters)"""
+        self.parent.order("EXIT", self)
+
+    # ---------------------------------------
+    def flatten(self):
+        """ Shortcut for ``instrument.order("FLATTEN", ...)``
+        (accepts no parameters)"""
+        self.parent.order("FLATTEN", self)
 
     # ---------------------------------------
     def get_contract(self):
