@@ -133,8 +133,8 @@ While the Blotter running in the background, write and execute your algorithm:
             if bars['short_ma'].crossed_above(bars['long_ma'])[-1]:
                 if not instrument.pending_orders and positions["position"] == 0:
 
-                    # send a buy signal
-                    self.signal("BUY", instrument, 1)
+                    # buy one contract
+                    instrument.buy(1)
 
                     # record values for later analysis
                     self.record(ma_cross=1)
@@ -144,7 +144,7 @@ While the Blotter running in the background, write and execute your algorithm:
                 if positions["position"] != 0:
 
                     # exit / flatten position
-                    self.signal("EXIT", instrument)
+                    instrument.exit()
 
                     # record values for later analysis
                     self.record(ma_cross=-1)
@@ -154,10 +154,10 @@ While the Blotter running in the background, write and execute your algorithm:
         strategy = CrossOver(
             instruments = [ ("ES", "FUT", "GLOBEX", "USD", 201609, 0.0, "") ], # ib tuples
             resolution  = "1T", # Pandas resolution (use "K" for tick bars)
-            tick_window = 20,
-            bar_window  = 5,
-            preload     = "1D",
-            timezone    = "US/Central"
+            tick_window = 20, # no. of ticks to keep
+            bar_window  = 5, # no. of bars to keep
+            preload     = "1D", # preload 1 day history when starting
+            timezone    = "US/Central" # convert all ticks/bars to this timezone
         )
         strategy.run()
 

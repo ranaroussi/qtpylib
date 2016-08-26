@@ -14,6 +14,17 @@ code, .pre {
     line-height: 1;
 }
 
+footer {
+    font-size: 13px;
+}
+.wy-nav-content {
+    max-width: 100% !important;
+}
+.rst-content {
+    max-width: 960px !important;
+    margin: auto;
+}
+
 .rst-content dl:not(.docutils) code {
     font-weight: normal;
 }
