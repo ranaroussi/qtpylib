@@ -1,11 +1,20 @@
 API Reference
 =============
 
-.. toctree::
-   :maxdepth: 1
+.. include:: ./api_instrument.rst
 
-   api_instrument
-   api_algo
-   api_blotter
-   api_reports
-   api_broker
+-----
+
+.. include:: ./api_algo.rst
+
+-----
+
+.. include:: ./api_blotter.rst
+
+-----
+
+.. include:: ./api_reports.rst
+
+-----
+
+.. include:: ./api_broker.rst

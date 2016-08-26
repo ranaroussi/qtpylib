@@ -211,7 +211,7 @@ class Algo(Broker):
         :Parameters:
 
             symbol : string
-                `Instruments Object <./api_instrument.html>`_
+                `Instruments Object <#instrument-api>`_
 
         """
         # raise NotImplementedError("Should implement on_tick()")
@@ -227,7 +227,7 @@ class Algo(Broker):
         :Parameters:
 
             instrument : object
-                `Instruments Object <./api_instrument.html>`_
+                `Instruments Object <#instrument-api>`_
 
         """
         # raise NotImplementedError("Should implement on_bar()")
@@ -238,7 +238,7 @@ class Algo(Broker):
         """
         A string subclass that provides easy access to misc
         symbol-related methods and information using shorthand.
-        Refer to the `Instruments API <./api_instrument.html>`_
+        Refer to the `Instruments API <#instrument-api>`_
         for available methods and properties
 
         Call from within your strategy:

@@ -1,5 +1,5 @@
 Algo API
-========
+--------
 
 Algo is a Sub-Class of Broker and the Parent Class for your strategies.
 Aside from ``algo.run(...)``, all the other methods should be called

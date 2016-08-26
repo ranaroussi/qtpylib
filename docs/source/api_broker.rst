@@ -1,5 +1,5 @@
 Broker API
-==========
+----------
 
 Broker is the Parent Class of Algo, which, in turn, is the
 Parent Class for your strategies. All the following methods
