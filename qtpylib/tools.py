@@ -383,6 +383,10 @@ class DataStore():
         self.recorded = self.recorded.groupby(self.recorded.index).sum()
         self.recorded.index.rename('datetime', inplace=True)
 
+        # forward fill positions
+        if "position" in self.recorded.columns:
+            self.recorded['position'].ffill(inplace=True)
+
         if ".csv" in self.output_file:
             self.recorded.to_csv(self.output_file)
         elif ".h5" in self.output_file:
