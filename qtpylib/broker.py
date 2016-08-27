@@ -34,7 +34,7 @@ import tempfile
 from datetime import datetime, timedelta
 
 from qtpylib import (
-    tools, sms
+    tools, sms, futures
 )
 
 from abc import ABCMeta
@@ -76,9 +76,38 @@ class Broker():
         instrument_tuples_dict = {}
         for instrument in instruments:
             try:
-                # signgle stock string
+                # signgle string
                 if isinstance(instrument, str):
-                    instrument = (instrument, "STK", "SMART", "USD", "", 0.0, "")
+                    instrument = instrument.upper()
+
+                    if "FUT." not in instrument:
+                        # symbol stock
+                        instrument = (instrument, "STK", "SMART", "USD", "", 0.0, "")
+
+                    else:
+                        # future contract
+                        try:
+                            symdata = instrument.split(".")
+
+                            # auto get contract details
+                            spec = futures.get_ib_futures(symdata[1])
+                            if not isinstance(spec, dict):
+                                raise ValueError("Un-parsable contract tuple")
+
+                            # expiry specified?
+                            if len(symdata) == 3 and symdata[2] != '':
+                                expiry = symdata[2]
+                            else:
+                                # default to most active
+                                expiry = futures.get_active_contract(symdata[1])
+
+                            instrument = (spec['symbol'].upper(), "FUT",
+                                spec['exchange'].upper(), spec['currency'].upper(),
+                                int(expiry), 0.0, "")
+
+                        except:
+                            raise ValueError("Un-parsable contract tuple")
+
 
                 # tuples without strike/right
                 elif len(instrument) <= 7:
