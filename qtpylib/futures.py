@@ -226,8 +226,12 @@ def get_ib_margin(cache_file, symbol=None, exchange=None):
                 df = pd.read_pickle(cache_file)
 
 
-            if symbol is not None and exchange is not None:
-                return df[(df['exchange']==exchange) & (df['symbol']==symbol)
+            if symbol is not None:
+                if exchange is None:
+                    return df[df['symbol']==symbol].to_dict(orient='records')[0]
+
+                return df[
+                    (df['exchange']==exchange) & (df['symbol']==symbol)
                 ].to_dict(orient='records')[0]
 
             return df
@@ -287,8 +291,12 @@ def get_ib_margin(cache_file, symbol=None, exchange=None):
         df.to_pickle(cache_file)
 
 
-    if symbol is not None and exchange is not None:
-        return df[(df['exchange']==exchange) & (df['symbol']==symbol)
+    if symbol is not None:
+        if exchange is None:
+            return df[df['symbol']==symbol].to_dict(orient='records')[0]
+
+        return df[
+            (df['exchange']==exchange) & (df['symbol']==symbol)
         ].to_dict(orient='records')[0]
 
     return df
