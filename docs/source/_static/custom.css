@@ -14,6 +14,36 @@ code, .pre {
     line-height: 1;
 }
 
+ul.wy-breadcrumbs {
+    background: url(icon.png) 0 4px no-repeat;
+    padding-left: 20px;
+    background-size: 14px;
+}
+.wy-side-nav-search, .wy-nav-top {
+    background: #111;
+}
+.wy-nav-top {
+    line-height: 1;
+}
+.wy-nav-top i {
+    margin-top: 4px;
+}
+.wy-side-nav-search a.icon-home, .wy-nav-top a {
+    background: #111 url(sidebar-logo.png) 0 50% no-repeat;
+    height: 40px;
+    background-size: 86px 40px;
+    text-indent: -5000px;
+    width: 86px;
+    opacity: .9;
+    display: inline-block;
+}
+.wy-side-nav-search a.icon-home:hover, .wy-nav-top a:hover {
+    opacity: 1;
+}
+.wy-side-nav-search input[type=text] {
+    border-color: #f5f5f5;
+}
+
 footer {
     font-size: 13px;
 }
