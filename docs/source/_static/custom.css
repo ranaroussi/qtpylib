@@ -14,6 +14,16 @@ code, .pre {
     line-height: 1;
 }
 
+h1, h2, .rst-content .toctree-wrapper p.caption, h3, h4, h5, h6, legend {
+    font-family: Lato, "Roboto Slab", "ff-tisa-web-pro", "Georgia", Arial, sans-serif;
+}
+h1 {
+    font-size: 200%;
+}
+.wy-breadcrumbs-aside a {
+    font-size: 14px;
+    line-height: 20px;
+}
 ul.wy-breadcrumbs {
     background: url(icon.png) 0 4px no-repeat;
     padding-left: 20px;
