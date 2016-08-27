@@ -26,6 +26,7 @@ import numpy as np
 import requests
 import re
 import time
+import tempfile
 
 from bs4 import BeautifulSoup as bs
 from dateutil.parser import parse as parse_date
@@ -214,10 +215,12 @@ def get_contract_ticksize(symbol, fallback=0.01):
 
 
 # -------------------------------------------
-def get_ib_margin(cache_file, symbol=None, exchange=None):
+def get_ib_futures(symbol=None, exchange=None, ttl=86400):
+
+    cache_file = tempfile.gettempdir()+"/futures_spec.pkl"
 
     if os.path.exists(cache_file):
-        if (int(time.time()) - int(os.path.getmtime(cache_file))) < 86400:
+        if (int(time.time()) - int(os.path.getmtime(cache_file))) < ttl:
             if ".csv" in cache_file:
                 df = pd.read_csv(cache_file)
             elif ".h5" in cache_file:

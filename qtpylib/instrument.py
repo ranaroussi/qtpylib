@@ -374,12 +374,10 @@ class Instrument(str):
             margin : dict
                 margin requirements for instrument (all values are ``None`` for non-futures instruments)
         """
-        cache_file = path['caller']+'/ib_margins.pkl'
-
         contract = self.get_contract()
 
         if contract.m_secType == "FUT":
-            return futures.get_ib_margin(cache_file, contract.m_symbol, contract.m_exchange)
+            return futures.get_ib_futures(contract.m_symbol, contract.m_exchange)
 
         # else...
         return {
