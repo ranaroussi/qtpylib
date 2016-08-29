@@ -35,6 +35,7 @@ class Instrument(str):
         """ sets the parent object to communicate with """
         self.parent = parent
 
+
     # ---------------------------------------
     def get_bars(self, lookback=None, as_dict=False):
         """ Get bars for this instrument
@@ -417,6 +418,17 @@ class Instrument(str):
         return None
 
     # ---------------------------------------
+    def get_ticksize(self, fallback=0.01):
+        """ Get instrument ticksize """
+        if hasattr(self, "ticksize_float"):
+            return self.ticksize_float
+
+        contract = self.get_contract()
+        if contract.m_secType == "FUT":
+            self.ticksize_float = futures.get_contract_ticksize(contract.m_symbol, fallback)
+            return self.ticksize_float
+
+    # ---------------------------------------
     @property
     def symbol(self):
         """(Property) Shortcut to self.get_symbol()"""
@@ -470,4 +482,10 @@ class Instrument(str):
         """(Property) Shortcut to self.get_margin_max_contracts()"""
         return self.get_margin_max_contracts()
 
+
+    # ---------------------------------------
+    @property
+    def ticksize(self):
+        """(Property) Shortcut to self.get_ticksize()"""
+        return self.get_ticksize()
 
