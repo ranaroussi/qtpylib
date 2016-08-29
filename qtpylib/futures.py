@@ -197,7 +197,19 @@ def get_active_contract(symbol, url=None, n=1):
 
 
 # -------------------------------------------
-def get_contract_ticksize(symbol, fallback=0.01):
+def get_contract_ticksize(symbol, fallback=0.01, ttl=84600):
+
+    cache_file = tempfile.gettempdir()+"/ticksizes.pkl"
+
+    if os.path.exists(cache_file):
+        df = pd.read_pickle(cache_file)
+        if (int(time.time()) - int(os.path.getmtime(cache_file))) < ttl:
+            filtered = df[df['symbol']==symbol]
+            if len(filtered) > 0:
+                return float(filtered['ticksize'].values[0])
+
+    # continue...
+
     try:
         url = _get_futures_url(symbol, 'contract_specifications')
     except:
@@ -209,9 +221,20 @@ def get_contract_ticksize(symbol, fallback=0.01):
     html = bs(requests.get(url).text.lower(), 'html.parser')
     try:
         ticksize = html.text.split('minimum price fluctuation')[1].split(' ')[0]
-        return float(re.compile(r'[^\d.]+').sub('', ticksize))
+        ticksize = float(re.compile(r'[^\d.]+').sub('', ticksize))
     except:
-        return fallback
+        ticksize = fallback
+
+    symdf = pd.DataFrame(index=[0], data={'symbol':symbol, 'ticksize':ticksize})
+    if os.path.exists(cache_file):
+        df = df[df['symbol']!=symbol].append(symdf[['symbol', 'ticksize']])
+    else:
+        df = symdf
+
+    # save
+    df.to_pickle(cache_file)
+
+    return float(ticksize)
 
 
 # -------------------------------------------
