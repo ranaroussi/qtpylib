@@ -89,6 +89,10 @@ class Broker():
                         try:
                             symdata = instrument.split(".")
 
+                            # is this a CME future?
+                            if symdata[1] not in futures.futures_contracts.keys():
+                                raise ValueError("Un-supported symbol. Please use full contract tuple.")
+
                             # auto get contract details
                             spec = futures.get_ib_futures(symdata[1])
                             if not isinstance(spec, dict):
