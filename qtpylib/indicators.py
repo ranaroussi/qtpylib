@@ -115,6 +115,7 @@ def crossed_below(series1, series2):
 
 # ---------------------------------------------------------
 def rolling_std(series, window=200, min_periods=None):
+    if min_periods is None: min_periods = window
     try:
         try:
             res = series.rolling(window=window, min_periods=min_periods).std()
@@ -127,6 +128,7 @@ def rolling_std(series, window=200, min_periods=None):
 
 # ---------------------------------------------------------
 def rolling_mean(series, window=200, min_periods=None):
+    if min_periods is None: min_periods = window
     try:
         try:
             res = series.rolling(window=window, min_periods=min_periods).mean()
@@ -139,6 +141,7 @@ def rolling_mean(series, window=200, min_periods=None):
 
 # ---------------------------------------------------------
 def rolling_min(series, window=14, min_periods=None):
+    if min_periods is None: min_periods = window
     try:
         try:
             res = series.rolling(window=window, min_periods=min_periods).min()
@@ -151,6 +154,7 @@ def rolling_min(series, window=14, min_periods=None):
 
 # ---------------------------------------------------------
 def rolling_max(series, window=14, min_periods=None):
+    if min_periods is None: min_periods = window
     try:
         try:
             res = series.rolling(window=window, min_periods=min_periods).min()
@@ -163,6 +167,7 @@ def rolling_max(series, window=14, min_periods=None):
 
 # ---------------------------------------------------------
 def rolling_weighted_mean(series, window=200, min_periods=None):
+    if min_periods is None: min_periods = window
     try:
         res = series.ewm(span=window, min_periods=min_periods).mean()
     except:
@@ -171,7 +176,7 @@ def rolling_weighted_mean(series, window=200, min_periods=None):
     return pd.Series(index=series.index, data=res)
 
 # ---------------------------------------------------------
-def hull_moving_average(series, window=200, min_periods=None):
+def hull_moving_average(series, window=200):
     wma = (2*rolling_weighted_mean(series, window=window/2)) - rolling_weighted_mean(series, window=window)
     return rolling_weighted_mean(wma, window=np.sqrt(window))
 
@@ -182,8 +187,8 @@ def sma(series, window=200, min_periods=None):
 def wma(series, window=200, min_periods=None):
     return rolling_weighted_mean(series, window=window, min_periods=min_periods)
 
-def hma(series, window=200, min_periods=None):
-    return hull_moving_average(series, window=window, min_periods=min_periods)
+def hma(series, window=200):
+    return hull_moving_average(series, window=window)
 
 # ---------------------------------------------------------
 def vwap(bars):
@@ -360,9 +365,7 @@ def stoch(bars, window=14, slow=False, slow_ma=3):
     return pd.DataFrame(index=bars.index, data={ 'k': k, 'r': r })
 
 # ---------------------------------------------------------
-PandasObject.session    = session
-
-
+PandasObject.session                  = session
 PandasObject.atr                      = atr
 PandasObject.bollinger_bands          = bollinger_bands
 PandasObject.cci                      = cci
@@ -387,7 +390,7 @@ PandasObject.mid_price                = mid_price
 PandasObject.typical_price            = typical_price
 PandasObject.vwap                     = vwap
 PandasObject.weighted_bollinger_bands = weighted_bollinger_bands
-PandasObject.rolling_weighted_mean            = rolling_weighted_mean
+PandasObject.rolling_weighted_mean    = rolling_weighted_mean
 
 PandasObject.sma = sma
 PandasObject.wma = wma
