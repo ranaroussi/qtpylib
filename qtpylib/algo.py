@@ -405,6 +405,7 @@ class Algo(Broker):
             self.ticks = self._update_window(self.ticks, tick)
             bar = tools.resample(self.ticks, self.resolution)
             if len(bar) > self.tick_bar_count > 0:
+                self.record_ts = tick.index[0]
                 self._bar_handler(bar)
 
                 periods = int("".join([s for s in self.resolution if s.isdigit()]))
@@ -413,7 +414,6 @@ class Algo(Broker):
             self.tick_bar_count = len(bar)
 
             # record tick bar
-            self.record_ts = tick.index[0]
             self.record(bar)
 
         self.on_tick(self.get_instrument(tick))
@@ -446,13 +446,11 @@ class Algo(Broker):
         self.bar_hash = this_bar_hash
 
         if newbar & handle_bar:
+            self.record_ts = bar.index[0]
             self.on_bar(self.get_instrument(bar))
 
             if "K" not in self.resolution:
-                self.record_ts = bar.index[0]
                 self.record(bar)
-        # else:
-        #     print("\n\nIGNORE BAR\n\n")
 
 
     # ---------------------------------------
