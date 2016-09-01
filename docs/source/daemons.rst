@@ -58,7 +58,7 @@ Next, change the permission on that file to **644**:
 
 
 Enable The Service using ``systemctl``
--------------------------------------
+--------------------------------------
 
 Now the system file has been defined, we need to reload ``systemctl``:
 
