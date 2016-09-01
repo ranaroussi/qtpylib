@@ -472,8 +472,10 @@ class Broker():
                 trades = trades.append(trade_df, ignore_index=True)
                 trades.drop_duplicates(['entry_time', 'symbol', 'strategy'], keep="last", inplace=True)
                 trades.to_csv(trade_log_path, header=True, index=False)
+                tools.chmod(trade_log_path)
             else:
                 trade_df.to_csv(trade_log_path, header=True, index=False)
+                tools.chmod(trade_log_path)
 
 
     # ---------------------------------------

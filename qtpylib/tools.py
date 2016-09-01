@@ -23,11 +23,20 @@ import datetime
 import numpy as np
 import pandas as pd
 import time
+import os
+from stat import S_IWRITE
 
 from dateutil.relativedelta import relativedelta, FR
 from dateutil.parser import parse as parse_date
 from pytz import timezone
 
+# =============================================
+def chmod(f):
+    """ change mod to writeable """
+    try: os.chmod(f, S_IWRITE) # windows (cover all)
+    except: pass
+    try: os.chmod(f, 0o777) # *nix
+    except: pass
 
 # =============================================
 def as_dict(df, ix=':'):
@@ -394,3 +403,4 @@ class DataStore():
         elif (".pickle" in self.output_file) | (".pkl" in self.output_file):
             self.recorded.to_pickle(self.output_file)
 
+        chmod(self.output_file)

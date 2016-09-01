@@ -233,6 +233,7 @@ def get_contract_ticksize(symbol, fallback=0.01, ttl=84600):
 
     # save
     df.to_pickle(cache_file)
+    tools.chmod(cache_file)
 
     return float(ticksize)
 
@@ -316,6 +317,7 @@ def get_ib_futures(symbol=None, exchange=None, ttl=86400):
     elif (".pickle" in cache_file) | (".pkl" in cache_file):
         df.to_pickle(cache_file)
 
+    tools.chmod(cache_file)
 
     if symbol is not None:
         if exchange is None:

@@ -214,6 +214,7 @@ class Blotter():
 
     def _write_cached_args(self):
         pickle.dump(self.args, open(self.args_cache_file, "wb"))
+        tools.chmod(self.args_cache_file)
 
     # -------------------------------------------
     def load_cli_args(self):
@@ -476,6 +477,7 @@ class Blotter():
                     pd.DataFrame(columns=['symbol','sec_type','exchange',
                         'currency','expiry','strike','opt_type']
                     ).to_csv(self.args['symbols'], header=True, index=False)
+                    tools.chmod(self.args['symbols'])
                 else:
                     time.sleep(0.1)
 
@@ -513,6 +515,7 @@ class Blotter():
                     ]
                     df.fillna("", inplace=True)
                     df.to_csv(self.args['symbols'], header=True, index=False)
+                    tools.chmod(self.args['symbols'])
 
                     df = df[df['symbol'].str.contains("#")==False] # ignore commentee
                     contracts = [tuple(x) for x in df.values]
@@ -705,6 +708,7 @@ class Blotter():
 
         db = db.append(instruments).drop_duplicates(keep="first")
         db.to_csv(self.args['symbols'], header=True, index=False)
+        tools.chmod(self.args['symbols'])
 
 
     # -------------------------------------------
