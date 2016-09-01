@@ -245,13 +245,7 @@ def get_ib_futures(symbol=None, exchange=None, ttl=86400):
 
     if os.path.exists(cache_file):
         if (int(time.time()) - int(os.path.getmtime(cache_file))) < ttl:
-            if ".csv" in cache_file:
-                df = pd.read_csv(cache_file)
-            elif ".h5" in cache_file:
-                df = pd.read_hdf(cache_file, 0)
-            elif (".pickle" in cache_file) | (".pkl" in cache_file):
-                df = pd.read_pickle(cache_file)
-
+            df = pd.read_pickle(cache_file)
 
             if symbol is not None:
                 if exchange is None:
@@ -310,13 +304,7 @@ def get_ib_futures(symbol=None, exchange=None, ttl=86400):
     df.dropna(how='all', inplace=True)
 
     # output
-    if ".csv" in cache_file:
-        df.to_csv(cache_file, index=False)
-    elif ".h5" in cache_file:
-        df.to_hdf(cache_file, 0)
-    elif (".pickle" in cache_file) | (".pkl" in cache_file):
-        df.to_pickle(cache_file)
-
+    df.to_pickle(cache_file)
     tools.chmod(cache_file)
 
     if symbol is not None:
