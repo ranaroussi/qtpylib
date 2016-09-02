@@ -509,8 +509,8 @@ class Blotter():
 
                     # removed expired
                     df = df[
-                        ( (df['expiry'] <1000000) & (df['expiry']>=int(datetime.now().strftime('%Y%m'  ))+1) ) |
-                        ( (df['expiry']>=1000000) & (df['expiry']>=int(datetime.now().strftime('%Y%m%d'))+1) ) |
+                        ( (df['expiry'] <1000000) & (df['expiry']>=int(datetime.now().strftime('%Y%m'  ))) ) |
+                        ( (df['expiry']>=1000000) & (df['expiry']>=int(datetime.now().strftime('%Y%m%d'))) ) |
                         isnan(df['expiry'])
                     ]
                     df.fillna("", inplace=True)
