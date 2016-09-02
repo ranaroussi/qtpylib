@@ -21,11 +21,11 @@ QTPyLib, Pythonic Algorithmic Trading
     :target: http://qtpylib.io/docs/latest/?badge=latest
     :alt: Documentation Status
 
-.. image:: https://img.shields.io/github/stars/ranaroussi/qtpylib.svg?style=social&label=Star&maxAge=2592000
+.. image:: https://img.shields.io/github/stars/ranaroussi/qtpylib.svg?style=social&label=Star&maxAge=60
     :target: https://github.com/ranaroussi/qtpylib
     :alt: Star this repo
 
-.. image:: https://img.shields.io/twitter/follow/aroussi.svg?style=social&label=Follow%20Me&maxAge=2592000
+.. image:: https://img.shields.io/twitter/follow/aroussi.svg?style=social&label=Follow%20Me&maxAge=60
     :target: https://twitter.com/aroussi
     :alt: Follow me on twitter
 
