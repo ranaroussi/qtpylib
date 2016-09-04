@@ -19,10 +19,7 @@
 # limitations under the License.
 #
 
-from qtpylib import (
-    path, futures
-)
-
+from qtpylib import futures
 import math
 
 class Instrument(str):
