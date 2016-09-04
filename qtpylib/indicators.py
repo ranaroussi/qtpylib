@@ -62,6 +62,14 @@ def session(df, start='17:00', end='16:00'):
 
     return df
 
+# ---------------------------------------------------------
+def heikinashi(df, columns=('open', 'high', 'low', 'close')):
+    ha_close = (df[columns[0]] + df[columns[1]] + df[columns[2]] + df[columns[3]]) / 4
+    ha_open  = (df[columns[0]].shift(1) + df[columns[3]].shift(1)) / 2
+    ha_high  = df.loc[:, ['high', 'ha_open', 'ha_close']].max(axis=1)
+    ha_low   = df.loc[:, ['low', 'ha_open', 'ha_close']].min(axis=1)
+
+    return pd.DataFrame(index=df.index, data={'open': ha_open, 'high':ha_high, 'low':ha_low, 'close':ha_close})
 
 # ---------------------------------------------------------
 def nans(len=1):
@@ -371,6 +379,7 @@ PandasObject.bollinger_bands          = bollinger_bands
 PandasObject.cci                      = cci
 PandasObject.crossed_above            = crossed_above
 PandasObject.crossed_below            = crossed_below
+PandasObject.heikinashi               = heikinashi
 PandasObject.hull_moving_average      = hull_moving_average
 PandasObject.ibs                      = ibs
 PandasObject.implied_volatility       = implied_volatility
