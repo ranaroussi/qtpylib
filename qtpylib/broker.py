@@ -145,14 +145,6 @@ class Broker():
         self.symbols = list(self.instruments.keys())
 
         # -----------------------------------
-        # easy access to ibconn objects
-        self.orderbook = self.ibConn.marketDepthData
-        self.account   = self.ibConn.account
-        self.positions = self.ibConn.positions
-        self.portfolio = self.ibConn.portfolio
-        self.contracts = self.ibConn.contracts
-
-        # -----------------------------------
         # track orders & trades
         self.active_trades = {}
         self.trades = []
@@ -690,6 +682,10 @@ class Broker():
         return symbol
 
     # ---------------------------------------
+    def get_account(self):
+        return self.ibConn.account
+
+    # ---------------------------------------
     def get_contract(self, symbol):
         return self.ibConn.contracts[self.ibConn.tickerId(symbol)]
 
@@ -706,8 +702,8 @@ class Broker():
     def get_orderbook(self, symbol):
         symbol = self._getsymbol_(symbol)
 
-        if symbol in self.positions:
-            return self.orderbook[symbol]
+        if symbol in self.ibConn.orderbook:
+            return self.ibConn.orderbook[symbol]
 
         return {
             "bid":0, "bidsize":0,
@@ -718,8 +714,8 @@ class Broker():
     def get_positions(self, symbol):
         symbol = self._getsymbol_(symbol)
 
-        if symbol in self.positions:
-            return self.positions[symbol]
+        if symbol in self.ibConn.positions:
+            return self.ibConn.positions[symbol]
 
         return {
             "symbol": symbol,
@@ -733,10 +729,10 @@ class Broker():
         if (symbol is not None):
             symbol = self._getsymbol_(symbol)
 
-            if (symbol in self.positions):
-                return self.portfolio[symbol]
+            if (symbol in self.ibConn.portfolio):
+                return self.ibConn.portfolio[symbol]
 
-        return self.portfolio
+        return self.ibConn.portfolio
 
 
     # ---------------------------------------
