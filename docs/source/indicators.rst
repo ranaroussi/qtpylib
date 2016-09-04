@@ -63,6 +63,17 @@ Crossed Above/Below
         ...
 
 
+Heikin Ashi
+-----------
+
+.. code:: python
+
+    # return heiken ashi ohlc based on bar's ohlc
+    heikinashi = bars.heikinashi()
+    heikinashi[['open', 'high', 'low', 'close']]
+    ...
+
+
 IBS
 ---------------------------
 
