@@ -126,62 +126,52 @@ def rolling_std(series, window=200, min_periods=None):
     if min_periods is None: min_periods = window
     try:
         try:
-            res = series.rolling(window=window, min_periods=min_periods).std()
+            return series.rolling(window=window, min_periods=min_periods).std()
         except:
-            res = pd.Series(series).rolling(window=window, min_periods=min_periods).std()
+            return pd.Series(series).rolling(window=window, min_periods=min_periods).std()
     except:
-        res = pd.rolling_std(series, window=window, min_periods=min_periods)
-
-    return pd.Series(index=series.index, data=res)
+        return pd.rolling_std(series, window=window, min_periods=min_periods)
 
 # ---------------------------------------------------------
 def rolling_mean(series, window=200, min_periods=None):
     if min_periods is None: min_periods = window
     try:
         try:
-            res = series.rolling(window=window, min_periods=min_periods).mean()
+            return series.rolling(window=window, min_periods=min_periods).mean()
         except:
-            res = pd.Series(series).rolling(window=window, min_periods=min_periods).mean()
+            return pd.Series(series).rolling(window=window, min_periods=min_periods).mean()
     except:
-        res = pd.rolling_mean(series, window=window, min_periods=min_periods)
-
-    return pd.Series(index=series.index, data=res)
+        return pd.rolling_mean(series, window=window, min_periods=min_periods)
 
 # ---------------------------------------------------------
 def rolling_min(series, window=14, min_periods=None):
     if min_periods is None: min_periods = window
     try:
         try:
-            res = series.rolling(window=window, min_periods=min_periods).min()
+            return series.rolling(window=window, min_periods=min_periods).min()
         except:
-            res = pd.Series(series).rolling(window=window, min_periods=min_periods).min()
+            return pd.Series(series).rolling(window=window, min_periods=min_periods).min()
     except:
-        res = pd.rolling_min(series, window=window, min_periods=min_periods)
-
-    return pd.Series(index=series.index, data=res)
+        return pd.rolling_min(series, window=window, min_periods=min_periods)
 
 # ---------------------------------------------------------
 def rolling_max(series, window=14, min_periods=None):
     if min_periods is None: min_periods = window
     try:
         try:
-            res = series.rolling(window=window, min_periods=min_periods).min()
+            return series.rolling(window=window, min_periods=min_periods).min()
         except:
-            res = pd.Series(series).rolling(window=window, min_periods=min_periods).min()
+            return pd.Series(series).rolling(window=window, min_periods=min_periods).min()
     except:
-        res = pd.rolling_min(series, window=window, min_periods=min_periods)
-
-    return pd.Series(index=series.index, data=res)
+        return pd.rolling_min(series, window=window, min_periods=min_periods)
 
 # ---------------------------------------------------------
 def rolling_weighted_mean(series, window=200, min_periods=None):
     if min_periods is None: min_periods = window
     try:
-        res = series.ewm(span=window, min_periods=min_periods).mean()
+        return series.ewm(span=window, min_periods=min_periods).mean()
     except:
-        res = pd.ewma(series, span=window, min_periods=min_periods)
-
-    return pd.Series(index=series.index, data=res)
+        return pd.ewma(series, span=window, min_periods=min_periods)
 
 # ---------------------------------------------------------
 def hull_moving_average(series, window=200):
