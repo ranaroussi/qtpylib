@@ -51,6 +51,9 @@ class Instrument(str):
             (self.parent.bars['symbol']==self) | (self.parent.bars['symbol_group']==self)
         ]
 
+        # add signal history to bars
+        bars = self.parent._add_signal_history(df=bars, symbol=self)
+
         if lookback is not None:
             bars = bars[-lookback:]
 
@@ -416,7 +419,13 @@ class Instrument(str):
 
     # ---------------------------------------
     def get_ticksize(self, fallback=0.01):
-        """ Get instrument ticksize """
+        """ Get instrument ticksize
+
+        :Parameters:
+            fallback : flaot
+                fallback ticksize (used when cannot retrive data from exchange)
+
+        """
         if hasattr(self, "ticksize_float"):
             return self.ticksize_float
 
@@ -424,6 +433,16 @@ class Instrument(str):
         if contract.m_secType == "FUT":
             self.ticksize_float = futures.get_contract_ticksize(contract.m_symbol, fallback)
             return self.ticksize_float
+
+    # ---------------------------------------
+    def log_signal(self, signal):
+        """ Log Signal for instrument
+
+        :Parameters:
+            signal : integer
+                signal identifier (1, 0, -1)
+        """
+        return self.parent._log_signal(self, signal)
 
     # ---------------------------------------
     @property

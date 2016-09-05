@@ -22,6 +22,7 @@
 import argparse
 import inspect
 import pandas as pd
+from numpy import nan
 import sys
 import logging
 
@@ -119,6 +120,12 @@ class Algo(Broker):
         # initiate broker/order manager
         super().__init__(instruments, ibclient=int(args.ibclient), \
             ibport=int(args.ibport), ibserver=str(args.ibserver))
+
+        # -----------------------------------
+        # signal collector
+        self.signals = {}
+        for sym in self.symbols:
+            self.signals[sym] = pd.DataFrame()
 
         # -----------------------------------
         # initilize output file
@@ -471,3 +478,30 @@ class Algo(Broker):
             return df
 
         return df[-window:]
+
+    # ---------------------------------------
+    # signal logging methods
+    # ---------------------------------------
+    def _add_signal_history(self, df, symbol):
+        """ Initilize signal history """
+        if symbol not in self.signals.keys() or len(self.signals[symbol]) == 0:
+            self.signals[symbol] = [nan]*len(df)
+        else:
+            self.signals[symbol].append(nan)
+
+        self.signals[symbol] = self.signals[symbol][-len(df):]
+        df.loc[-len(self.signals[symbol]):, 'signal'] = self.signals[symbol]
+
+        return df
+
+    def _log_signal(self, symbol, signal):
+        """ Log signal
+
+        :Parameters:
+            symbol : string
+                instruments symbol
+            signal : integer
+                signal identifier (1, 0, -1)
+
+        """
+        self.signals[symbol][-1] = signal
