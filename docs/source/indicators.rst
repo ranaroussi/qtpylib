@@ -1,9 +1,12 @@
 Technical Indicators
 ====================
 
-Although you can import technical indicator libraries such as the
-excellent `TA-Lib <http://ta-lib.org>`_ and use them in your strategies,
+Although you can import technical indicator libraries and use them in your strategies,
 QTPyLib does comes bundled with some common indicators that work as Pandas Objects.
+
+
+Built-In Indicators
+~~~~~~~~~~~~~~~~~~~
 
 ATR
 ---
@@ -28,7 +31,7 @@ Bollinger Bands
 
 
 Weighted Bollinger Bands
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 .. code:: python
 
@@ -74,6 +77,17 @@ Heikin Ashi
     ...
 
 
+Hull Moving Average
+-------------------
+
+.. code:: python
+
+    bars['hma'] = bars.hull_moving_average(window=200 [, min_periods=None])
+
+    # also available via shorthand
+    # bars['hma'] = bars.hma(...)
+    ...
+
 IBS
 ---------------------------
 
@@ -118,11 +132,8 @@ MACD
     ...
 
 
-Moving Average
---------------
-
-Simple Moving Average
-~~~~~~~~~~~~~~~~~~~~~
+Moving Average: Simple
+----------------------
 
 Shorthand for ``bars.rolling_mean(...)``
 
@@ -132,8 +143,8 @@ Shorthand for ``bars.rolling_mean(...)``
     ...
 
 
-Weighted Moving Average
-~~~~~~~~~~~~~~~~~~~~~~~
+Moving Average: Weighted
+-------------------------
 
 Shorthand for ``bars.rolling_weighted_mean(...)``
 
@@ -143,8 +154,8 @@ Shorthand for ``bars.rolling_weighted_mean(...)``
     ...
 
 
-Hull Moving Average
-~~~~~~~~~~~~~~~~~~~
+Moving Average: Hull
+---------------------
 
 Shorthand for ``bars.hull_moving_average(...)``
 
@@ -155,32 +166,27 @@ Shorthand for ``bars.hull_moving_average(...)``
 
 
 
-Price Indicators
-----------------
-
-Mid: (High + Low) / 2
-~~~~~~~~~~~~~~~~~~~~~~
+Median Price
+----------------------
 .. code:: python
 
+    # (High + Low) / 2
     bars['mid'] = bars.mid_price()
     ...
 
 
-Typical: (High + Low + Close) / 3
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Typical Price
+---------------------------------
 .. code:: python
 
+    # (High + Low + Close) / 3
     bars['typical'] = bars.typical_price()
     ...
 
 
 
-
-Rolling Indicators
-------------------
-
-Min
-~~~
+Rolling Minimum
+---------------
 
 .. code:: python
 
@@ -188,8 +194,8 @@ Min
     ...
 
 
-Max
-~~~
+Rolling Maximum
+---------------
 
 .. code:: python
 
@@ -197,17 +203,20 @@ Max
     ...
 
 
-Mean
-~~~~
+Rolling Mean
+------------
 
 .. code:: python
 
     bars['sma'] = bars.rolling_mean(window=200 [, min_periods=None])
+
+    # also available via shorthand
+    # bars['sma'] = bars.sma(...)
     ...
 
 
-Standard Deviation
-~~~~~~~~~~~~~~~~~~
+Rolling Standard Deviation
+--------------------------
 
 .. code:: python
 
@@ -215,18 +224,21 @@ Standard Deviation
     ...
 
 
-Weighted Mean
-~~~~~~~~~~~~~
+Rolling Weighted Mean
+---------------------
 
 .. code:: python
 
     bars['wma'] = bars.rolling_weighted_mean(window=200 [, min_periods=None])
+
+    # also available via shorthand
+    # bars['wma'] = bars.wma(...)
     ...
 
 
 
-Returns
--------
+Rolling Returns
+---------------
 
 .. code:: python
 
@@ -234,8 +246,8 @@ Returns
     ...
 
 
-Log Returns
-~~~~~~~~~~~
+Rolling Log Returns
+-------------------
 
 .. code:: python
 
@@ -311,3 +323,42 @@ VWAP
     bars['vwap'] = bars.vwap(bars)
     ...
 
+
+-----
+
+
+TA-Lib Integration
+~~~~~~~~~~~~~~~~~~
+
+Starting with 1.3.91a, QTPyLib offers full integration with `TA-Lib <http://ta-lib.org>`_.
+
+All the TA-Lib methods are available via the ``talib_indicators`` modules and
+automatically extracts and prepares the relevant data your strategy's ``bars`` or ``ticks``.
+
+To use the TA-Lib integtation, you'll need to have TA-Lib installed on your system,
+and import the ``talib_indicators`` module into your strategies:
+
+
+.. code:: python
+
+    # strategy.py
+
+    from qtpylib import talib_indicators as ta
+
+    ...
+
+    def on_bar(self, instrument):
+        # get OHLCV bars
+        bars = instrument.get_bars()
+
+        # add 14-period ATR column
+        bars['atr'] = ta.ATR(timeperiod=14)
+
+        # same result using Vanilla TA-Lib:
+        # bars['atr'] = talib.ATR(bars['high'].values, bars['low'].values, bars['close'].values, timeperiod=14)
+
+    ...
+
+
+For more information on all available TA-Lib methods/indicators, please visit
+`TA-Lib's website <http://mrjbq7.github.io/ta-lib/funcs.html>`_.
