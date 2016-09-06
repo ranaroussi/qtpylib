@@ -752,6 +752,9 @@ class Broker():
     def get_pending_orders(self, symbol=None):
         if (symbol is not None):
             symbol = self._getsymbol_(symbol)
+            if symbol in self.orders.pending:
+                return self.orders.pending[symbol]
+            return {}
 
-        return (symbol in self.orders.pending)
+        return self.orders.pending
 
