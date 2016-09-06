@@ -335,9 +335,9 @@ def cci(series, window=14):
     """
     compute commodity channel index
     """
-    typical_price = typical(series)
-    typical_mean  = rolling_mean(typical_price, window)
-    res = (typical_price - typical_mean) / (.015 * np.std(typical_mean))
+    price = typical_price(series)
+    typical_mean  = rolling_mean(price, window)
+    res = (price - typical_mean) / (.015 * np.std(typical_mean))
     return pd.Series(index=series.index, data=res)
 
 # ---------------------------------------------------------
