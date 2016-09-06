@@ -19,7 +19,7 @@
 # limitations under the License.
 #
 
-__version__ = '1.3.9a'
+__version__ = '1.3.91a'
 __author__ = 'Ran Aroussi'
 
 from . import *
@@ -42,6 +42,7 @@ __all__ = [
     'tools',
     'sms',
     'indicators',
+    'talib_indicators',
     'futures',
     'path'
 ]
