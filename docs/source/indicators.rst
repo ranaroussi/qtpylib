@@ -223,6 +223,13 @@ Rolling Standard Deviation
     bars['std'] = bars.rolling_std(window=200 [, min_periods=None])
     ...
 
+Rolling VWAP
+------------
+
+.. code:: python
+
+    bars['rvwap'] = bars.rolling_vwap(window=200 [, min_periods=None])
+    ...
 
 Rolling Weighted Mean
 ---------------------

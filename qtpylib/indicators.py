@@ -191,13 +191,31 @@ def hma(series, window=200):
 # ---------------------------------------------------------
 def vwap(bars):
     """
-    calculate vwap
+    calculate vwap of entire time series
     (input can be pandas series or numpy array)
     bars are usually mid [ (h+l)/2 ] or typical [ (h+l+c)/3 ]
     """
     typical = ((bars['high']+bars['low']+bars['close'])/3).values
     volume  = bars['volume'].values
     res     = np.cumsum(volume*typical) / np.cumsum(volume)
+
+    return pd.Series(index=bars.index, data=res)
+
+# ---------------------------------------------------------
+def rolling_vwap(bars, window=200, min_periods=None):
+    """
+    calculate vwap using moving window
+    (input can be pandas series or numpy array)
+    bars are usually mid [ (h+l)/2 ] or typical [ (h+l+c)/3 ]
+    """
+    if min_periods is None: min_periods = window
+
+    typical = ((bars['high']+bars['low']+bars['close'])/3)
+    volume  = bars['volume']
+
+    left  = (volume*typical).rolling(window=window, min_periods=min_periods).sum()
+    right = volume.rolling(window=window, min_periods=min_periods).sum()
+    res     = left/right
 
     return pd.Series(index=bars.index, data=res)
 
@@ -388,6 +406,7 @@ PandasObject.true_range               = true_range
 PandasObject.mid_price                = mid_price
 PandasObject.typical_price            = typical_price
 PandasObject.vwap                     = vwap
+PandasObject.rolling_vwap             = rolling_vwap
 PandasObject.weighted_bollinger_bands = weighted_bollinger_bands
 PandasObject.rolling_weighted_mean    = rolling_weighted_mean
 
