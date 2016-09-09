@@ -328,7 +328,7 @@ def implied_volatility(series, window=252):
 
 # ---------------------------------------------------------
 def keltner_channel(bars, window=14, atrs=2):
-    typical_mean = rolling_mean(typical(bars), window)
+    typical_mean = rolling_mean(typical_price(bars), window)
     atrval = atr(bars, window) * atrs
 
     upper = typical_mean + atrval
