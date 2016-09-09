@@ -359,7 +359,7 @@ and import the ``talib_indicators`` module into your strategies:
         bars = instrument.get_bars()
 
         # add 14-period ATR column
-        bars['atr'] = ta.ATR(timeperiod=14)
+        bars['atr'] = ta.ATR(bars, timeperiod=14)
 
         # same result using Vanilla TA-Lib:
         # bars['atr'] = talib.ATR(bars['high'].values, bars['low'].values, bars['close'].values, timeperiod=14)
