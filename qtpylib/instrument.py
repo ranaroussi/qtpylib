@@ -76,7 +76,7 @@ class Instrument(str):
                 Return a dict or a pd.DataFrame object
 
         :Retruns:
-            bars : pd.DataFrame / dict
+            ticks : pd.DataFrame / dict
                 The ticks for this instruments
         """
         ticks = self.parent.ticks[
@@ -93,6 +93,17 @@ class Instrument(str):
                 ticks = ticks[0]
 
         return ticks
+
+    # ---------------------------------------
+    def get_quote(self):
+        """ Get last quote for this instrument
+
+        :Retruns:
+            quote : dict
+                The quote for this instruments
+        """
+        if self in self.parent.quotes.keys():
+            return self.parent.quotes[self]
 
     # ---------------------------------------
     def order(self, direction, quantity, **kwargs):

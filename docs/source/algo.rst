@@ -3,6 +3,7 @@ Writing Your Algorithm
 
 When creating your algorithm, there are two functions that handles
 incoming market data from the running Blotter. These are
+``on_quote()`` which is invoked on every quote change,
 ``on_tick()`` which is invoked on every tick captured, and
 ``on_bar()``, which is invoked on every bar created in the
 pre-specified resolution. An `Instruments Object <./api_instrument.html>`_ is being passed
@@ -39,6 +40,10 @@ and sells when in position.
 
         def on_start(self):
             # optional method that gets called once upon start
+            pass
+
+        def on_quote(self, instrument):
+            # optional method that gets called on every quote change
             pass
 
         def on_tick(self, instrument):

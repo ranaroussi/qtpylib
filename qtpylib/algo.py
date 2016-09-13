@@ -90,6 +90,7 @@ class Algo(Broker):
         # assign algo params
         self.bars           = pd.DataFrame()
         self.ticks          = pd.DataFrame()
+        self.quotes         = {}
         self.tick_count     = 0
         self.tick_bar_count = 0
         self.bar_count      = 0
@@ -161,13 +162,14 @@ class Algo(Broker):
 
             # backtest history
             self.blotter.drip(
-                symbols      = self.symbols,
-                start        = self.backtest_start,
-                end          = self.backtest_end,
-                resolution   = self.resolution,
-                tz           = self.timezone,
-                tick_handler = self._tick_handler,
-                bar_handler  = self._bar_handler
+                symbols       = self.symbols,
+                start         = self.backtest_start,
+                end           = self.backtest_end,
+                resolution    = self.resolution,
+                tz            = self.timezone,
+                quote_handler = self._quote_handler,
+                tick_handler  = self._tick_handler,
+                bar_handler   = self._bar_handler
             )
 
         # -----------------------------------
@@ -191,10 +193,11 @@ class Algo(Broker):
 
             # listen for RT data
             self.blotter.listen(
-                symbols      = self.symbols,
-                tz           = self.timezone,
-                tick_handler = self._tick_handler,
-                bar_handler  = self._bar_handler
+                symbols       = self.symbols,
+                tz            = self.timezone,
+                quote_handler = self._quote_handler,
+                tick_handler  = self._tick_handler,
+                bar_handler   = self._bar_handler
             )
 
     # ---------------------------------------
@@ -206,6 +209,22 @@ class Algo(Broker):
 
         """
         # raise NotImplementedError("Should implement on_start()")
+        pass
+
+    # ---------------------------------------
+    @abstractmethod
+    def on_quote(self, instrument):
+        """
+        Invoked on every quote captured for the selected instrument.
+        This is where you'll write your strategy logic for quote events.
+
+        :Parameters:
+
+            symbol : string
+                `Instruments Object <#instrument-api>`_
+
+        """
+        # raise NotImplementedError("Should implement on_quote()")
         pass
 
     # ---------------------------------------
@@ -401,6 +420,12 @@ class Algo(Broker):
     def _caller(self, caller):
         stack = [x[3] for x in inspect.stack()][1:-1]
         return caller in stack
+
+    # ---------------------------------------
+    def _quote_handler(self, quote):
+        # self._cancel_expired_pending_orders()
+        self.quotes[quote['symbol']] = quote
+        self.on_quote(self.get_instrument(quote))
 
     # ---------------------------------------
     def _tick_handler(self, tick):

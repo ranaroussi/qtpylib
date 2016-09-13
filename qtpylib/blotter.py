@@ -296,6 +296,22 @@ class Blotter():
             # print('.', end="", flush=True)
             self.on_tick_received(data)
 
+        elif caller == "handleTickPrice" or caller == "handleTickSize":
+            self.on_quote_received(msg.tickerId)
+
+    # -------------------------------------------
+    def on_quote_received(self, tickerId):
+        try:
+            symbol = self.ibConn.tickerSymbol(tickerId)
+            quote  = self.ibConn.marketData[tickerId].to_dict(orient='records')[0]
+            quote["kind"]   = "QUOTE"
+            quote["symbol"] = symbol
+            quote["symbol_group"] = _gen_symbol_group(symbol)
+            quote["asset_class"]  = _gen_asset_class(symbol)
+
+            self.broadcast(quote, "QUOTE")
+        except:
+            pass
 
     # -------------------------------------------
     def on_tick_received(self, tick):
@@ -619,7 +635,7 @@ class Blotter():
         return data
 
     # -------------------------------------------
-    def listen(self, symbols, tick_handler=None, bar_handler=None, tz="UTC"):
+    def listen(self, symbols, tick_handler=None, bar_handler=None, quote_handler=None, tz="UTC"):
         # load runtime/default data
         if isinstance(symbols, str):
             symbols = symbols.split(',')
@@ -641,6 +657,12 @@ class Blotter():
 
                     if data['symbol'] not in symbols:
                         continue
+
+                    # quote
+                    if data['kind'] == "QUOTE":
+                        if quote_handler is not None:
+                            quote_handler(data)
+                            continue
 
                     try: data["datetime"] = parse_date(data["timestamp"])
                     except: pass
