@@ -357,6 +357,7 @@ class Algo(Broker):
             try: self.record(position=0)
             except: pass
 
+            print(">>", kwargs)
             if not self.backtest:
                 self._create_order(**kwargs)
 
@@ -379,6 +380,17 @@ class Algo(Broker):
 
             if not self.backtest:
                 self._create_order(**kwargs)
+
+
+    # ---------------------------------------
+    def cancel_order(self, orderId):
+        """ Cancels a un-filled order
+
+        Parameters:
+            orderId : int
+                Order ID
+        """
+        self._cancel_order(orderId)
 
     # ---------------------------------------
     def record(self, *args, **kwargs):

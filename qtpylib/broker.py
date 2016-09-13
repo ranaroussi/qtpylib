@@ -251,6 +251,11 @@ class Broker():
         if caller == "handleOrders":
             # print("handleOrders" , msg)
 
+            # order canceled
+            if hasattr(msg, 'status') and "CANCELLED" in msg.status.upper():
+                return
+
+            # continue...
             order    = self.ibConn.orders[msg.orderId]
 
             # print("***********************\n\n", order, "\n\n***********************")
@@ -573,6 +578,10 @@ class Broker():
         expiry = expiry*1000 if expiry > 0 else 60000 # 1min
         self._update_pending_order(symbol, orderId, expiry, order_quantity)
 
+
+    # ---------------------------------------
+    def _cancel_order(self, orderId):
+        self.ibConn.cancelOrder(orderId)
 
     # ---------------------------------------
     def modify_order(self, symbol, orderId, quantity=None, limit_price=None):
