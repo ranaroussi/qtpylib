@@ -251,11 +251,18 @@ class Broker():
         if caller == "handleOrders":
             # print("handleOrders" , msg)
 
-            # order canceled
+            # order canceled? do some cleanup
             if hasattr(msg, 'status') and "CANCELLED" in msg.status.upper():
+                if msg.orderId in self.orders.recent.keys():
+                    symbol = self.orders.recent[msg.orderId]['symbol']
+                    del self.orders.pending_ttls[msg.orderId]
+                    del self.orders.recent[msg.orderId]
+                    if self.orders.pending[symbol]['orderId'] == msg.orderId:
+                        del self.orders.pending[symbol]
                 return
 
             # continue...
+
             order    = self.ibConn.orders[msg.orderId]
 
             # print("***********************\n\n", order, "\n\n***********************")
