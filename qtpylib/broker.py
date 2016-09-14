@@ -610,6 +610,17 @@ class Broker():
             self.ibConn.cancelOrder(orderId)
 
     # ---------------------------------------
+    def modify_order_group(self, symbol, orderId, entry=None, target=None, stop=None, quantity=None):
+        order_group = self.orders.recent[orderId]['order']
+        if entry is not None:
+            self.modify_order(symbol, orderId, limit_price=entry, quantity=quantity)
+        if target is not None:
+            self.modify_order(symbol, order_group['targetOrderId'], limit_price=target, quantity=quantity)
+        if stop is not None:
+            stop_quantity = -quantity if quantity is not None else None
+            self.modify_order(symbol, order_group['stopOrderId'], limit_price=stop, quantity=stop_quantity)
+
+    # ---------------------------------------
     def modify_order(self, symbol, orderId, quantity=None, limit_price=None):
         if quantity is None and limit_price is None:
             return
@@ -617,18 +628,30 @@ class Broker():
         if symbol in self.orders.history:
             for historyOrderId in self.orders.history[symbol]:
                 if historyOrderId == orderId:
+                    order_quantity = self.orders.history[symbol][orderId]['quantity']
+                    if quantity is not None:
+                        order_quantity = quantity
+
                     order = self.orders.history[symbol][orderId]
                     if order['order_type'] == "STOP":
-                        # request
-                        self.ibConn.modifyStopOrder(orderId, order['parentId'], limit_price, quantity)
-                        break
-                    # elif order['order_type'] == "LMT" and "parentId" in order:
-                    #     order.m_lmtPrice = limit_price
-                    #     self.ibConn.placeOrder(self.get_contract(symbol), order, orderId=order['parentId'])
+                        new_order = self.ibConn.createStopOrder(
+                            quantity = order_quantity,
+                            parentId = order['parentId'],
+                            stop     = limit_price,
+                            trail    = False,
+                            transmit = True
+                            )
                     else:
-                        order.m_lmtPrice = limit_price
-                        self.ibConn.placeOrder(self.get_contract(symbol), order, orderId=orderId)
-                        break
+                        new_order = self.ibConn.createOrder(order_quantity, limit_price)
+
+                        # child order?
+                        if "parentId" in order:
+                            new_order.parentId = order['parentId']
+
+                    #  send order
+                    contract = self.get_contract(symbol)
+                    self.ibConn.placeOrder(contract, new_order, orderId=orderId)
+                    break
 
     # ---------------------------------------
     def _milliseconds_delta(self, delta):
