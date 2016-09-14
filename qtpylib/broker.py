@@ -37,6 +37,9 @@ from qtpylib import (
     tools, sms, futures
 )
 
+from decimal import *
+getcontext().prec = 5
+
 from abc import ABCMeta
 
 class Broker():
@@ -383,8 +386,13 @@ class Broker():
 
             trade = self.active_trades[tradeId]
             if trade['entry_price'] > 0 and trade['position'] == 0:
-                pnl = trade['exit_price']-trade['entry_price']
-                pnl = -pnl if trade['direction'] == "BUY" else pnl
+                if trade['direction'] == "SELL":
+                    pnl = trade['entry_price']-trade['exit_price']
+                else:
+                    pnl = trade['exit_price']-trade['entry_price']
+
+                pnl = float(Decimal(pnl))
+                print("1)", pnl)
                 self.active_trades[tradeId]['realized_pnl'] = pnl
 
         # print("\n\n-----------------")
