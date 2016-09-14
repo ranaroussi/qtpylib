@@ -599,7 +599,8 @@ class Broker():
 
     # ---------------------------------------
     def _cancel_order(self, orderId):
-        self.ibConn.cancelOrder(orderId)
+        if orderId is not None and orderId > 0:
+            self.ibConn.cancelOrder(orderId)
 
     # ---------------------------------------
     def modify_order(self, symbol, orderId, quantity=None, limit_price=None):
