@@ -46,6 +46,9 @@ from qtpylib import (
     tools, path, futures
 )
 
+from decimal import *
+getcontext().prec = 5
+
 from abc import ABCMeta
 
 # =============================================
@@ -285,10 +288,10 @@ class Blotter():
                 "symbol_group": _gen_symbol_group(symbol), # ES_F, ...
                 "asset_class":  _gen_asset_class(symbol),
                 "timestamp":    kwargs['tick']['time'],
-                "last":         kwargs['tick']['last'],
+                "last":         float(Decimal(kwargs['tick']['last'])),
                 "lastsize":     int(kwargs['tick']['size']),
-                "bid":          kwargs['tick']['bid'],
-                "ask":          kwargs['tick']['ask'],
+                "bid":          float(Decimal(kwargs['tick']['bid'])),
+                "ask":          float(Decimal(kwargs['tick']['ask'])),
                 "bidsize":      int(kwargs['tick']['bidsize']),
                 "asksize":      int(kwargs['tick']['asksize']),
                 # "wap":          kwargs['tick']['wap']
@@ -304,7 +307,10 @@ class Blotter():
         try:
             symbol = self.ibConn.tickerSymbol(tickerId)
             quote  = self.ibConn.marketData[tickerId].to_dict(orient='records')[0]
-            quote["kind"]   = "QUOTE"
+            quote['bid']  = float(Decimal(quote['bid']))
+            quote['ask']  = float(Decimal(quote['ask']))
+            quote['last'] = float(Decimal(quote['last']))
+            quote["kind"] = "QUOTE"
             quote["symbol"] = symbol
             quote["symbol_group"] = _gen_symbol_group(symbol)
             quote["asset_class"]  = _gen_asset_class(symbol)
