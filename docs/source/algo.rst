@@ -13,7 +13,11 @@ If you need to set some parameters when your strategy starts,
 simply add an ``on_start()`` method to your strategy, and set
 your parameters there.
 
-All three methods are optional. You can run logic on start *and/or*
+If your strategy requires you to take action on every fill,
+simply add an ``on_fill()`` method to your strategy, and
+run write code logic there.
+
+All methods are optional. You can run logic on start *and/or*
 on every tick *and/or* on every bar event as needed. Unnecessary can
 either use ``pass`` or be ommited from your strategy code.
 
@@ -40,6 +44,10 @@ and sells when in position.
 
         def on_start(self):
             # optional method that gets called once upon start
+            pass
+
+        def on_fill(self, instrument, order):
+            # optional method that gets called on every order fill
             pass
 
         def on_quote(self, instrument):
