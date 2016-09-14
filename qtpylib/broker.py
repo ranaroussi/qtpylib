@@ -252,16 +252,23 @@ class Broker():
     # @abstractmethod
     def ibCallback(self, caller, msg, **kwargs):
         if caller == "handleOrders":
+
+            if not hasattr(self, "orders"):
+                return
             # print("handleOrders" , msg)
 
             # order canceled? do some cleanup
             if hasattr(msg, 'status') and "CANCELLED" in msg.status.upper():
                 if msg.orderId in self.orders.recent.keys():
                     symbol = self.orders.recent[msg.orderId]['symbol']
-                    del self.orders.pending_ttls[msg.orderId]
-                    del self.orders.recent[msg.orderId]
-                    if self.orders.pending[symbol]['orderId'] == msg.orderId:
-                        del self.orders.pending[symbol]
+                    try: del self.orders.pending_ttls[msg.orderId]
+                    except: pass
+                    try: del self.orders.recent[msg.orderId]
+                    except: pass
+                    try:
+                        if self.orders.pending[symbol]['orderId'] == msg.orderId:
+                            del self.orders.pending[symbol]
+                    except: pass
                 return
 
             # continue...
