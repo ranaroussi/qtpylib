@@ -297,8 +297,10 @@ class Broker():
                 self._update_order_history(symbol, orderId, quantity, filled=True)
                 self._expire_pending_order(symbol, orderId)
                 self._cancel_orphan_orders(symbol, orderId)
-
                 self._register_trade(order)
+
+                # filled
+                self.on_fill(self.get_instrument(order['symbol']), order)
 
     # ---------------------------------------
     def _register_trade(self, order):

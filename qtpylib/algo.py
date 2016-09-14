@@ -260,6 +260,24 @@ class Algo(Broker):
         pass
 
     # ---------------------------------------
+    @abstractmethod
+    def on_fill(self, instrument, order):
+        """
+        Invoked on every order fill for the selected instrument.
+        This is where you'll write your strategy logic for fill events.
+
+        :Parameters:
+
+            instrument : object
+                `Instruments Object <#instrument-api>`_
+            order : object
+                Filled order data
+
+        """
+        # raise NotImplementedError("Should implement on_fill()")
+        pass
+
+    # ---------------------------------------
     def get_instrument(self, symbol):
         """
         A string subclass that provides easy access to misc
