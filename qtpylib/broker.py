@@ -721,6 +721,7 @@ class Broker():
     def get_orders(self, symbol):
         symbol = self._getsymbol_(symbol)
 
+        self.orders.by_symbol = self.ibConn.group_orders("symbol")
         if symbol in self.orders.by_symbol:
             return self.orders.by_symbol[symbol]
 
