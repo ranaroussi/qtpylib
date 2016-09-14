@@ -508,7 +508,7 @@ class Broker():
      # ---------------------------------------
     def _create_order(self, symbol, direction, quantity, order_type="", \
         limit_price=0, expiry=0, orderId=0, ticksize=0.01, \
-        target=0, initial_stop=0, trail_stop_at=0, trail_stop_by=0):
+        target=0, initial_stop=0, trail_stop_at=0, trail_stop_by=0, **kwargs):
 
         # force BUY/SELL (not LONG/SHORT)
         direction = direction.replace("LONG", "BUY").replace("SHORT", "SELL")
@@ -519,6 +519,9 @@ class Broker():
             return
 
         # continue...
+
+        if "stoploss" in kwargs and initial_stop == 0:
+            initial_stop = kwargs['stoploss']
 
         order_type = "MARKET" if limit_price == 0 else "LIMIT"
 
