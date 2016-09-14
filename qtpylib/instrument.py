@@ -140,6 +140,18 @@ class Instrument(str):
         """
         self.parent.order(direction.upper(), self, quantity, **kwargs)
 
+
+    # ---------------------------------------
+    def cancel_order(self, orderId):
+        """ Cancels an order for this instrument
+
+        :Parameters:
+            orderId : int
+                Order ID
+        """
+
+        self.parent.cancel_order(orderId)
+
     # ---------------------------------------
     def market_order(self, direction, quantity, **kwargs):
         """ Shortcut for ``instrument.order(...)`` and accepts all of its
@@ -379,6 +391,27 @@ class Instrument(str):
 
 
     # ---------------------------------------
+    def modify_order_group(self, orderId, entry=None, target=None, stop=None, quantity=None):
+        """Modify bracket order
+
+        :Parameters:
+            orderId : int
+                the order id to modify
+
+        :Optional:
+            entry: float
+                new entry limit price (for unfilled limit orders only)
+            target: float
+                new target limit price (for unfilled limit orders only)
+            stop: float
+                new stop limit price (for unfilled limit orders only)
+            quantity : int
+                the required quantity of the modified order
+        """
+        return self.parent.modify_order_group(self, orderId=orderId,
+            entry=entry, target=target, stop=stop, quantity=quantity)
+
+    # ---------------------------------------
     def get_margin_requirement(self):
         """ Get margin requirements for intrument (futures only)
 
@@ -472,6 +505,12 @@ class Instrument(str):
     def positions(self):
         """(Property) Shortcut to self.get_positions()"""
         return self.get_positions()
+
+    # ---------------------------------------
+    @property
+    def position(self):
+        """(Property) Shortcut to self.get_positions(position)"""
+        return self.get_positions('position')
 
     # ---------------------------------------
     @property
