@@ -152,6 +152,9 @@ class Broker():
         self.active_trades = {}
         self.trades = []
 
+        # shortcut
+        self.account = self.ibConn.account
+
         # use: self.orders.pending...
         self.orders = tools.make_object(
             by_tickerid = self.ibConn.orders,
