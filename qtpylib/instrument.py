@@ -136,6 +136,10 @@ class Instrument(str):
                 % of trailing stop distance from current price
             ticksize : float
                 If using traling stop, pass the tick size for the instruments so you won't try to buy ES at 2200.128230 :)
+            fillorkill: bool
+                fill entire quantiry or none at all
+            iceberg: bool
+                is this an iceberg (hidden) order
 
         """
         self.parent.order(direction.upper(), self, quantity, **kwargs)
