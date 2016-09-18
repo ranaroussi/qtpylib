@@ -68,11 +68,8 @@ class Broker():
         # -----------------------------------
         # connect to IB
         self.ibConn = ezibpy.ezIBpy()
-        self.ibConn.connect(clientId=int(ibclient), host=ibserver, port=int(ibport))
         self.ibConn.ibCallback = self.ibCallback
-
-        self.ibConn.requestPositionUpdates(subscribe=True)
-        self.ibConn.requestAccountUpdates(subscribe=True)
+        self.ibConnect()
 
         # -----------------------------------
         # create contracts
@@ -250,6 +247,13 @@ class Broker():
             self.dbconn.close()
         except:
             pass
+
+
+    # ---------------------------------------
+    def ibConnect(self):
+        self.ibConn.connect(clientId=int(ibclient), host=ibserver, port=int(ibport))
+        self.ibConn.requestPositionUpdates(subscribe=True)
+        self.ibConn.requestAccountUpdates(subscribe=True)
 
     # ---------------------------------------
     # @abstractmethod
