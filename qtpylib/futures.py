@@ -343,7 +343,7 @@ futures_contracts = {
         "symbol": "GE",
         "product": "Eurodollar Futures",
         "group": "interest-rates",
-        "base_url": "http://www.cmegroup.com/trading/trading/interest-rates/stir/eurodollar_{}.html"
+        "base_url": "http://www.cmegroup.com/trading/interest-rates/stir/eurodollar_{}.html"
     },
     "N9L": {
         "symbol": "N9L",
