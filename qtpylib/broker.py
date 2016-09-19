@@ -190,7 +190,7 @@ class Broker():
 
         # -----------------------------------
         # do stuff on exit
-        atexit.register(self.on_exit)
+        atexit.register(self._on_exit)
 
 
     # -------------------------------------------
@@ -231,13 +231,10 @@ class Broker():
         self.blotter_args = args
 
     # -------------------------------------------
-    def on_exit(self):
+    def _on_exit(self):
         logging.info("Algo stopped...")
 
         if self.ibConn is not None:
-            logging.info("Cancel market data...")
-            self.ibConn.cancelMarketData()
-
             logging.info("Disconnecting...")
             self.ibConn.disconnect()
 
