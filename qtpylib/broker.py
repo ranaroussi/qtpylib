@@ -423,7 +423,7 @@ class Broker():
                     pnl = trade['exit_price']-trade['entry_price']
 
                 pnl = float(Decimal(pnl))
-                print("1)", pnl)
+                # print("1)", pnl)
                 self.active_trades[tradeId]['realized_pnl'] = pnl
 
         # print("\n\n-----------------")
