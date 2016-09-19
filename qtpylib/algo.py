@@ -138,7 +138,6 @@ class Algo(Broker):
         # initiate strategy
         self.on_start()
 
-
     # ---------------------------------------
     def run(self):
         """Starts the algo
@@ -378,7 +377,6 @@ class Algo(Broker):
             try: self.record(position=0)
             except: pass
 
-            print(">>", kwargs)
             if not self.backtest:
                 self._create_order(**kwargs)
 
