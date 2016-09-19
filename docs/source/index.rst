@@ -24,5 +24,6 @@ Table of Contents
    futures
    api
    daemons
+   changelog
    legal
 
