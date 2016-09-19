@@ -30,6 +30,7 @@ import pickle
 import pymysql
 import sys
 import tempfile
+import time
 
 from datetime import datetime, timedelta
 
@@ -67,6 +68,10 @@ class Broker():
 
         # -----------------------------------
         # connect to IB
+        self.ibclient = int(ibclient)
+        self.ibport   = int(ibport)
+        self.ibserver = str(ibserver)
+
         self.ibConn = ezibpy.ezIBpy()
         self.ibConn.ibCallback = self.ibCallback
         self.ibConnect()
@@ -248,14 +253,27 @@ class Broker():
 
     # ---------------------------------------
     def ibConnect(self):
-        self.ibConn.connect(clientId=int(ibclient), host=ibserver, port=int(ibport))
+        self.ibConn.connect(clientId=self.ibclient, host=self.ibserver, port=self.ibport)
         self.ibConn.requestPositionUpdates(subscribe=True)
         self.ibConn.requestAccountUpdates(subscribe=True)
 
     # ---------------------------------------
     # @abstractmethod
     def ibCallback(self, caller, msg, **kwargs):
-        if caller == "handleOrders":
+
+        if caller == "handleConnectionClosed":
+
+            logging.info("Lost conncetion to Interactive Brokers...")
+
+            while not self.ibConn.connected:
+                self.ibConnect()
+                time.sleep(1.3)
+                if not self.ibConn.connected:
+                    print('*', end="", flush=True)
+
+            logging.info("Connection established...")
+
+        elif caller == "handleOrders":
 
             if not hasattr(self, "orders"):
                 return

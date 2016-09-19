@@ -280,7 +280,12 @@ class Blotter():
         if self.ibConn is None:
             return
 
-        if caller == "handleTickString" and "tick" in kwargs:
+        if caller == "handleConnectionClosed":
+            logging.info("Lost conncetion to Interactive Brokers...")
+            self._on_exit()
+            self.run()
+
+        elif caller == "handleTickString" and "tick" in kwargs:
             symbol = self.ibConn.tickerSymbol(msg.tickerId)
             data = {
                 # available data from ib
@@ -487,10 +492,15 @@ class Blotter():
 
         logging.info("Connecting to Interactive Brokers...")
         self.ibConn = ezIBpy()
-
-        self.ibConn.connect(clientId=int(self.args['ibclient']),
-            port=int(self.args['ibport']), host=str(self.args['ibserver']))
         self.ibConn.ibCallback = self.ibCallback
+
+        while not self.ibConn.connected:
+            self.ibConn.connect(clientId=int(self.args['ibclient']),
+                port=int(self.args['ibport']), host=str(self.args['ibserver']))
+            time.sleep(1)
+            if not self.ibConn.connected:
+                print('*', end="", flush=True)
+        logging.info("Connection established...")
 
         try:
             while True:
