@@ -92,7 +92,7 @@ Margin Requriments for Contract
 -------------------------------
 
 When you want to know a futures contract's margin requirements, you can
-call ``futures.get_ib_margin(...)`` to get that information.
+call ``futures.get_ib_futures(...)`` to get that information.
 New data is fetched from IB id cache file doesn't exist or
 if it's older than 24 hours.
 
@@ -104,15 +104,15 @@ if it's older than 24 hours.
     from qtpylib import futures
 
     def on_bar(self, instrument):
-        margin = futures.get_ib_margin('path/to/cache_file.pkl', "NQ", "GLOBEX")
+        contract_spec = futures.get_ib_futures("NQ", "GLOBEX")
 
-        if margin['intraday_initial'] > self.account['AvailableFunds']:
+        if contract_spec['intraday_initial'] > self.account['AvailableFunds']:
             print("Not enough funds to trade this contract")
             return
 
 
     """
-    margin returns a dict with the following data:
+    contract_spec returns a dict with the following data:
 
     {
         'class': 'NQ',
@@ -129,8 +129,8 @@ if it's older than 24 hours.
 
     """
 
-This information is also available using
-``instrument.get_futures_margin_requirement()``
-from within your strategies (in this case, the
-cache file will be saved as ``ib_margins.pkl``
-in your working directory).
+To get the maximum number of contracts you can trade,
+based on your account balance and contract requirements,
+use ``instrument.get_margin_max_contracts()``
+from within your strategies.
+
