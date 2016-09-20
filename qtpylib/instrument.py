@@ -130,6 +130,8 @@ class Instrument(str):
                 target (exit) price
             initial_stop : float
                 price to set hard stop
+            stop_limit: bool
+                Flag to indicate if the stop should be STOP or STOP LIMIT (default False=STOP)
             trail_stop_at : float
                 price at which to start trailing the stop
             trail_stop_by : float

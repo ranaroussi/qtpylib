@@ -539,7 +539,8 @@ class Broker():
      # ---------------------------------------
     def _create_order(self, symbol, direction, quantity, order_type="", \
         limit_price=0, expiry=0, orderId=0, ticksize=0.01, \
-        target=0, initial_stop=0, trail_stop_at=0, trail_stop_by=0, **kwargs):
+        target=0, initial_stop=0, trail_stop_at=0, trail_stop_by=0, \
+        stop_limit=False, **kwargs):
 
         # force BUY/SELL (not LONG/SHORT)
         direction = direction.replace("LONG", "BUY").replace("SHORT", "SELL")
@@ -592,7 +593,7 @@ class Broker():
             # bracket order
             order = self.ibConn.createBracketOrder(contract, order_quantity,
                 entry=limit_price, target=target, stop=initial_stop,
-                fillorkill=fillorkill, iceberg=iceberg)
+                fillorkill=fillorkill, iceberg=iceberg, stop_limit=stop_limit)
             orderId = order["entryOrderId"]
 
             # triggered trailing stop?

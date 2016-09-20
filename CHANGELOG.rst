@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+1.3.99a
+-------
+
+*Date: September 20, 2016*
+
+- Added option to send limit stop orders
+- Fixed setup import to prevent built error
+
 
 1.3.98a
 -------
