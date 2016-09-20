@@ -18,11 +18,9 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
-from qtpylib import __version__
-
 setup(
     name='QTPyLib',
-    version=__version__,
+    version='1.4.0',
     description='Quantitative Trading Python Library',
     long_description=long_description,
     url='https://github.com/ranaroussi/qtpylib',
