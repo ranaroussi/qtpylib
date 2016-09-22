@@ -248,7 +248,7 @@ Algo Parameters
 ~~~~~~~~~~~~~~~
 
 - ``instruments`` List of stock symbols (for US Stocks) / IB Contract Tuples
-- ``resolution`` Bar resolution (pandas resample resolution: 1T/4H/etc, and K for tick bars).
+- ``resolution`` Bar resolution (pandas resample resolution: 1T/4H/etc - use **K** for tick bars or **V** for volume bars).
 - ``tick_window`` Length of tick lookback window to keep (defaults to 1)
 - ``bar_window`` Length of bar lookback window to keep (defaults to 100)
 - ``timezone`` Convert IB timestamps to this timezone, eg. "US/Central" (defaults to UTC)
