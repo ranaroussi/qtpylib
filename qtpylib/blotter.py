@@ -607,7 +607,7 @@ class Blotter():
         self.mysql_connect()
 
         # --- build query
-        table = 'ticks' if ("K" in resolution) | ("S" in resolution) else 'bars'
+        table = 'ticks' if ("K" in resolution) | ("V" in resolution) | ("S" in resolution) else 'bars'
 
         query = """SELECT tbl.*,
             CONCAT(s.`symbol`, "_", s.`asset_class`) as symbol, s.symbol_group, s.asset_class, s.expiry
@@ -709,7 +709,7 @@ class Blotter():
         bar_handler=None, resolution="1T", tz="UTC"):
 
         handler = None
-        if "K" in resolution and tick_handler is not None:
+        if ("K" in resolution or "V" in resolution) and tick_handler is not None:
             handler = tick_handler
         elif bar_handler is not None:
             handler = bar_handler

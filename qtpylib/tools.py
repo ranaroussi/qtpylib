@@ -146,47 +146,61 @@ def fix_timezone(df, freq, tz=None):
 # ===========================================
 def resample(data, resolution="1T", tz=None, ffill=True, dropna=False):
 
-    def resample_ticks(df, freq=1000, price_col='last', volume_col=None):
+    def resample_ticks(data, freq=1000, by='last'):
         """
-        function that re-samples tick data into an N-tick-chart ready OHLC(V) format
+        function that re-samples tick data into an N-tick or N-volume OHLC format
 
-        df = pandas pd.dataframe tick data
-        price_col = the Price column name
-        volume_col = the Volume column name (if applicable)
-        freq = tick resoltuin grouping
+        df = pandas pd.dataframe of raw tick data
+        freq = resoltuin grouping
+        by = the column name to resample by
         """
-
-        # get only ticks and fill missing data
-        cols = [price_col]
-        if volume_col:
-            cols.append(volume_col)
-        ticks = df.ix[:, cols]
 
         # place timestamp index in T colums
         # (to be used as future df index)
-        ticks['T'] = ticks.index
+        data['T'] = data.index
 
-        # add group indicator evey N ticks
-        ticks['grp'] = [np.nan if i%freq else i for i in range(len(ticks[price_col]))]
-        ticks.fillna(method='ffill', inplace=True)
-        ticks = ticks.set_index('grp')
+        # get only ticks and fill missing data
+        try:
+            df = data[['T', 'last', 'lastsize']].copy()
+            price_col = 'last'
+            size_col  = 'lastsize'
+        except:
+            df = data[['T', 'close', 'volume']].copy()
+            price_col = 'close'
+            size_col  = 'volume'
 
-        # grop ticks
-        groupped = ticks.groupby(ticks.index, sort=False)
+        # add group indicator evey N df
+        if by == 'size' or by == 'lastsize' or by == 'volume':
+            df['cumvol'] = df[size_col].cumsum()
+            df['mark'] = round(round(round(df['cumvol'] / .1)*.1, 2)/freq) * freq
+            df['diff'] = df['mark'].diff().fillna(0).astype(int)
+            df['grp'] = np.where(df['diff']>=freq-1, (df['mark']/freq), np.nan)
+        else:
+            df['grp'] = [np.nan if i%freq else i for i in range(len(df[price_col]))]
+
+        df.loc[:1, 'grp'] = 0
+
+        df.fillna(method='ffill', inplace=True)
+        # print(df[['lastsize', 'cumvol', 'mark', 'diff', 'grp']].tail(1))
+        df = df.set_index('grp')
+
+        # grop df
+        groupped = df.groupby(df.index, sort=False)
 
         # build ohlc(v) pd.dataframe from new grp column
-        tickdf = pd.DataFrame({'open': groupped[price_col].first()})
-        tickdf['high']  = groupped[price_col].max()
-        tickdf['low']   = groupped[price_col].min()
-        tickdf['close'] = groupped[price_col].last()
-        if volume_col:
-            tickdf['volume'] = groupped[volume_col].sum()
+        newdf = pd.DataFrame({
+            'open':   groupped[price_col].first(),
+            'high':   groupped[price_col].max(),
+            'low':    groupped[price_col].min(),
+            'close':  groupped[price_col].last(),
+            'volume': groupped[size_col].sum()
+        })
 
         # set index to timestamp
-        tickdf['datetime'] = groupped.T.head(1)
-        tickdf.set_index(['datetime'], inplace=True)
+        newdf['datetime'] = groupped.T.head(1)
+        newdf.set_index(['datetime'], inplace=True)
 
-        return tickdf
+        return newdf
 
 
     if len(data) > 0:
@@ -199,7 +213,20 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False):
         if ("K" in resolution):
             if (periods > 1):
                 for sym in meta_data.index.values:
-                    symdata = resample_ticks(data[data['symbol']==sym], periods, price_col='last', volume_col='lastsize')
+                    # symdata = resample_ticks(data[data['symbol']==sym], periods, price_col='last', volume_col='lastsize')
+                    symdata = resample_ticks(data[data['symbol']==sym], freq=periods, by='last')
+                    symdata['symbol'] = sym
+                    symdata['symbol_group'] = meta_data[meta_data.index==sym]['symbol_group'].values[0]
+                    symdata['asset_class'] = meta_data[meta_data.index==sym]['asset_class'].values[0]
+                    combined.append(symdata)
+
+                data = pd.concat(combined).dropna()
+
+        elif ("V" in resolution):
+            if (periods > 1):
+                for sym in meta_data.index.values:
+                    symdata = resample_ticks(data[data['symbol']==sym], freq=periods, by='lastsize')
+                    # print(symdata)
                     symdata['symbol'] = sym
                     symdata['symbol_group'] = meta_data[meta_data.index==sym]['symbol_group'].values[0]
                     symdata['asset_class'] = meta_data[meta_data.index==sym]['asset_class'].values[0]
@@ -304,7 +331,7 @@ def backdate(res, date=None, as_datetime=False, fmt='%Y-%m-%d', tz="UTC"):
             new_date = date - datetime.timedelta(seconds=periods)
         elif "T" in res:
             new_date = date - datetime.timedelta(minutes=periods)
-        elif "H" in res:
+        elif "H" in res or "V" in res:
             new_date = date - datetime.timedelta(hours=periods)
         elif "W" in res:
             new_date = date - datetime.timedelta(weeks=periods)

@@ -110,7 +110,7 @@ def create_continous_contract(df, resolution="1T"):
     flags = _continous_contract_flags(daily_df)
 
     # resample back to original
-    if "K" in resolution or "S" in resolution:
+    if "K" in resolution or "V" in resolution or "S" in resolution:
         flags = flags.resample('S').last().ffill().loc[df.index.unique()].ffill()
     else:
         flags = flags.resample('T').last().ffill().loc[df.index.unique()].ffill()

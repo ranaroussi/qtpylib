@@ -97,6 +97,8 @@ class Algo(Broker):
         self.bar_hash       = 0
 
         self.tick_window    = tick_window if tick_window > 0 else 1
+        if "V" in resolution:
+            self.tick_window = 1000
         self.bar_window     = bar_window if bar_window > 0 else 100
         self.resolution     = resolution.replace("MIN", "T")
         self.timezone       = timezone
@@ -464,7 +466,7 @@ class Algo(Broker):
     def _tick_handler(self, tick):
         self._cancel_expired_pending_orders()
 
-        if "K" not in self.resolution:
+        if "K" not in self.resolution and "V" not in self.resolution:
             self.ticks = self._update_window(self.ticks, tick, window=self.tick_window)
         else:
             self.ticks = self._update_window(self.ticks, tick)
@@ -487,18 +489,14 @@ class Algo(Broker):
     # ---------------------------------------
     def _bar_handler(self, bar):
 
-        is_tick_bar = False
+        is_tick_or_volume_bar = False
         handle_bar  = True
 
-        if "K" in self.resolution:
-            if self._caller("_tick_handler"):
-                is_tick_bar = True
-                handle_bar  = True
-            else:
-                is_tick_bar = True
-                handle_bar = False
+        if "K" in self.resolution or "V" in self.resolution:
+            is_tick_or_volume_bar = True
+            handle_bar = self._caller("_tick_handler")
 
-        if is_tick_bar:
+        if is_tick_or_volume_bar:
             # just add a bar (used by tick bar bandler)
             self.bars = self._update_window(self.bars, bar, window=self.bar_window)
         else:
@@ -514,7 +512,7 @@ class Algo(Broker):
             self.record_ts = bar.index[0]
             self.on_bar(self.get_instrument(bar))
 
-            if "K" not in self.resolution:
+            if "K" not in self.resolution and "V" not in self.resolution:
                 self.record(bar)
 
 
