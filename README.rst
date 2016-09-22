@@ -52,9 +52,10 @@ Features
 - Tick, Bar and Trade data is stored in MySQL for later analisys and backtesting.
 - Using pub/sub architecture using `ØMQ <http://zeromq.org>`__ (ZeroMQ) for communicating between the Algo and the Blotter allows for a single Blotter/multiple Algos running on the same machine.
 - Includes many common indicators that you can seamlessly use in your algorithm.
-- Ability to import any Python library (such as `scikit-learn <http://scikit-learn.org>`__ or `TensorFlow <https://www.tensorflow.org>`__) to use them in your algorithms.
+- **Support for quote, time, tick or volume based strategy resolutions**
 - Have orders delivered to your mobile via SMS (requires a `Nexmo <https://www.nexmo.com/>`__ or `Twilio <https://www.twilio.com/>`__ account)
 - Full integration with `TA-Lib <http://ta-lib.org>`__ via dedicated module (`see documentation <http://qtpylib.io/docs/latest/indicators.html#ta-lib-integration>`_)
+- Ability to import any Python library (such as `scikit-learn <http://scikit-learn.org>`__ or `TensorFlow <https://www.tensorflow.org>`__) to use them in your algorithms.
 
 -----
 
