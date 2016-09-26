@@ -3,6 +3,11 @@ Release Notes
 
 *September 26, 2016*
 
+1.4.3a
+-------
+
+- Introduced ``instrument.trades`` / ``instrument.get_trades()`` as quick access to the instuments trade log
+
 1.4.2a
 -------
 
