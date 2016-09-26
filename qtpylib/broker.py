@@ -847,3 +847,27 @@ class Broker():
 
         return self.orders.pending
 
+
+    # ---------------------------------------
+    def get_trades(self, symbol=None):
+
+        # closed trades
+        trades = pd.DataFrame(self.trades)
+        if len(trades) > 0:
+            trades.loc[:, 'closed'] = True
+
+        # ongoing trades
+        active_trades = pd.DataFrame(list(self.active_trades.values()))
+        if len(active_trades) > 0:
+            active_trades.loc[:, 'closed'] = False
+
+        # combine
+        df = pd.concat([trades, active_trades]).reset_index()
+
+        # get single symbol
+        if len(df) > 0 and symbol is not None:
+            df = df[ df['symbol']==symbol.split("_")[0] ]
+            df.loc[:, 'symbol'] = symbol
+
+        # return
+        return df

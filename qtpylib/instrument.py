@@ -316,7 +316,7 @@ class Instrument(str):
         """Get portfolio data for the instrument
 
         :Retruns:
-            contract : dict
+            portfolio : dict
                 portfolio data for the instrument
         """
         return self.parent.get_portfolio(self)
@@ -326,7 +326,7 @@ class Instrument(str):
         """Get orders for the instrument
 
         :Retruns:
-            contract : list
+            orders : list
                 list of order data as dict
         """
         return self.parent.get_orders(self)
@@ -336,7 +336,7 @@ class Instrument(str):
         """Get pending orders for the instrument
 
         :Retruns:
-            contract : list
+            orders : list
                 list of pending order data as dict
         """
         return self.parent.get_pending_orders(self)
@@ -351,7 +351,7 @@ class Instrument(str):
                 the type order to return: STOP (default), LIMIT, MARKET
 
         :Retruns:
-            contract : object
+            order : object
                 IB Order object of instrument
         """
         return self.parent.active_order_id(self)
@@ -362,10 +362,21 @@ class Instrument(str):
         """Get orderbook for the instrument
 
         :Retruns:
-            contract : pd.DataFrame
+            orderbook : pd.DataFrame
                 orderbook DataFrame for the instrument
         """
         return self.parent.get_orderbook(self)
+
+
+    # ---------------------------------------
+    def get_trades(self):
+        """Get orderbook for the instrument
+
+        :Retruns:
+            trades : pd.DataFrame
+                instrument's trade log as DataFrame
+        """
+        return self.parent.get_trades(self)
 
 
     # ---------------------------------------
@@ -373,8 +384,8 @@ class Instrument(str):
         """Get symbol of this instrument
 
         :Retruns:
-            contract : pd.DataFrame
-                orderbook DataFrame for the instrument
+            symbol : string
+                instrument's symbol
         """
         return self
 
@@ -541,6 +552,12 @@ class Instrument(str):
     def orderbook(self):
         """(Property) Shortcut to self.get_orderbook()"""
         return self.get_orderbook()
+
+    # ---------------------------------------
+    @property
+    def trades(self):
+        """(Property) Shortcut to self.get_trades()"""
+        return self.get_trades()
 
     # ---------------------------------------
     @property
