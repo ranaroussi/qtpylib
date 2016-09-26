@@ -28,6 +28,28 @@ To uninstall QTPyLib using ``pip``, simply use:
     $ pip uninstall qtpylib
 
 
+Possible Conda/Anaconda Issue
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you're using Python under a Conda/Anaconda enviroment, it is possible you'll run
+into the following error message during installation that's caused by a
+`documented Anaconda bug <https://github.com/ContinuumIO/anaconda-issues/issues/542>`_:
+
+.. code:: bash
+
+    Installing collected packages: setuptools, cryptography
+        Found existing installation: setuptools 27.2.0
+    Cannot remove entries from nonexistent file ~/anaconda3/lib/python/site-packages/easy-install.pth
+
+
+To get ``conda`` to play nice with ``pip``, run this command before installing/upgrading QTPyLib:
+
+.. code:: bash
+
+    $ pip install --ignore-installed --upgrade pip setuptools
+
+
+
 Requirements
 ~~~~~~~~~~~~
 
