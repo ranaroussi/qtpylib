@@ -8,6 +8,7 @@ Release Notes
 
 - Updated pip installer to use ezIBpy >= 1.12.19
 
+
 *September 22, 2016*
 
 1.4.1a
@@ -15,7 +16,6 @@ Release Notes
 
 - Added support for working with Volume based bars (by using ``nV`` in the ``resolution`` parameter)
 
------
 
 *September 20, 2016*
 
@@ -36,7 +36,6 @@ Release Notes
 - Fixed Eurodollar's base url in ``futures.py``
 - Fetching correct ticksize for futures (including those that aren't using decimal ticks, eg 1/32 for bonds)
 
------
 
 *September 19, 2016*
 
