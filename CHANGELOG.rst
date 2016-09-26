@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+*September 26, 2016*
+
+1.4.2a
+-------
+
+- Updated pip installer to use ezIBpy >= 1.12.19
+
 *September 22, 2016*
 
 1.4.1a

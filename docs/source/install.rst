@@ -6,7 +6,7 @@ Install QTPyLib using ``pip``
 
 .. code:: bash
 
-    $ pip install qtpylib --upgrade
+    $ pip install qtpylib --upgrade --no-cache-dir
 
 
 .. note::
