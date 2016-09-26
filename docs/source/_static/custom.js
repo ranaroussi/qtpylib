@@ -1,7 +1,12 @@
+$(document).ready(function() {
+    $("a[href^='http']").attr('target','_blank');
+});
+
 window.onload = function() {
 
   // readthedocs
   if (window.location.href.indexOf('en/latest') !== -1) return
+
 
   // own domain?
   var domain = document.domain || '';
