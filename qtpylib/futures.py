@@ -52,7 +52,7 @@ def create_continous_contract(df, resolution="1T"):
             # rollover by volume
             combined  = m1.merge(m2, left_index=True, right_index=True)
             m_highest = combined['volume_y'] > combined['volume_x']
-            if len(m_highest) == 0:
+            if len(m_highest.index) == 0:
                 return m1 # didn't rolled over yet
             roll_date = m_highest[m_highest].index[-1]
 
@@ -87,7 +87,7 @@ def create_continous_contract(df, resolution="1T"):
         flags = flags[flags['symbol'].isin(flags['symbol'].unique())]
 
         # single row df won't resample
-        if len(flags) <= 1:
+        if len(flags.index) <= 1:
             flags = pd.DataFrame(index=pd.date_range(start=flags[0:1].index[0],
                 periods=24, freq="1H"), data=flags[['symbol', 'expiry', 'gap']]).ffill()
 
@@ -184,7 +184,7 @@ def get_active_contract(symbol, url=None, n=1):
             c = c[c.expiry!=datetime.datetime.now().strftime('%Y%m')]
 
         # based on volume
-        if len(c[c.volume>100]):
+        if len(c[c.volume>100].index):
             return c.sort_values(by=['volume', 'expiry'], ascending=False)[:n]['expiry'].values[0]
         else:
             # based on date
@@ -206,7 +206,7 @@ def get_contract_ticksize(symbol, fallback=0.01, ttl=84600):
         df = pd.read_pickle(cache_file)
         if (int(time.time()) - int(os.path.getmtime(cache_file))) < ttl:
             filtered = df[df['symbol']==symbol]
-            if len(filtered) > 0:
+            if len(filtered.index) > 0:
                 return float(filtered['ticksize'].values[0])
 
     # continue...

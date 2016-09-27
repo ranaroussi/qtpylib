@@ -855,12 +855,12 @@ class Broker():
 
         # closed trades
         trades = pd.DataFrame(self.trades)
-        if len(trades) > 0:
+        if len(trades.index) > 0:
             trades.loc[:, 'closed'] = True
 
         # ongoing trades
         active_trades = pd.DataFrame(list(self.active_trades.values()))
-        if len(active_trades) > 0:
+        if len(active_trades.index) > 0:
             active_trades.loc[:, 'closed'] = False
 
         # combine

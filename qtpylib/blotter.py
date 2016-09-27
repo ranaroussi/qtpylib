@@ -365,7 +365,7 @@ class Blotter():
         self._bars[symbol] = self._bars[symbol].append(opened_bar)
         self._bars[symbol] = self._bars[symbol].groupby(self._bars[symbol].index).last()
 
-        if len(self._bars[symbol]) > previous_bar_count:
+        if len(self._bars[symbol].index) > previous_bar_count:
 
             bar = self._bars[symbol].to_dict(orient='records')[0]
             bar["symbol"]      = symbol
@@ -536,7 +536,7 @@ class Blotter():
 
                     # read contructs db
                     df = pd.read_csv(self.args['symbols'], header=0)
-                    if len(df) == 0:
+                    if len(df.index) == 0:
                         continue
 
                     # removed expired
