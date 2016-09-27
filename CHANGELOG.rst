@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+*September 27, 2016*
+
+1.4.4a
+-------
+
+- Added open trades + unrealized PNL to ``instrument.trades`` and ``instrument.get_trades()``
+- Switched DataFrame length check to ``len(df.index)>0`` (faster than ``df.empty`` or ``len(df)>0`` in my checks)
+- Fixed last price in recent orders
+
+
 *September 26, 2016*
 
 1.4.3a
