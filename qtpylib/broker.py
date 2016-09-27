@@ -24,6 +24,7 @@ import ezibpy
 import glob
 import hashlib
 import logging
+import numpy as np
 import os
 import pandas as pd
 import pickle
@@ -863,13 +864,39 @@ class Broker():
         if len(active_trades.index) > 0:
             active_trades.loc[:, 'closed'] = False
 
-        # combine
+        # combine dataframes
         df = pd.concat([trades, active_trades]).reset_index()
 
-        # get single symbol
-        if len(df) > 0 and symbol is not None:
-            df = df[ df['symbol']==symbol.split("_")[0] ]
-            df.loc[:, 'symbol'] = symbol
+        # set last price
+        if len(df.index) > 0:
+
+            # conert values to floats
+            df['entry_price']  = df['entry_price'].astype(float)
+            df['exit_price']   = df['exit_price'].astype(float)
+            df['market_price'] = df['market_price'].astype(float)
+            df['realized_pnl'] = df['realized_pnl'].astype(float)
+            df['stop']         = df['stop'].astype(float)
+            df['target']       = df['target'].astype(float)
+            df['quantity']     = df['quantity'].astype(int)
+
+            try:
+                df.loc[:, 'last'] = float(self.ticks[self.ticks['symbol']==symbol]['last'].values[-1])
+            except:
+                df.loc[:, 'last'] = 0
+
+            # calc unrealized pnl
+            df['unrealized_pnl'] = np.where(df['direction']=="SHORT",
+                df['entry_price']-df['last'], df['last']-df['entry_price'])
+
+            df.loc[df['closed']==True, 'unrealized_pnl'] = 0
+
+            # drop index column
+            df.drop('index', axis=1, inplace=True)
+
+            # get single symbol
+            if symbol is not None:
+                df = df[ df['symbol']==symbol.split("_")[0] ]
+                df.loc[:, 'symbol'] = symbol
 
         # return
         return df
