@@ -626,8 +626,10 @@ class Broker():
             self.orders.recent[orderId]['targetOrderId'] = order["targetOrderId"]
             self.orders.recent[orderId]['stopOrderId'] = order["stopOrderId"]
         # append market price at the time of order
-        try: self.orders.recent[orderId]['price'] = self.ticks[-1:]['last'][0]
-        except: self.orders.recent[orderId]['price'] = 0
+        try:
+            self.orders.recent[orderId]['price'] = self.ticks[self.ticks['symbol']==symbol]['last'].values[-1]
+        except:
+            self.orders.recent[orderId]['price'] = 0
 
         # add orderId / ttl to (auto-adds to history)
         expiry = expiry*1000 if expiry > 0 else 60000 # 1min
