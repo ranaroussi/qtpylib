@@ -431,12 +431,15 @@ class Broker():
         # print(self.active_trades[tradeId])
         # print("-----------------\n\n")
 
+
         # get trade
         trade = self.active_trades[tradeId].copy()
-        trade['direction'] = trade['direction'].replace("BUY", "LONG").replace("SELL", "SHORT")
 
-        # sms
+        # sms trades
         sms._send_trade(trade, self.sms_numbers, self.timezone)
+
+        # rename trade direction
+        trade['direction'] = trade['direction'].replace("BUY", "LONG").replace("SELL", "SHORT")
 
         # log
         self.log_trade(trade)
