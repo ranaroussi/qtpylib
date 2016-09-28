@@ -19,7 +19,7 @@ these recepients will receive the notification to their phone.
     To enable this functionality, you need to have an account with either
     `Nexmo <https://www.nexmo.com/>`_ or `Twilio <https://www.twilio.com/>`_
     and set an SMS Provider for your algo (refer to the
-    `SMS Service Provider Setup <#sms-service-provider-setup>`_
+    `SMS Service Provider Setup <#id1>`_
     section below).
 
 

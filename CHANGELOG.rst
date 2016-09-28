@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+*September 28, 2016*
+
+1.4.5a
+-------
+
+- Fixed sms formatting by sending SMS before logging trade
+
+
 *September 27, 2016*
 
 1.4.4a
