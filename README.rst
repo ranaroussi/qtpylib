@@ -218,7 +218,7 @@ First, install IbPy (for some reason I can't get this installed automatically):
 
 .. code:: bash
 
-    $ pip install git+git://github.com/blampe/IbPy --user
+    $ pip install git+git://github.com/blampe/IbPy --user --upgrade
 
 Then, install QTPyLib using ``pip``:
 
