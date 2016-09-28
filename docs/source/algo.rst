@@ -150,7 +150,7 @@ While the Blotter running in the background, write and execute your algorithm:
 
     if __name__ == "__main__":
         strategy = CrossOver(
-            instruments = [ ("CL", "FUT", "NYMAX", "USD", 201609) ],
+            instruments = [ ("CL", "FUT", "NYMEX", "USD", 201609) ],
             resolution  = "1H"
         )
 
@@ -204,7 +204,7 @@ Using Multiple Instruments
         strategy = BuyStockSellOil(
             instruments = [
                 ("ES", "FUT", "GLOBEX", "USD", 201609),
-                ("CL", "FUT", "NYMAX", "USD", 201609)
+                ("CL", "FUT", "NYMEX", "USD", 201609)
             ],
             resolution  = "15T"
         )
