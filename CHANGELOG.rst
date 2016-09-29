@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+*September 29, 2016*
+
+1.4.6a
+-------
+
+- Rounding numbers in SMS message template
+
+
 *September 28, 2016*
 
 1.4.5a
