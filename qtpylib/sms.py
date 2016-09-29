@@ -69,21 +69,30 @@ def _send_trade(trade, numbers, timezone="UTC"):
     if numbers == False:
         return
 
+    # decimals to round:
+    decimals = max( [2, len(str(trade['entry_price']).split('.')[1])] )
+
+    # reverse direction for exits
+    if trade['action'] == "EXIT":
+        trade['direction'] = "BUY" if trade['direction'] == "SELL" else "BUY"
+
     # message template
     arrow      = "▲" if trade['direction'] == "BUY" else "▼"
-    order_type = trade['order_type'].replace("MARKET", "MKT").replace("LIMIT", "LMT")
+    order_type = trade['order_type'].replace("MARKET", "MKT"
+        ).replace("LIMIT", "LMT")
 
     msg = ""
 
-    trade['direction'] = trade['direction'].replace("BUY", "BOT").replace("SELL", "SLD")
+    trade['direction'] = trade['direction'].replace("BUY", "BOT"
+        ).replace("SELL", "SLD")
 
     qty = ""
     if abs(trade['quantity']) > 1:
         qty = str(abs(trade['quantity'])) + "x "
 
     if trade['action'] == "ENTRY":
-        target = round(trade['target'], 2) if trade['target'] > 0 else '-'
-        stop   = round(trade['stop'], 2) if trade['stop'] > 0 else '-'
+        target = round(trade['target'], decimals) if trade['target'] > 0 else '-'
+        stop   = round(trade['stop'], decimals) if trade['stop'] > 0 else '-'
 
         try:
             trade['entry_time'] = tools.datetime_to_timezone(
@@ -91,8 +100,10 @@ def _send_trade(trade, numbers, timezone="UTC"):
             msg += trade['entry_time'].strftime('%H:%M:%S%z') +"\n"
         except:
             pass
+
         msg += trade['direction'] +" "+ arrow  +" "+ qty +" "+ trade['symbol']
-        msg += " @ "+ str(round(trade['entry_price'], 2)) +" "+ order_type +"\n"
+        msg += " @ "+ str(round(trade['entry_price'], decimals))
+        msg += " "+ order_type +"\n"
         msg += "TP "+ str(target) +" / SL "+ str(stop) +"\n"
 
     elif trade['action'] == "EXIT":
@@ -106,10 +117,12 @@ def _send_trade(trade, numbers, timezone="UTC"):
             msg += trade['exit_time'].strftime('%H:%M:%S%z') +"\n"
         except:
             pass
-        msg += trade['direction'] +" "+ arrow  +" "+ qty +" "+ trade['symbol']
-        msg += " @ "+ str(round(trade['exit_price'], 2)) +" "+ exit_type +"\n"
-        msg += "PL "+ pnl_char + str(trade['realized_pnl']) +" ("+ trade['duration'] +")\n"
 
+        msg += trade['direction'] +" "+ arrow  +" "+ qty +" "+ trade['symbol']
+        msg += " @ "+ str(round(trade['exit_price'], decimals))
+        msg += " "+ exit_type +"\n"
+        msg += "PL "+ pnl_char + str(round(trade['realized_pnl'], decimals))
+        msg += " ("+ trade['duration'] +")\n"
 
     # if UTC remove timezone info
     msg = msg.replace("+0000", " UTC")
