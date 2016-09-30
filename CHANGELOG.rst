@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+*September 30, 2016*
+
+1.4.7a
+-------
+
+- Fixed issue that prevented from blotter to assign ``asset_class`` to stocks
+
 *September 29, 2016*
 
 1.4.6a
