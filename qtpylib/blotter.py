@@ -65,7 +65,7 @@ def _gen_symbol_group(sym):
 
 def _gen_asset_class(sym):
     sym_class = str(sym).split("_")
-    if len(sym_class) > 0:
+    if len(sym_class) > 1:
         return sym_class[1]
     return "STK"
 
