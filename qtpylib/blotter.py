@@ -61,12 +61,14 @@ def _gen_symbol_group(sym):
     if "_FUT" in sym:
         sym = sym.split("_FUT")
         return sym[0][:-5]+"_F"
+    elif "_CASH" in sym:
+        return "CASH"
     return sym
 
 def _gen_asset_class(sym):
     sym_class = str(sym).split("_")
     if len(sym_class) > 1:
-        return sym_class[1]
+        return sym_class[1].replace("CASH", "CSH")
     return "STK"
 
 
