@@ -115,8 +115,8 @@ class Blotter():
         self.socket  = None
         self.ibConn  = None
 
-        self.symbol_ids  = {} # cache
-        self.last_prices = {} # cache
+        self.symbol_ids = {} # cache
+        self.cash_ticks = {} # cache
 
         self.implicit_args = False
 
@@ -310,6 +310,26 @@ class Blotter():
         elif caller == "handleTickPrice" or caller == "handleTickSize":
             self.on_quote_received(msg.tickerId)
 
+        # elif caller in "handleTickOptionComputation":
+        #     self.on_option_received(msg.tickerId)
+
+    # -------------------------------------------
+    # def on_option_received(self, tickerId):
+    #     try:
+    #         symbol = self.ibConn.tickerSymbol(tickerId)
+    #         quote  = self.ibConn.optionsData[tickerId].to_dict(orient='records')[0]
+    #         quote['bid']  = float(Decimal(quote['bid']))
+    #         quote['ask']  = float(Decimal(quote['ask']))
+    #         quote['last'] = float(Decimal(quote['last']))
+    #         quote["kind"] = "TICK"
+    #         quote["symbol"] = symbol
+    #         quote["symbol_group"] = _gen_symbol_group(symbol)
+    #         quote["asset_class"]  = _gen_asset_class(symbol)
+
+    #         self.broadcast(quote, "TICK")
+    #     except:
+    #         pass
+
     # -------------------------------------------
     def on_quote_received(self, tickerId):
         try:
@@ -319,7 +339,7 @@ class Blotter():
             quote['ask']  = float(Decimal(quote['ask']))
             quote['last'] = float(Decimal(quote['last']))
             quote["kind"] = "QUOTE"
-            quote["symbol"] = symbol.replace("_CASH", "")
+            quote["symbol"] = symbol
             quote["symbol_group"] = _gen_symbol_group(symbol)
             quote["asset_class"]  = _gen_asset_class(symbol)
 
@@ -328,13 +348,15 @@ class Blotter():
                 quote['last'] = round(float((quote['bid']+quote['ask'])/2), 5)
                 quote['timestamp'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")
 
-                # log to db on last change
-                if symbol in self.last_prices.keys() and quote['last'] != self.last_prices[symbol]:
-                    self.log2db(quote, "TICK")
+                # create synthetic tick
+                if symbol in self.cash_ticks.keys() and quote['last'] != self.cash_ticks[symbol]:
+                    self.on_tick_received(quote)
+                else:
+                    self.broadcast(quote, "QUOTE")
 
-                self.last_prices[symbol] = quote['last']
-
-            self.broadcast(quote, "QUOTE")
+                self.cash_ticks[symbol] = quote['last']
+            else:
+                self.broadcast(quote, "QUOTE")
 
         except:
             pass
@@ -399,7 +421,7 @@ class Blotter():
     # -------------------------------------------
     def broadcast(self, data, kind):
         string2send = "%s %s" % (self.args['zmqtopic'], json.dumps(data))
-        # string2send = "%s %s" % (data['symbol'], json.dumps(data))
+        # print(kind, string2send)
         try:
             self.socket.send_string(string2send)
         except:
