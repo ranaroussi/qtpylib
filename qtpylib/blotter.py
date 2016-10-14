@@ -116,6 +116,7 @@ class Blotter():
         self.ibConn  = None
 
         self.symbol_ids = {} # cash
+        self.last_prices = {} # cache
 
         self.implicit_args = False
 
@@ -318,11 +319,23 @@ class Blotter():
             quote['ask']  = float(Decimal(quote['ask']))
             quote['last'] = float(Decimal(quote['last']))
             quote["kind"] = "QUOTE"
-            quote["symbol"] = symbol
+            quote["symbol"] = symbol.replace("_CASH", "")
             quote["symbol_group"] = _gen_symbol_group(symbol)
             quote["asset_class"]  = _gen_asset_class(symbol)
 
+            # cash markets do not get RTVOLUME (handleTickString)
+            if quote["asset_class"] == "CSH":
+                quote['last'] = round(float((quote['bid']+quote['ask'])/2), 5)
+                quote['timestamp'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")
+
+                # log to db on last change
+                if symbol in self.last_prices.keys() and quote['last'] != self.last_prices[symbol]:
+                    self.log2db(quote, "TICK")
+
+                self.last_prices[symbol] = quote['last']
+
             self.broadcast(quote, "QUOTE")
+
         except:
             pass
 
