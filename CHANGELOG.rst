@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+
+*October 14, 2016*
+
+1.4.7a
+-------
+
+- Using a **synthetic tick** for CASH contracts (cash markets do not get RTVOLUME)
+
+
 *September 30, 2016*
 
 1.4.7a
