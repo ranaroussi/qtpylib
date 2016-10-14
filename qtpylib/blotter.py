@@ -115,7 +115,7 @@ class Blotter():
         self.socket  = None
         self.ibConn  = None
 
-        self.symbol_ids = {} # cash
+        self.symbol_ids  = {} # cache
         self.last_prices = {} # cache
 
         self.implicit_args = False
