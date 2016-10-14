@@ -401,7 +401,7 @@ class Blotter():
         symbol_id = 0
 
         # in memory?
-        if symbol in self.symbol_ids:
+        if symbol in self.symbol_ids.keys():
             symbol_id = self.symbol_ids[symbol]
 
         # load from db
