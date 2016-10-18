@@ -255,20 +255,39 @@ def get_ib_futures(symbol=None, exchange=None, ttl=86400):
 
     cache_file = tempfile.gettempdir()+"/futures_spec.pkl"
 
+    if symbol is not None:
+        symbol = symbol.upper()
+
+    def _get(df, symbol=None, exchange=None):
+        if symbol == "*" or symbol is None:
+            return df
+
+        if exchange is None:
+            symdf = df[df['symbol']==symbol]
+            if len(symdf) > 0:
+                return symdf.to_dict(orient='records')[0]
+            else:
+                symdf = df[df['class']==symbol]
+                if len(symdf) > 0:
+                    return symdf.to_dict(orient='records')[0]
+
+        symdf = df[(df['exchange']==exchange) & (df['symbol']==symbol)]
+        if len(symdf) == 1:
+            return symdf.to_dict(orient='records')[0]
+        else:
+            symdf = df[(df['exchange']==exchange) & (df['class']==symbol)]
+            if len(symdf) == 1:
+                return symdf.to_dict(orient='records')[0]
+
+        return None
+
     if os.path.exists(cache_file):
         if (int(time.time()) - int(os.path.getmtime(cache_file))) < ttl:
             df = pd.read_pickle(cache_file)
 
-            if symbol is not None:
-                if exchange is None:
-                    return df[df['symbol']==symbol].to_dict(orient='records')[0]
-
-                return df[
-                    (df['exchange']==exchange) & (df['symbol']==symbol)
-                ].to_dict(orient='records')[0]
-
-            return df
-
+            symdf = _get(df, symbol, exchange)
+            if symdf is not None:
+                return symdf
 
     # else: fetch new...
 
@@ -319,15 +338,11 @@ def get_ib_futures(symbol=None, exchange=None, ttl=86400):
     df.to_pickle(cache_file)
     tools.chmod(cache_file)
 
-    if symbol is not None:
-        if exchange is None:
-            return df[df['symbol']==symbol].to_dict(orient='records')[0]
+    symdf = _get(df, symbol, exchange)
+    if symdf is not None:
+        return symdf
 
-        return df[
-            (df['exchange']==exchange) & (df['symbol']==symbol)
-        ].to_dict(orient='records')[0]
-
-    return df
+    return None
 
 
 # -------------------------------------------
