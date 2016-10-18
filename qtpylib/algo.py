@@ -75,7 +75,7 @@ class Algo(Broker):
         preload : str
             Preload history when starting algo (using pandas resolution: 1H, 1D, etc). Use K for tick bars.
         continuous : bool
-            Tells preloader weather to construct continuous Futures contracts (default is True)
+            Tells preloader to construct continuous Futures contracts (default is True)
         blotter : str
             Log trades to MySQL server used by this Blotter (default is "auto detect")
 
