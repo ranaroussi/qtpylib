@@ -786,8 +786,12 @@ class Blotter():
 
         instruments = pd.DataFrame(instruments)
         instruments.columns = db.columns
+        instruments['expiry'] = instruments['expiry'].astype(str)
 
-        db = db.append(instruments).drop_duplicates(keep="first")
+        db = db.append(instruments)
+        db['expiry'] = db['expiry'].astype(str)
+        db = db.drop_duplicates(keep="first")
+
         db.to_csv(self.args['symbols'], header=True, index=False)
         tools.chmod(self.args['symbols'])
 
