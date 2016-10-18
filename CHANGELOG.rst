@@ -7,6 +7,7 @@ Release Notes
 -------
 
 - Continuous Futures contract construction is now optional (defaults to ``True``)
+- Added ``futures.make_tuple(...)`` for automatic tuple construction for Futures
 
 *October 14, 2016*
 

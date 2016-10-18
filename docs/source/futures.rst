@@ -1,6 +1,38 @@
 Futures Trading
 ===============
 
+Auto-Tuple Generation
+---------------------
+
+Version 1.4.9 instoduced ``futures.make_tuple(...)``, a method
+that automatically constructs a valid instrument tuple for any Futures
+contract available on Interactive Brokers, using the information available
+via the `contract specification retrival functionality <#contract-specification>`_.
+
+.. code:: python
+
+    # strategy.oy
+    ...
+
+    from qtpylib import futures
+
+    if __name__ == "__main__":
+        # get most active ES contract
+        ACTIVE_MONTH = futures.get_active_contract("ES")
+
+        strategy = CrossOver(
+            instruments = [
+                futures.make_tuple("ES", 201612),
+                futures.make_tuple("CL", 201612, exchange="NYMEX"),
+                futures.make_tuple("GBL", 201612)
+            ],
+            ...
+        )
+
+    ...
+
+
+
 
 Minimum Contract Tick Size
 --------------------------
@@ -105,8 +137,8 @@ In this case
 -----
 
 
-Margin Requriments for Contract
--------------------------------
+Contract Specification
+----------------------
 
 When you want to know a Futures contract's margin requirements, you can
 call ``futures.get_ib_futures(...)`` to get that information.

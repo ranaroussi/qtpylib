@@ -251,6 +251,13 @@ def get_contract_ticksize(symbol, fallback=0.01, ttl=84600):
 
 
 # -------------------------------------------
+def make_tuple(symbol, expiry, exchange=None):
+    contract = get_ib_futures(symbol, exchange)
+    if contract is not None:
+        return (contract['symbol'], "FUT", contract['exchange'], contract['currency'], expiry, 0.0, "")
+    return None
+
+# -------------------------------------------
 def get_ib_futures(symbol=None, exchange=None, ttl=86400):
 
     cache_file = tempfile.gettempdir()+"/futures_spec.pkl"
