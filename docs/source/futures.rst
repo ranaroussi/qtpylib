@@ -17,14 +17,11 @@ via the `contract specification retrival functionality <#contract-specification>
     from qtpylib import futures
 
     if __name__ == "__main__":
-        # get most active ES contract
-        ACTIVE_MONTH = futures.get_active_contract("ES")
-
         strategy = CrossOver(
             instruments = [
                 futures.make_tuple("ES", 201612),
-                futures.make_tuple("CL", 201612, exchange="NYMEX"),
-                futures.make_tuple("GBL", 201612)
+                futures.make_tuple("CL", 201612),
+                futures.make_tuple("GBL", 201612, exchange="DTB")
             ],
             ...
         )
