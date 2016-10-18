@@ -177,6 +177,8 @@ class Blotter():
         except:
             pass
 
+        os._exit(0)
+
     # -------------------------------------------
     def _detect_running_blotter(self, name):
         return name
