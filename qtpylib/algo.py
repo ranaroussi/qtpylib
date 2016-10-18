@@ -74,6 +74,8 @@ class Algo(Broker):
             Convert IB timestamps to this timezone (eg. US/Central). Defaults to UTC
         preload : str
             Preload history when starting algo (using pandas resolution: 1H, 1D, etc). Use K for tick bars.
+        continuous : bool
+            Tells preloader weather to construct continuous Futures contracts (default is True)
         blotter : str
             Log trades to MySQL server used by this Blotter (default is "auto detect")
 
@@ -83,7 +85,7 @@ class Algo(Broker):
 
     def __init__(self, instruments, resolution, \
         tick_window=1, bar_window=100, timezone="UTC", preload=None, \
-        blotter=None, **kwargs):
+        continuous=True, blotter=None, **kwargs):
 
         self.name = str(self.__class__).split('.')[-1].split("'")[0]
 
@@ -103,6 +105,7 @@ class Algo(Broker):
         self.resolution     = resolution.replace("MIN", "T")
         self.timezone       = timezone
         self.preload        = preload
+        self.continuous     = continuous
 
         self.backtest       = args.backtest
         self.backtest_start = args.start
@@ -168,6 +171,7 @@ class Algo(Broker):
                 end           = self.backtest_end,
                 resolution    = self.resolution,
                 tz            = self.timezone,
+                continuous    = self.continuous,
                 quote_handler = self._quote_handler,
                 tick_handler  = self._tick_handler,
                 bar_handler   = self._bar_handler
@@ -183,7 +187,8 @@ class Algo(Broker):
                         symbols    = self.symbols,
                         start      = tools.backdate(self.preload),
                         resolution = self.resolution,
-                        tz         = self.timezone
+                        tz         = self.timezone,
+                        continuous = self.continuous
                     )
                 except:
                     pass

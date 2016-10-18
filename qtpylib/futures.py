@@ -38,7 +38,7 @@ import logging
 logging.getLogger('requests').setLevel(logging.WARNING)
 
 # -------------------------------------------
-def create_continous_contract(df, resolution="1T"):
+def create_continuous_contract(df, resolution="1T"):
 
     def _merge_contracts(m1, m2):
 
@@ -60,12 +60,12 @@ def create_continous_contract(df, resolution="1T"):
         return pd.concat([ m1[m1.index<=roll_date], m2[m2.index>roll_date] ])
 
 
-    def _continous_contract_flags(daily_df):
+    def _continuous_contract_flags(daily_df):
         # grab expirations
         expirations = list(daily_df['expiry'].dropna().unique())
         expirations.sort()
 
-        # set continous contract markets
+        # set continuous contract markets
         flags = None
         for expiration in expirations:
             new_contract = daily_df[daily_df['expiry']==expiration].copy()
@@ -107,7 +107,7 @@ def create_continous_contract(df, resolution="1T"):
         daily_df['diff'] = daily_df['last'].diff()
 
     # build flags
-    flags = _continous_contract_flags(daily_df)
+    flags = _continuous_contract_flags(daily_df)
 
     # resample back to original
     if "K" in resolution or "V" in resolution or "S" in resolution:

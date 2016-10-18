@@ -451,7 +451,7 @@ class Blotter():
             if row is not None:
                 symbol_id = row[0]
             else:
-                # save expiration (for building continous contracs)
+                # save expiration (for building continuous contracs)
                 expiry = None
                 if data["asset_class"] == "FUT":
                     try:
@@ -624,13 +624,15 @@ class Blotter():
     # -------------------------------------------
     # CLIENT / STATIC
     # -------------------------------------------
-    def history(self, symbols, start, end=None, resolution="1T", tz="UTC"):
+    def history(self, symbols, start, end=None, resolution="1T", tz="UTC", continuous=True):
         # load runtime/default data
         if isinstance(symbols, str):
             symbols = symbols.split(',')
 
         # work with symbol groups
-        symbols = list(map(_gen_symbol_group, symbols))
+        # symbols = list(map(_gen_symbol_group, symbols))
+        symbol_groups = list(map(_gen_symbol_group, symbols))
+        # print(symbols)
 
         # convert datetime to string for MySQL
         try: start = start.strftime(ibDataTypes["DATE_TIME_FORMAT_LONG_MILLISECS"])
@@ -659,8 +661,12 @@ class Blotter():
             query = query.replace('{END_SQL}', '')
 
         if symbols[0].strip() != "*":
-            query += """ AND ( s.`symbol_group` in ("{SYMBOLS}") OR s.`symbol` IN ("{SYMBOLS}") ) """
-            query = query.replace('{SYMBOLS}', '","'.join(symbols))
+            if continuous:
+                query += """ AND ( s.`symbol_group` in ("{SYMBOL_GROUPS}") or CONCAT(s.`symbol`, "_", s.`asset_class`) IN ("{SYMBOLS}") ) """
+                query = query.replace('{SYMBOLS}', '","'.join(symbols)).replace('{SYMBOL_GROUPS}', '","'.join(symbol_groups))
+            else:
+                query += """ AND ( CONCAT(s.`symbol`, "_", s.`asset_class`) IN ("{SYMBOLS}") ) """
+                query = query.replace('{SYMBOLS}', '","'.join(symbols))
         # --- end build query
 
         # get data using pandas
@@ -669,17 +675,16 @@ class Blotter():
         data.index = pd.to_datetime(data.index, utc=True)
         data['expiry'] = pd.to_datetime(data['expiry'], utc=True)
 
-
-        if "K" not in resolution and "S" not in resolution:
-            # construct continous contracts for futures
+        if continuous and "K" not in resolution and "S" not in resolution:
+            # construct continuous contracts for futures
             all_dfs = [ data[data['asset_class']!='FUT'] ]
 
             # generate dict of df per future
             futures_symbol_groups = list( data[data['asset_class']=='FUT']['symbol_group'].unique() )
             for key in futures_symbol_groups:
                 future_group = data[data['symbol_group']==key]
-                continous = futures.create_continous_contract(future_group, resolution)
-                all_dfs.append(continous)
+                continuous = futures.create_continuous_contract(future_group, resolution)
+                all_dfs.append(continuous)
 
             # make one df again
             data = pd.concat(all_dfs)
@@ -743,7 +748,7 @@ class Blotter():
 
     # -------------------------------------------
     def drip(self, symbols, start, end=None, tick_handler=None, \
-        bar_handler=None, resolution="1T", tz="UTC"):
+        bar_handler=None, resolution="1T", tz="UTC", continuous=True):
 
         handler = None
         if ("K" in resolution or "V" in resolution) and tick_handler is not None:
@@ -753,7 +758,8 @@ class Blotter():
         else:
             return
 
-        data = self.history(symbols, start=start, end=end, resolution=resolution, tz=tz)
+        data = self.history(symbols, start=start, end=end,
+            resolution=resolution, tz=tz, continuous=continuous)
 
         # stream
         try:
