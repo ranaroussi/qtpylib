@@ -1,10 +1,16 @@
 Release Notes
 =============
 
+*October 18, 2016*
+
+1.4.9a
+-------
+
+- Continuous Futures contract construction is now optional (defaults to ``True``)
 
 *October 14, 2016*
 
-1.4.7a
+1.4.8a
 -------
 
 - Using a **synthetic tick** for CASH contracts (cash markets do not get RTVOLUME)

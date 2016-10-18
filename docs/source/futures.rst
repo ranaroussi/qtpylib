@@ -56,7 +56,7 @@ method to pull this information automatically from the CME's website.
 Most Traded Contract Expiration
 -------------------------------
 
-If you want to **always trade the most active future contract**
+If you want to **always trade the most active Futures contract**
 (based on the previous day's volume and open interest),
 you can do so by using the ``futures.get_active_contract()``
 function to construct your IB contract tuples specified in
@@ -80,6 +80,23 @@ your algo.
 
         ...
 
+You can now achieve the same functionality by using a simple shorthand as the instrument symbol.
+In this case
+
+.. code:: python
+
+    # strategy.oy
+    ...
+
+    # from qtpylib import futures
+    # ^^ no need to import this when using this method
+
+    strategy = CrossOver(
+        instruments = [ "FUT.ES" ],
+    )
+
+    ...
+
 
 .. note::
     This functionality currently only works for the CME Group's futures (inc. CME, GLOBEX, CBOT, NYMEX and COMEX).
@@ -91,7 +108,7 @@ your algo.
 Margin Requriments for Contract
 -------------------------------
 
-When you want to know a futures contract's margin requirements, you can
+When you want to know a Futures contract's margin requirements, you can
 call ``futures.get_ib_futures(...)`` to get that information.
 New data is fetched from IB id cache file doesn't exist or
 if it's older than 24 hours.

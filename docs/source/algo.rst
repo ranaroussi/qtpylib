@@ -253,6 +253,7 @@ Algo Parameters
 - ``bar_window`` Length of bar lookback window to keep (defaults to 100)
 - ``timezone`` Convert IB timestamps to this timezone, eg. "US/Central" (defaults to UTC)
 - ``preload`` Preload history upon start (eg. 1H, 2D, etc, or K for tick bars).
+- ``continuous`` Tells preloader to construct continuous Futures contracts (default is ``True``)
 - ``blotter`` Log trades to MySQL server used by this Blotter (default: ``auto-detect``).
 
 **Example:**
@@ -306,8 +307,8 @@ following arguments when running your algo.
     Blotter's database in order to run back-tests - which is also
     a good reason to keep your Blotter running for all eternity :)
 
-    In addition, when backtesting Futures, the Blotter will stream
-    adjusted, continous contracts for the contracts requested, based
+    When backtesting Futures, the Blotter will will default to streaming
+    adjusted, continuous contracts for the contracts requested, based
     on previously captured market data stored in the Database.
 
 - ``--backtest`` [flag] Work in Backtest mode (default: ``False``)
