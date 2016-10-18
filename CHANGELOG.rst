@@ -3,6 +3,11 @@ Release Notes
 
 *October 18, 2016*
 
+1.4.91a
+-------
+
+- Misc bugfixes
+
 1.4.9a
 -------
 
