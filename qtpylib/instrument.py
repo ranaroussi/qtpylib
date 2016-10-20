@@ -57,6 +57,10 @@ class Instrument(str):
         if lookback is not None:
             bars = bars[-lookback:]
 
+        if bars['asset_class'].values[-1] not in ("OPT", "FOP"):
+            bars.drop(['opt_underlying', 'opt_dividend', 'opt_volume', 'opt_iv', 'opt_oi',
+                'opt_delta', 'opt_gamma', 'opt_vega', 'opt_theta'], inplace=True, axis=1)
+
         if as_dict:
             bars['datetime'] = bars.index
             bars = bars.to_dict(orient='records')
@@ -85,6 +89,10 @@ class Instrument(str):
 
         if lookback is not None:
             ticks = ticks[-lookback:]
+
+        if ticks['asset_class'].values[-1] not in ("OPT", "FOP"):
+            ticks.drop(['opt_underlying', 'opt_dividend', 'opt_volume', 'opt_iv', 'opt_oi',
+                'opt_delta', 'opt_gamma', 'opt_vega', 'opt_theta'], inplace=True, axis=1)
 
         if as_dict:
             ticks['datetime'] = ticks.index
