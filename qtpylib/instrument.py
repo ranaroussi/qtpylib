@@ -52,7 +52,7 @@ class Instrument(str):
         ]
 
         # add signal history to bars
-        bars = self.parent._add_signal_history(df=bars, symbol=self)
+        bars = self.parent._add_signal_history(df=bars.copy(), symbol=self)
 
         if lookback is not None:
             bars = bars[-lookback:]
@@ -62,7 +62,7 @@ class Instrument(str):
                 'opt_delta', 'opt_gamma', 'opt_vega', 'opt_theta'], inplace=True, axis=1)
 
         if as_dict:
-            bars['datetime'] = bars.index
+            bars.loc[:, 'datetime'] = bars.index
             bars = bars.to_dict(orient='records')
             if lookback == 1:
                 bars = bars[0]
@@ -95,7 +95,7 @@ class Instrument(str):
                 'opt_delta', 'opt_gamma', 'opt_vega', 'opt_theta'], inplace=True, axis=1)
 
         if as_dict:
-            ticks['datetime'] = ticks.index
+            ticks.loc[:, 'datetime'] = ticks.index
             ticks = ticks.to_dict(orient='records')
             if lookback == 1:
                 ticks = ticks[0]
