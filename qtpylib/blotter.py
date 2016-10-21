@@ -58,17 +58,23 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO,
 # =============================================
 def _gen_symbol_group(sym):
     sym = sym.strip()
+
     if "_FUT" in sym:
         sym = sym.split("_FUT")
         return sym[0][:-5]+"_F"
+
     elif "_CASH" in sym:
         return "CASH"
+
+    if "_FOP" in sym or "_OPT" in sym:
+        return sym[:-12]
+
     return sym
 
 def _gen_asset_class(sym):
     sym_class = str(sym).split("_")
     if len(sym_class) > 1:
-        return sym_class[1].replace("CASH", "CSH")
+        return sym_class[-1].replace("CASH", "CSH")
     return "STK"
 
 
