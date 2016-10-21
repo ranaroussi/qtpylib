@@ -81,6 +81,7 @@ CREATE TABLE IF NOT EXISTS `greeks` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `tick_id` int(11) unsigned DEFAULT NULL,
   `bar_id` int(11) unsigned DEFAULT NULL,
+  `price` double unsigned DEFAULT NULL,
   `underlying` double unsigned DEFAULT NULL,
   `dividend` double unsigned DEFAULT NULL,
   `volume` int(11) unsigned DEFAULT NULL,
