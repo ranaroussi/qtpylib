@@ -18,6 +18,13 @@ limitations under the License.
 
 SET foreign_key_checks = 0;
 
+CREATE TABLE IF NOT EXISTS `_version_` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `version` varchar(8) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+
 CREATE TABLE IF NOT EXISTS `symbols` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `symbol` varchar(24) DEFAULT NULL,
