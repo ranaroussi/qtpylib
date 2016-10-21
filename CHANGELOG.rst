@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+*October 21, 2016*
+
+1.4.92a
+-------
+
+- Full support for Options trading (greeks available upon quotes, ticks and bars)
+- Improved asset class and symbol group parsing
+- QTPyLib's version is now stored in MySQL for smooter upgrades
+- ``pip`` Installer requires ezIBpy >= 1.12.23
+- Misc bugfixes and code improvements
+
 *October 18, 2016*
 
 1.4.91a
