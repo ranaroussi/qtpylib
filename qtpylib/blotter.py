@@ -830,6 +830,7 @@ class Blotter():
                 "ticks" in tables and \
                 "symbols" in tables and \
                 "trades" in tables and \
+                "greeks" in tables and \
                 "_version_" in tables:
                     self.dbcurr.execute("SELECT version FROM `_version_`")
                     db_version = self.dbcurr.fetchone()
