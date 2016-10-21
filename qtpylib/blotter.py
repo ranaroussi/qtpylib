@@ -545,6 +545,14 @@ class Blotter():
                     except:
                         pass
 
+                if data["asset_class"] in ("OPT", "FOP"):
+                    try:
+                        expiry = datetime.strptime(
+                            re.sub('[^0-9]', '', data["symbol_group"])
+                            , "%Y%m%d").strftime("%Y-%m-%d")
+                    except:
+                        pass
+
                 sql = """INSERT IGNORE INTO `symbols`
                     (`symbol`, `symbol_group`, `asset_class`, `expiry`) VALUES (%s, %s, %s, %s)
                     ON DUPLICATE KEY UPDATE `symbol`=`symbol`
