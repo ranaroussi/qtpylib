@@ -822,15 +822,25 @@ class Blotter():
             # check for db schema
             self.dbcurr.execute("SHOW TABLES")
             tables = [ table[0] for table in self.dbcurr.fetchall() ]
+
             if "bars" in tables and \
                 "ticks" in tables and \
                 "symbols" in tables and \
-                "trades" in tables:
-                return
+                "trades" in tables and \
+                "_version_" in tables:
+                    self.dbcurr.execute("SELECT version FROM `_version_`")
+                    db_version = self.dbcurr.fetchone()
+                    if db_version is not None and __version__ == db_version[0]:
+                        return
 
             # create database schema
             self.dbcurr.execute(open(path['library']+'/schema.sql', "rb" ).read())
             try:
+                self.dbconn.commit()
+
+                # update version #
+                sql = "TRUNCATE TABLE _version_; INSERT INTO _version_ (`version`) VALUES (%s)"
+                self.dbcurr.execute(sql, (__version__))
                 self.dbconn.commit()
 
                 # unless we do this, there's a problem with curr.fetchX()
