@@ -310,7 +310,19 @@ class Blotter():
                 "ask":          float(Decimal(kwargs['tick']['ask'])),
                 "bidsize":      int(kwargs['tick']['bidsize']),
                 "asksize":      int(kwargs['tick']['asksize']),
-                # "wap":          kwargs['tick']['wap']
+                # "wap":          kwargs['tick']['wap'],
+
+                # need these for resampling
+                "opt_price":      None,
+                "opt_underlying": None,
+                "opt_dividend":   None,
+                "opt_volume":     None,
+                "opt_iv":         None,
+                "opt_oi":         None,
+                "opt_delta":      None,
+                "opt_gamma":      None,
+                "opt_vega":       None,
+                "opt_theta":      None,
             }
             # print('.', end="", flush=True)
             self.on_tick_received(data)
