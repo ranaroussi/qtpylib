@@ -330,25 +330,78 @@ class Blotter():
         elif caller == "handleTickPrice" or caller == "handleTickSize":
             self.on_quote_received(msg.tickerId)
 
-        # elif caller in "handleTickOptionComputation":
-        #     self.on_option_received(msg.tickerId)
+        elif caller in "handleTickOptionComputation":
+            self.on_option_computation_received(msg.tickerId)
 
     # -------------------------------------------
-    # def on_option_received(self, tickerId):
-    #     try:
-    #         symbol = self.ibConn.tickerSymbol(tickerId)
-    #         quote  = self.ibConn.optionsData[tickerId].to_dict(orient='records')[0]
-    #         quote['bid']  = float(Decimal(quote['bid']))
-    #         quote['ask']  = float(Decimal(quote['ask']))
-    #         quote['last'] = float(Decimal(quote['last']))
-    #         quote["kind"] = "TICK"
-    #         quote["symbol"] = symbol
-    #         quote["symbol_group"] = _gen_symbol_group(symbol)
-    #         quote["asset_class"]  = _gen_asset_class(symbol)
+    def on_option_computation_received(self, tickerId):
+        # try:
+        symbol = self.ibConn.tickerSymbol(tickerId)
 
-    #         self.broadcast(quote, "TICK")
-    #     except:
-    #         pass
+        tick  = self.ibConn.optionsData[tickerId].to_dict(orient='records')[0]
+
+        # must have values!
+        for key in ('bid', 'ask', 'last', 'bidsize', 'asksize', 'lastsize',
+            'volume', 'delta', 'gamma', 'vega', 'theta'):
+            if tick[key] == 0:
+                return
+
+        tick['type']          = self.ibConn.contracts[tickerId].m_right
+        tick['strike']        = float(Decimal(self.ibConn.contracts[tickerId].m_strike))
+        tick["symbol_group"]  = self.ibConn.contracts[tickerId].m_symbol+'_'+self.ibConn.contracts[tickerId].m_secType
+        tick['volume']        = int(Decimal(tick['volume']))
+        tick['bid']           = float(Decimal(tick['bid']))
+        tick['bidsize']       = int(Decimal(tick['bidsize']))
+        tick['ask']           = float(Decimal(tick['ask']))
+        tick['asksize']       = int(Decimal(tick['asksize']))
+        tick['last']          = float(Decimal(tick['last']))
+        tick['lastsize']      = int(Decimal(tick['lastsize']))
+
+        tick['price']         = round(float(Decimal(tick['price'])), 2)
+        tick['underlying']    = round(float(Decimal(tick['underlying'])), 5)
+        tick['dividend']      = float(Decimal(tick['dividend']))
+        tick['volume']        = int(Decimal(tick['volume']))
+        tick['iv']            = float(Decimal(tick['iv']))
+        tick['oi']            = int(Decimal(tick['oi']))
+        tick['delta']         = float(Decimal(tick['delta']))
+        tick['gamma']         = float(Decimal(tick['gamma']))
+        tick['vega']          = float(Decimal(tick['vega']))
+        tick['theta']         = float(Decimal(tick['theta']))
+
+        tick["symbol"]        = symbol
+        tick["symbol_group"]  = _gen_symbol_group(symbol)
+        tick["asset_class"]   = _gen_asset_class(symbol)
+
+        tick = _mark_options_values(tick)
+
+        # is this a really new tick?
+        prev_last = 0
+        prev_lastsize = 0
+        if symbol in self.cash_ticks.keys():
+            prev_last = self.cash_ticks[symbol]['last']
+            prev_lastsize = self.cash_ticks[symbol]['lastsize']
+            if tick == self.cash_ticks[symbol]:
+                return
+
+        self.cash_ticks[symbol] = dict(tick)
+
+        # assign timestamp
+        tick['timestamp'] = self.ibConn.optionsData[tickerId].index[0]
+        if tick['timestamp'] == 0:
+            tick['timestamp'] = datetime.utcnow().strftime(ibDataTypes['DATE_TIME_FORMAT_LONG_MILLISECS'])
+
+        # treat as tick if last/volume changed
+        if tick['last'] != prev_last or tick['lastsize'] != prev_lastsize:
+            tick["kind"] = "TICK"
+            self.on_tick_received(tick)
+
+        # otherwise treat as quote
+        else:
+            tick["kind"] = "QUOTE"
+            self.broadcast(tick, "QUOTE")
+
+        # except:
+            # pass
 
     # -------------------------------------------
     def on_quote_received(self, tickerId):
