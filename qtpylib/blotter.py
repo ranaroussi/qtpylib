@@ -78,6 +78,37 @@ def _gen_asset_class(sym):
     return "STK"
 
 
+def _mark_options_values(data):
+    if isinstance(data, dict):
+        data['opt_price']      = data.pop('price')
+        data['opt_underlying'] = data.pop('underlying')
+        data['opt_dividend']   = data.pop('dividend')
+        data['opt_volume']     = data.pop('volume')
+        data['opt_iv']         = data.pop('iv')
+        data['opt_oi']         = data.pop('oi')
+        data['opt_delta']      = data.pop('delta')
+        data['opt_gamma']      = data.pop('gamma')
+        data['opt_vega']       = data.pop('vega')
+        data['opt_theta']      = data.pop('theta')
+        return data
+
+    elif isinstance(data, pd.DataFrame):
+        return data.rename(columns={
+            'price': 'opt_price',
+            'underlying': 'opt_underlying',
+            'dividend': 'opt_dividend',
+            'volume': 'opt_volume',
+            'iv': 'opt_iv',
+            'oi': 'opt_oi',
+            'delta': 'opt_delta',
+            'gamma': 'opt_gamma',
+            'vega': 'opt_vega',
+            'theta': 'opt_theta'
+        })
+
+    return data
+
+
 class Blotter():
     """Broker class initilizer
 
