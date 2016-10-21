@@ -406,15 +406,25 @@ class Blotter():
     # -------------------------------------------
     def on_quote_received(self, tickerId):
         try:
+
             symbol = self.ibConn.tickerSymbol(tickerId)
-            quote  = self.ibConn.marketData[tickerId].to_dict(orient='records')[0]
+
+            if self.ibConn.contracts[tickerId].m_secType in ("OPT", "FOP"):
+                quote = self.ibConn.optionsData[tickerId].to_dict(orient='records')[0]
+                quote['type']   = self.ibConn.contracts[tickerId].m_right
+                quote['strike'] = float(Decimal(self.ibConn.contracts[tickerId].m_strike))
+                quote["symbol_group"] = self.ibConn.contracts[tickerId].m_symbol+'_'+self.ibConn.contracts[tickerId].m_secType
+                quote = self._mark_options_values(quote)
+            else:
+                quote = self.ibConn.marketData[tickerId].to_dict(orient='records')[0]
+                quote["symbol_group"] = _gen_symbol_group(symbol)
+
+            quote["symbol"] = symbol
+            quote["asset_class"] = _gen_asset_class(symbol)
             quote['bid']  = float(Decimal(quote['bid']))
             quote['ask']  = float(Decimal(quote['ask']))
             quote['last'] = float(Decimal(quote['last']))
             quote["kind"] = "QUOTE"
-            quote["symbol"] = symbol
-            quote["symbol_group"] = _gen_symbol_group(symbol)
-            quote["asset_class"]  = _gen_asset_class(symbol)
 
             # cash markets do not get RTVOLUME (handleTickString)
             if quote["asset_class"] == "CSH":
