@@ -6,7 +6,7 @@ incoming market data from the running Blotter. These are
 ``on_quote()`` which is invoked on every quote change,
 ``on_tick()`` which is invoked on every tick captured, and
 ``on_bar()``, which is invoked on every bar created in the
-pre-specified resolution. An `Instruments Object <./api_instrument.html>`_ is being passed
+pre-specified resolution. An `Instrument Object <./api_instrument.html>`_ is being passed
 to each method when called.
 
 If you need to set some parameters when your strategy starts,
@@ -343,6 +343,50 @@ Then run your algo with the ``--output`` flag:
 
 The recorded data (and bar data) will be made availble in ``./path/to/recorded-file.csv``,
 which gets updated in real-time.
+
+-----
+
+The Instrument Object
+---------------------
+
+When writing your algo, an ``Instrument`` Object is passed to each of the algos
+methods (``on_tick()``, ``on_bar()``, ``on_quote()`` and ``on_fill()``), which
+has many useful `methods and properties <api.html#instrument-api>`_,
+including methods to access to the tick/bar/quote data.
+
+Whenever you call ``instrument.get_quotes(...)``, ``instrument.get_ticks(...)`` or ``instrument.get_bars(...)``,
+you'll get a Pandas DataFrame (and optionally, a dict object) with the following columns/keys:
+
+* ``asset_class`` (ie. STK, FUT, CASH, OPT, FOP, ...)
+* ``symbol`` (ie. ESZ2016_FUT, AAPL, SPX20161024P02150000_OPT, ...)
+* ``symbol_group`` (ie. ES_F, AAPL, SPX20161024P, ...)
+
+**Quotes / Ticks will include:**
+
+``bid``, ``bidsize``, ``ask``, ``asksize``, ``last``, ``lastsize``
+
+**Bars will include:**
+
+``open``, ``high``, ``low``, ``close``, ``volume``
+
+**Options (Quotes/Ticks/Bars) will include:**
+
+* ``opt_underlying`` Options' Underlying's Price
+* ``opt_dividend`` Options' Underlying Dividend
+* ``opt_iv`` Options' Implied Volatility
+* ``opt_oi`` Options' Open Interest
+* ``opt_price`` Options' Price
+* ``opt_volume`` Options' Volume
+* ``opt_delta`` Options' Delta
+* ``opt_gamma`` Options' Gamma
+* ``opt_theta`` Options' Theta
+* ``opt_vega`` Options' Vega
+
+
+.. note::
+    See a list of all of ``Instrument`` Object's methods and properties in the
+    `Instrument API Reference <api.html#instrument-api>`_.
+
 
 -----
 
