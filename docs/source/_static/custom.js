@@ -1,12 +1,10 @@
-$(document).ready(function() {
-    $("a[href^='http']").attr('target','_blank');
-});
-
 window.onload = function() {
 
   // readthedocs
   if (window.location.href.indexOf('en/latest') !== -1) return
 
+  // external links open in new tab
+  $("a[href^='http']").attr('target','_blank');
 
   // own domain?
   var domain = document.domain || '';
