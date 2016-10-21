@@ -155,17 +155,19 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False):
         by = the column name to resample by
         """
 
-        # place timestamp index in T colums
-        # (to be used as future df index)
-        data['T'] = data.index
+        data.fillna(value=np.nan, inplace=True)
 
         # get only ticks and fill missing data
         try:
-            df = data[['T', 'last', 'lastsize']].copy()
+            df = data[['last', 'lastsize', 'opt_underlying', 'opt_price',
+                'opt_dividend', 'opt_volume', 'opt_iv', 'opt_oi',
+                'opt_delta', 'opt_gamma', 'opt_theta', 'opt_vega']].copy()
             price_col = 'last'
             size_col  = 'lastsize'
         except:
-            df = data[['T', 'close', 'volume']].copy()
+            df = data[['close', 'volume', 'opt_underlying', 'opt_price',
+                'opt_dividend', 'opt_volume', 'opt_iv', 'opt_oi',
+                'opt_delta', 'opt_gamma', 'opt_theta', 'opt_vega']].copy()
             price_col = 'close'
             size_col  = 'volume'
 
@@ -181,7 +183,14 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False):
         df.loc[:1, 'grp'] = 0
 
         df.fillna(method='ffill', inplace=True)
+
         # print(df[['lastsize', 'cumvol', 'mark', 'diff', 'grp']].tail(1))
+
+        # place timestamp index in T colums
+        # (to be used as future df index)
+        df['T'] = df.index
+
+        # make group the index
         df = df.set_index('grp')
 
         # grop df
@@ -193,7 +202,18 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False):
             'high':   groupped[price_col].max(),
             'low':    groupped[price_col].min(),
             'close':  groupped[price_col].last(),
-            'volume': groupped[size_col].sum()
+            'volume': groupped[size_col].sum(),
+
+            'opt_price':      groupped['opt_price'].last(),
+            'opt_underlying': groupped['opt_underlying'].last(),
+            'opt_dividend':   groupped['opt_dividend'].last(),
+            'opt_volume':     groupped['opt_volume'].last(),
+            'opt_iv':         groupped['opt_iv'].last(),
+            'opt_oi':         groupped['opt_oi'].last(),
+            'opt_delta':      groupped['opt_delta'].last(),
+            'opt_gamma':      groupped['opt_gamma'].last(),
+            'opt_theta':      groupped['opt_theta'].last(),
+            'opt_vega':       groupped['opt_vega'].last()
         })
 
         # set index to timestamp
@@ -214,45 +234,83 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False):
             if (periods > 1):
                 for sym in meta_data.index.values:
                     # symdata = resample_ticks(data[data['symbol']==sym], periods, price_col='last', volume_col='lastsize')
-                    symdata = resample_ticks(data[data['symbol']==sym], freq=periods, by='last')
+                    symdata = resample_ticks(data[data['symbol']==sym].copy(), freq=periods, by='last')
                     symdata['symbol'] = sym
                     symdata['symbol_group'] = meta_data[meta_data.index==sym]['symbol_group'].values[0]
                     symdata['asset_class'] = meta_data[meta_data.index==sym]['asset_class'].values[0]
+
+                    # cleanup
+                    symdata.dropna(inplace=True, subset=['open', 'high', 'low', 'close', 'volume'])
+                    if sym[-3:] in ("OPT", "FOP"):
+                        symdata.dropna(inplace=True)
+
                     combined.append(symdata)
 
-                data = pd.concat(combined).dropna()
+                data = pd.concat(combined)
 
         elif ("V" in resolution):
             if (periods > 1):
                 for sym in meta_data.index.values:
-                    symdata = resample_ticks(data[data['symbol']==sym], freq=periods, by='lastsize')
+                    symdata = resample_ticks(data[data['symbol']==sym].copy(), freq=periods, by='lastsize')
                     # print(symdata)
                     symdata['symbol'] = sym
                     symdata['symbol_group'] = meta_data[meta_data.index==sym]['symbol_group'].values[0]
                     symdata['asset_class'] = meta_data[meta_data.index==sym]['asset_class'].values[0]
+
+                    # cleanup
+                    symdata.dropna(inplace=True, subset=['open', 'high', 'low', 'close', 'volume'])
+                    if sym[-3:] in ("OPT", "FOP"):
+                        symdata.dropna(inplace=True)
+
                     combined.append(symdata)
 
-                data = pd.concat(combined).dropna()
+                data = pd.concat(combined)
 
         # continue...
         else:
-            ohlc_dict = {
-                'open':   'first',
-                'high':   'max',
-                'low':    'min',
-                'close':  'last',
-                'volume': 'sum'
+            ticks_ohlc_dict = {
+                'lastsize':       'sum',
+                'opt_price':      'last',
+                'opt_underlying': 'last',
+                'opt_dividend':   'last',
+                'opt_volume':     'last',
+                'opt_iv':         'last',
+                'opt_oi':         'last',
+                'opt_delta':      'last',
+                'opt_gamma':      'last',
+                'opt_theta':      'last',
+                'opt_vega':       'last'
+            }
+            bars_ohlc_dict = {
+                'open':           'first',
+                'high':           'max',
+                'low':            'min',
+                'close':          'last',
+                'volume':         'sum',
+                'opt_price':      'last',
+                'opt_underlying': 'last',
+                'opt_dividend':   'last',
+                'opt_volume':     'last',
+                'opt_iv':         'last',
+                'opt_oi':         'last',
+                'opt_delta':      'last',
+                'opt_gamma':      'last',
+                'opt_theta':      'last',
+                'opt_vega':       'last'
             }
 
             for sym in meta_data.index.values:
                 if ("S" in resolution):
                     ohlc = data[data['symbol']==sym]['last'].resample(resolution).ohlc()
-                    vol  = data[data['symbol']==sym]['lastsize'].resample(resolution).sum()
-                    symdata = ohlc
-                    symdata['volume'] = vol
+                    symdata = data[data['symbol']==sym].resample(resolution).apply(ticks_ohlc_dict).fillna(value=np.nan)
+                    symdata.rename(columns={'lastsize': 'volume'}, inplace=True)
+                    symdata['open']  = ohlc['open']
+                    symdata['high']  = ohlc['high']
+                    symdata['low']   = ohlc['low']
+                    symdata['close'] = ohlc['close']
                 else:
                     original_length = len(data[data['symbol']==sym])
-                    symdata = data[data['symbol']==sym].resample(resolution).apply(ohlc_dict).dropna()
+                    symdata = data[data['symbol']==sym].resample(resolution).apply(bars_ohlc_dict).fillna(value=np.nan)
 
                     # deal with new rows caused by resample
                     if len(symdata) > original_length:
@@ -279,9 +337,15 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False):
                 symdata['symbol'] = sym
                 symdata['symbol_group'] = meta_data[meta_data.index==sym]['symbol_group'].values[0]
                 symdata['asset_class'] = meta_data[meta_data.index==sym]['asset_class'].values[0]
+
+                # cleanup
+                symdata.dropna(inplace=True, subset=['open', 'high', 'low', 'close', 'volume'])
+                if sym[-3:] in ("OPT", "FOP"):
+                    symdata.dropna(inplace=True)
+
                 combined.append(symdata)
 
-            data = pd.concat(combined).dropna()
+            data = pd.concat(combined)
 
     # figure out timezone
     if tz is None:
