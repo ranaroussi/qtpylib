@@ -724,6 +724,9 @@ class Blotter():
                     if data['symbol'] not in symbols:
                         continue
 
+                    # convert None to np.nan !!
+                    data.update((k, npnan) for k,v in data.items() if v is None)
+
                     # quote
                     if data['kind'] == "QUOTE":
                         if quote_handler is not None:
