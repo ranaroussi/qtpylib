@@ -599,8 +599,9 @@ class Blotter():
 
         # gen epoch datetime
         if kind == "TICK":
-            sql = """INSERT IGNORE INTO `ticks` (`datetime`, `symbol_id`, `bid`, `bidsize`,
-                `ask`, `asksize`, `last`, `lastsize`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            sql = """INSERT IGNORE INTO `ticks` (`datetime`, `symbol_id`,
+                `bid`, `bidsize`, `ask`, `asksize`, `last`, `lastsize`)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 ON DUPLICATE KEY UPDATE `symbol_id`=`symbol_id`
             """
             self.dbcurr.execute(sql, (data["timestamp"], symbol_id,
@@ -609,10 +610,28 @@ class Blotter():
                 float(data["last"]), int(data["lastsize"])
             ))
 
+            # add greeks
+            if self.dbcurr.lastrowid and data["asset_class"] in ("OPT", "FOP"):
+                greeks_sql = """INSERT IGNORE INTO `greeks` (
+                    `tick_id`, `price`, `underlying`, `dividend`, `volume`,
+                    `iv`, `oi`, `delta`, `gamma`, `theta`, `vega`)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """
+                try:
+                    self.dbcurr.execute(greeks_sql, (self.dbcurr.lastrowid,
+                        round(float(data["opt_price"]), 2), round(float(data["opt_underlying"]), 5),
+                        float(data["opt_dividend"]),int(data["opt_volume"]),
+                        float(data["opt_iv"]), float(data["opt_oi"]),
+                        float(data["opt_delta"]), float(data["opt_gamma"]),
+                        float(data["opt_theta"]), float(data["opt_vega"]),
+                    ))
+                except:
+                    pass
+
         elif kind == "BAR":
             sql = """INSERT IGNORE INTO `bars`
                 (`datetime`, `symbol_id`, `open`, `high`, `low`, `close`, `volume`)
-                    VALUES (%s,%s,%s,%s,%s,%s,%s)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
                 ON DUPLICATE KEY UPDATE
                     `open`=%s, `high`=%s, `low`=%s, `close`=%s, `volume`=`volume`+%s
             """
@@ -620,6 +639,22 @@ class Blotter():
                 float(data["open"]),float(data["high"]),float(data["low"]),float(data["close"]),int(data["volume"]),
                 float(data["open"]),float(data["high"]),float(data["low"]),float(data["close"]),int(data["volume"])
             ))
+
+            # add greeks
+            if self.dbcurr.lastrowid and data["asset_class"] in ("OPT", "FOP"):
+                greeks_sql = """INSERT IGNORE INTO `greeks` (
+                    `bar_id`, `price`, `underlying`, `dividend`, `volume`,
+                    `iv`, `oi`, `delta`, `gamma`, `theta`, `vega`)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """
+                greeks = self.cash_ticks[data['symbol']]
+                self.dbcurr.execute(greeks_sql, (self.dbcurr.lastrowid,
+                    round(float(greeks["opt_price"]), 2), round(float(greeks["opt_underlying"]), 5),
+                    float(greeks["opt_dividend"]),int(greeks["opt_volume"]),
+                    float(greeks["opt_iv"]), float(greeks["opt_oi"]),
+                    float(greeks["opt_delta"]), float(greeks["opt_gamma"]),
+                    float(greeks["opt_theta"]), float(greeks["opt_vega"]),
+                ))
 
         # commit
         try:
