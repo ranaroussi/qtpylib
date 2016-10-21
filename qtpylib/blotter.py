@@ -27,13 +27,17 @@ import os
 import pandas as pd
 import pickle
 import pymysql
+import re
 import subprocess
 import sys
 import tempfile
 import time
 import zmq
 
-from numpy import isnan as isnan
+from numpy import (
+    isnan as npisnan,
+    nan as npnan
+)
 
 from datetime import datetime
 from dateutil.parser import parse as parse_date
@@ -43,7 +47,7 @@ from ezibpy import (
 )
 
 from qtpylib import (
-    tools, path, futures
+    tools, path, futures, __version__
 )
 
 from decimal import *
@@ -737,7 +741,7 @@ class Blotter():
                     df = df[
                         ( (df['expiry'] <1000000) & (df['expiry']>=int(datetime.now().strftime('%Y%m'  ))) ) |
                         ( (df['expiry']>=1000000) & (df['expiry']>=int(datetime.now().strftime('%Y%m%d'))) ) |
-                        isnan(df['expiry'])
+                        npisnan(df['expiry'])
                     ]
                     df.fillna("", inplace=True)
                     df.to_csv(self.args['symbols'], header=True, index=False)
