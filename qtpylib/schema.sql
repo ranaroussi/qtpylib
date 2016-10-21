@@ -20,8 +20,8 @@ SET foreign_key_checks = 0;
 
 CREATE TABLE IF NOT EXISTS `symbols` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `symbol` varchar(12) DEFAULT NULL,
-  `symbol_group` varchar(8) DEFAULT NULL,
+  `symbol` varchar(24) DEFAULT NULL,
+  `symbol_group` varchar(18) DEFAULT NULL,
   `asset_class` varchar(3) DEFAULT NULL,
   `expiry` date DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -30,6 +30,10 @@ CREATE TABLE IF NOT EXISTS `symbols` (
   KEY `asset_class` (`asset_class`),
   KEY `expiry` (`expiry`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+ALTER TABLE `symbols`
+  MODIFY `symbol` varchar(24),
+  MODIFY `symbol_group` varchar(18);
 
 
 CREATE TABLE IF NOT EXISTS `bars` (
@@ -66,6 +70,25 @@ CREATE TABLE IF NOT EXISTS `ticks` (
   CONSTRAINT `tick_symbol` FOREIGN KEY (`symbol_id`) REFERENCES `symbols` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `greeks` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `tick_id` int(11) unsigned DEFAULT NULL,
+  `bar_id` int(11) unsigned DEFAULT NULL,
+  `underlying` double unsigned DEFAULT NULL,
+  `dividend` double unsigned DEFAULT NULL,
+  `volume` int(11) unsigned DEFAULT NULL,
+  `iv` double unsigned DEFAULT NULL,
+  `oi` double unsigned DEFAULT NULL,
+  `delta` decimal(3,2) DEFAULT NULL,
+  `gamma` decimal(3,2) DEFAULT NULL,
+  `theta` decimal(3,2) DEFAULT NULL,
+  `vega` decimal(3,2) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `tick_id` (`tick_id`),
+  KEY `bar_id` (`bar_id`),
+  CONSTRAINT `bar_data` FOREIGN KEY (`bar_id`) REFERENCES `bars` (`id`),
+  CONSTRAINT `tick_data` FOREIGN KEY (`tick_id`) REFERENCES `ticks` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `trades` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
