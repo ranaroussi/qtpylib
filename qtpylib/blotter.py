@@ -806,10 +806,15 @@ class Blotter():
         table = 'ticks' if ("K" in resolution) | ("V" in resolution) | ("S" in resolution) else 'bars'
 
         query = """SELECT tbl.*,
-            CONCAT(s.`symbol`, "_", s.`asset_class`) as symbol, s.symbol_group, s.asset_class, s.expiry
+            CONCAT(s.`symbol`, "_", s.`asset_class`) as symbol, s.symbol_group, s.asset_class, s.expiry,
+            g.price AS opt_price, g.underlying AS opt_underlying, g.dividend AS opt_dividend,
+            g.volume AS opt_volume, g.iv AS opt_iv, g.oi AS opt_oi,
+            g.delta AS opt_delta, g.gamma AS opt_gamma,
+            g.theta AS opt_theta, g.vega AS opt_vega
             FROM `{TABLE}` tbl LEFT JOIN `symbols` s ON tbl.symbol_id = s.id
+            LEFT JOIN `greeks` g ON tbl.id = g.{TABLE_ID}
             WHERE (`datetime` >= "{START}"{END_SQL}) """.replace(
-            '{START}', start).replace('{TABLE}', table)
+            '{START}', start).replace('{TABLE}', table).replace('{TABLE_ID}', table[:-1]+'_id')
 
         if end is not None:
             query = query.replace('{END_SQL}', ' AND `datetime` <= "{END}"')
@@ -827,7 +832,7 @@ class Blotter():
         # --- end build query
 
         # get data using pandas
-        data = pd.read_sql(query, self.dbconn).dropna()
+        data = pd.read_sql(query, self.dbconn) #.dropna()
         data.set_index('datetime', inplace=True)
         data.index = pd.to_datetime(data.index, utc=True)
         data['expiry'] = pd.to_datetime(data['expiry'], utc=True)
