@@ -917,7 +917,8 @@ class Blotter():
 
     # -------------------------------------------
     def drip(self, symbols, start, end=None, tick_handler=None, \
-        bar_handler=None, resolution="1T", tz="UTC", continuous=True):
+        bar_handler=None, quote_handler=None, resolution="1T", \
+        tz="UTC", continuous=True):
 
         handler = None
         if ("K" in resolution or "V" in resolution) and tick_handler is not None:

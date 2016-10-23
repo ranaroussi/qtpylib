@@ -155,7 +155,7 @@ class Algo(Broker):
         # -----------------------------------
         # backtest mode?
         if self.backtest:
-            if self.output is None:
+            if self.record_output is None:
                 print("ERROR: Must provide an output file for backtesting mode")
                 sys.exit(0)
             if self.backtest_start is None:

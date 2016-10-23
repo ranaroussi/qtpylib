@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+
+*October 23, 2016*
+
+1.4.93a
+-------
+
+- Bugfix: Updated backtesting mode to use correct variable names (closing issue #10)
+
+
 *October 21, 2016*
 
 1.4.92a
@@ -11,6 +20,7 @@ Release Notes
 - QTPyLib's version is now stored in MySQL for smooter upgrades
 - ``pip`` Installer requires ezIBpy >= 1.12.23
 - Misc bugfixes and code improvements
+
 
 *October 18, 2016*
 
@@ -24,6 +34,7 @@ Release Notes
 
 - Continuous Futures contract construction is now optional (defaults to ``True``)
 - Added ``futures.make_tuple(...)`` for automatic tuple construction for Futures
+
 
 *October 14, 2016*
 
@@ -39,6 +50,7 @@ Release Notes
 -------
 
 - Fixed issue that prevented from blotter to assign ``asset_class`` to stocks
+
 
 *September 29, 2016*
 
