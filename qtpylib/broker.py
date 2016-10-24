@@ -509,6 +509,10 @@ class Broker():
             self.trade_log_dir = (self.trade_log_dir+'/').replace('//', '/')
             trade_log_path = self.trade_log_dir+self.strategy.lower()+"_"+datetime.now().strftime('%Y%m%d')+".csv"
 
+            # convert None to empty string !!
+            trade.update((k, '') for k,v in trade.items() if v is None)
+
+            # create df
             trade_df = pd.DataFrame(index=[0], data=trade)[[
                 'strategy','symbol','direction','quantity','entry_time','exit_time','exit_reason',
                 'order_type','market_price','target','stop','entry_price','exit_price','realized_pnl'

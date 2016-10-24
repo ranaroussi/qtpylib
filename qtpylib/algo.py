@@ -471,6 +471,10 @@ class Algo(Broker):
     def _tick_handler(self, tick):
         self._cancel_expired_pending_orders()
 
+        # initial value
+        if self.record_ts is None:
+            self.record_ts = tick.index[0]
+
         if "K" not in self.resolution and "V" not in self.resolution:
             self.ticks = self._update_window(self.ticks, tick, window=self.tick_window)
         else:

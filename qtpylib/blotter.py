@@ -113,6 +113,24 @@ def _mark_options_values(data):
     return data
 
 
+def _force_options_columns(df):
+    opt_cols = ['opt_price', 'opt_underlying', 'opt_dividend', 'opt_volume',
+        'opt_iv', 'opt_oi', 'opt_delta', 'opt_gamma', 'opt_vega', 'opt_theta']
+
+    if not set(opt_cols).issubset(df.columns):
+        df.loc[:, 'opt_price']      = npnan
+        df.loc[:, 'opt_underlying'] = npnan
+        df.loc[:, 'opt_dividend']   = npnan
+        df.loc[:, 'opt_volume']     = npnan
+        df.loc[:, 'opt_iv']         = npnan
+        df.loc[:, 'opt_oi']         = npnan
+        df.loc[:, 'opt_delta']      = npnan
+        df.loc[:, 'opt_gamma']      = npnan
+        df.loc[:, 'opt_vega']       = npnan
+        df.loc[:, 'opt_theta']      = npnan
+
+    return df
+
 class Blotter():
     """Broker class initilizer
 
@@ -903,6 +921,9 @@ class Blotter():
                         df.index = df.index.tz_convert(tz)
                     except:
                         df.index = df.index.tz_localize('UTC').tz_convert(tz)
+
+                    # add options columns
+                    df = _force_options_columns(df)
 
                     if data['kind'] == "TICK":
                         if tick_handler is not None:
