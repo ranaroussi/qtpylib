@@ -2,6 +2,20 @@ Release Notes
 =============
 
 
+*October 24, 2016*
+
+1.4.95a
+-------
+
+- Removed debugging code
+
+1.4.94a
+-------
+
+- Fixed bug caused by ``self.record`` (closing issue #12)
+- Misc bugfixes and code improvements
+
+
 *October 23, 2016*
 
 1.4.93a
