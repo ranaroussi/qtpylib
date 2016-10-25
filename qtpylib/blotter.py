@@ -113,23 +113,37 @@ def _mark_options_values(data):
     return data
 
 
-def _force_options_columns(df):
+def _force_options_columns(data):
     opt_cols = ['opt_price', 'opt_underlying', 'opt_dividend', 'opt_volume',
         'opt_iv', 'opt_oi', 'opt_delta', 'opt_gamma', 'opt_vega', 'opt_theta']
 
-    if not set(opt_cols).issubset(df.columns):
-        df.loc[:, 'opt_price']      = npnan
-        df.loc[:, 'opt_underlying'] = npnan
-        df.loc[:, 'opt_dividend']   = npnan
-        df.loc[:, 'opt_volume']     = npnan
-        df.loc[:, 'opt_iv']         = npnan
-        df.loc[:, 'opt_oi']         = npnan
-        df.loc[:, 'opt_delta']      = npnan
-        df.loc[:, 'opt_gamma']      = npnan
-        df.loc[:, 'opt_vega']       = npnan
-        df.loc[:, 'opt_theta']      = npnan
+    if isinstance(data, dict):
+        if not set(opt_cols).issubset(data.keys()):
+            data['opt_price'] = None
+            data['opt_underlying'] = None
+            data['opt_dividend'] = None
+            data['opt_volume'] = None
+            data['opt_iv'] = None
+            data['opt_oi'] = None
+            data['opt_delta'] = None
+            data['opt_gamma'] = None
+            data['opt_vega'] = None
+            data['opt_theta'] = None
 
-    return df
+    elif isinstance(data, pd.DataFrame):
+        if not set(opt_cols).issubset(data.columns):
+            data.loc[:, 'opt_price']      = npnan
+            data.loc[:, 'opt_underlying'] = npnan
+            data.loc[:, 'opt_dividend']   = npnan
+            data.loc[:, 'opt_volume']     = npnan
+            data.loc[:, 'opt_iv']         = npnan
+            data.loc[:, 'opt_oi']         = npnan
+            data.loc[:, 'opt_delta']      = npnan
+            data.loc[:, 'opt_gamma']      = npnan
+            data.loc[:, 'opt_vega']       = npnan
+            data.loc[:, 'opt_theta']      = npnan
+
+    return data
 
 class Blotter():
     """Broker class initilizer
