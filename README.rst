@@ -43,6 +43,8 @@ trading logic itself and ignore everything else.
 
 `Full Documentation » <http://www.qtpylib.io/>`__
 
+`Changelog » <./CHANGELOG.rst>`__
+
 -----
 
 Features

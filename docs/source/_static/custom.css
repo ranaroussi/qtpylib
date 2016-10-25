@@ -76,7 +76,7 @@ footer {
     margin: 0 0 12px;
 }
 
-#qtpylib-pythonic-algorithmic-trading p:last-of-type a.reference.external {
+#qtpylib-pythonic-algorithmic-trading p a.reference.external {
     display: none;
 }
 
