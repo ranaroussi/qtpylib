@@ -190,6 +190,7 @@ class Blotter():
 
         self.symbol_ids = {} # cache
         self.cash_ticks = {} # cache
+        self.rtvolume   = set() # has RTVOLUME?
 
         self.implicit_args = False
 
@@ -363,36 +364,65 @@ class Blotter():
             self._on_exit()
             self.run()
 
-        elif caller == "handleTickString" and "tick" in kwargs:
+        elif caller == "handleTickString":
+            data = None
             symbol = self.ibConn.tickerSymbol(msg.tickerId)
-            data = {
-                # available data from ib
-                "symbol":       symbol,
-                "symbol_group": _gen_symbol_group(symbol), # ES_F, ...
-                "asset_class":  _gen_asset_class(symbol),
-                "timestamp":    kwargs['tick']['time'],
-                "last":         float(Decimal(kwargs['tick']['last'])),
-                "lastsize":     int(kwargs['tick']['size']),
-                "bid":          float(Decimal(kwargs['tick']['bid'])),
-                "ask":          float(Decimal(kwargs['tick']['ask'])),
-                "bidsize":      int(kwargs['tick']['bidsize']),
-                "asksize":      int(kwargs['tick']['asksize']),
-                # "wap":          kwargs['tick']['wap'],
 
-                # need these for resampling
-                "opt_price":      None,
-                "opt_underlying": None,
-                "opt_dividend":   None,
-                "opt_volume":     None,
-                "opt_iv":         None,
-                "opt_oi":         None,
-                "opt_delta":      None,
-                "opt_gamma":      None,
-                "opt_vega":       None,
-                "opt_theta":      None,
-            }
-            # print('.', end="", flush=True)
-            self.on_tick_received(data)
+            # for instruments that receive RTVOLUME events
+            if "tick" in kwargs:
+                self.rtvolume.add(symbol)
+                data = {
+                    # available data from ib
+                    "symbol":       symbol,
+                    "symbol_group": _gen_symbol_group(symbol), # ES_F, ...
+                    "asset_class":  _gen_asset_class(symbol),
+                    "timestamp":    kwargs['tick']['time'],
+                    "last":         float(Decimal(kwargs['tick']['last'])),
+                    "lastsize":     int(kwargs['tick']['size']),
+                    "bid":          float(Decimal(kwargs['tick']['bid'])),
+                    "ask":          float(Decimal(kwargs['tick']['ask'])),
+                    "bidsize":      int(kwargs['tick']['bidsize']),
+                    "asksize":      int(kwargs['tick']['asksize']),
+                    # "wap":          kwargs['tick']['wap'],
+                }
+
+            # for instruments that DOESN'T receive RTVOLUME events
+            elif symbol not in self.rtvolume:
+
+                if self.ibConn.contracts[msg.tickerId].m_secType in ("OPT", "FOP"):
+                    tick = self.ibConn.optionsData[msg.tickerId]
+                else:
+                    tick = self.ibConn.marketData[msg.tickerId]
+
+                if len(tick) > 0 and tick['last'].values[-1] > 0 < tick['lastsize'].values[-1]:
+                    data = {
+                        # available data from ib
+                        "symbol":       symbol,
+                        "symbol_group": _gen_symbol_group(symbol), # ES_F, ...
+                        "asset_class":  _gen_asset_class(symbol),
+                        "timestamp":    tick.index.values[-1],
+                        "last":         float(Decimal(tick['last'].values[-1])),
+                        "lastsize":     int(tick['lastsize'].values[-1]),
+                        "bid":          float(Decimal(tick['bid'].values[-1])),
+                        "ask":          float(Decimal(tick['ask'].values[-1])),
+                        "bidsize":      int(tick['bidsize'].values[-1]),
+                        "asksize":      int(tick['asksize'].values[-1]),
+                        # "wap":          kwargs['tick']['wap'],
+                    }
+
+            if data is not None:
+                # cache last tick
+                if symbol in self.cash_ticks.keys():
+                    if data == self.cash_ticks[symbol]:
+                        return
+
+                self.cash_ticks[symbol] = data
+
+                # add options fields
+                data = _force_options_columns(data)
+
+                # print('.', end="", flush=True)
+                self.on_tick_received(data)
 
         elif caller == "handleTickPrice" or caller == "handleTickSize":
             self.on_quote_received(msg.tickerId)
