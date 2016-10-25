@@ -251,7 +251,10 @@ def get_contract_ticksize(symbol, fallback=0.01, ttl=84600):
 
 
 # -------------------------------------------
-def make_tuple(symbol, expiry, exchange=None):
+def make_tuple(symbol, expiry=None, exchange=None):
+    if expiry == None:
+        expiry = get_active_contract(symbol)
+
     contract = get_ib_futures(symbol, exchange)
     if contract is not None:
         return (contract['symbol'], "FUT", contract['exchange'], contract['currency'], expiry, 0.0, "")
