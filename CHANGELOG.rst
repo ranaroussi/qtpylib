@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+*October 25, 2016*
+
+1.4.96a
+-------
+
+- Creating synthetic ticks for instruments that DOESN'T receive ``RTVOLUME`` events (issue #9)
+- ``futures.make_tuple(...)`` auto selects most active contract when no expiry is provided (CME Group Futures only)
+- Misc bugfixes and code improvements
+
 
 *October 24, 2016*
 
