@@ -386,13 +386,11 @@ class Blotter():
                     # "wap":          kwargs['tick']['wap'],
                 }
 
-            # for instruments that DOESN'T receive RTVOLUME events
-            elif symbol not in self.rtvolume:
+            # for instruments that DOESN'T receive RTVOLUME events (exclude options)
+            elif symbol not in self.rtvolume and \
+                self.ibConn.contracts[msg.tickerId].m_secType not in ("OPT", "FOP"):
 
-                if self.ibConn.contracts[msg.tickerId].m_secType in ("OPT", "FOP"):
-                    tick = self.ibConn.optionsData[msg.tickerId]
-                else:
-                    tick = self.ibConn.marketData[msg.tickerId]
+                tick = self.ibConn.marketData[msg.tickerId]
 
                 if len(tick) > 0 and tick['last'].values[-1] > 0 < tick['lastsize'].values[-1]:
                     data = {
