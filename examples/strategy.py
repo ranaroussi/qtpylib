@@ -38,6 +38,12 @@ class TestStrategy(Algo):
         self.count = 0
 
     # ---------------------------------------
+    def on_quote(self, instrument):
+        # quote = instrument.get_quote()
+        # ^^ quote data available via get_quote()
+        pass
+
+    # ---------------------------------------
     def on_tick(self, instrument):
 
         # increase counter and do nothing if nor 10th tick
