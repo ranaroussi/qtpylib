@@ -1,6 +1,6 @@
 language: python
 
-sudo: false
+sudo: true
 fast_finish: true
 
 python:
