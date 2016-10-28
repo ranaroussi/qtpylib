@@ -6,7 +6,7 @@ window.onload = function() {
   // external links open in new tab
   $("a[href^='http']").attr('target','_blank');
 
-  // $("#qtpylib-pythonic-algorithmic-trading p a.reference.external").first().show();
+  $("#qtpylib-pythonic-algorithmic-trading p a.reference.external").first().show();
   // $("#qtpylib-pythonic-algorithmic-trading p a.reference.external").not(":eq(0)").hide();
 
   // own domain?
