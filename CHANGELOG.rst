@@ -3,6 +3,12 @@ Release Notes
 
 *October 25, 2016*
 
+1.4.97a
+-------
+
+- Made changes to ``.travis.yml`` to help Travis-CI with its Pandas build issues
+
+
 1.4.96a
 -------
 
