@@ -55,11 +55,12 @@ and TWS/IBGW port and run it.
 
     if __name__ == "__main__":
         blotter = MainBlotter(
-            dbhost   = "localhost",
-            dbname   = "qtpy",
-            dbuser   = "master",
-            dbpass   = "blaster",
-            ibport   = 4001, # 7496/7497 = TWS, 4001 = IBGateway
+            dbhost    = "localhost", # MySQL server
+            dbname    = "qtpy",      # MySQL database
+            dbuser    = "master",    # MySQL username
+            dbpass    = "blaster",   # MySQL password
+            ibport    = 4001,        # IB port (7496/7497 = TWS, 4001 = IBGateway)
+            orderbook = True         # fetch and stream order book data
         )
 
         blotter.run()
@@ -101,7 +102,7 @@ Then, run the Blotter by passing the parameters via the command line:
 
 .. code:: bash
 
-    $ python blotter.py [--dbport] [--dbname] [--dbuser] [--dbpass] [--ibport] [...]
+    $ python blotter.py [--dbport] [--dbname] [--dbuser] [--dbpass] [--ibport] [--orderbook] [...]
 
 
 Available Arguments
@@ -121,6 +122,7 @@ or via CLI:
 - ``--dbuser`` MySQL server username (default: ``root``)
 - ``--dbpass`` MySQL server password (default: ``None``)
 - ``--dbskip`` [flag] Skip MySQL logging of market data (default: ``False``)
+- ``--orderbook`` [flag] Tells the blotter to fetch and stream order book data (default: ``False``)
 
 -----
 

@@ -96,6 +96,12 @@ Then, with IB TWS/GW running, run the Blotter from the command line:
 
     $ python blotter.py
 
+If your strategy needs order book / market depth data, add the ``--orderbook`` flag to the command:
+
+.. code:: bash
+
+    $ python blotter.py --orderbook
+
 
 2. Write your Algorithm
 -----------------------
@@ -110,6 +116,15 @@ While the Blotter running in the background, write and execute your algorithm:
     class CrossOver(Algo):
 
         def on_start(self):
+            pass
+
+        def on_fill(self, instrument, order):
+            pass
+
+        def on_quote(self, instrument):
+            pass
+
+        def on_orderbook(self, instrument):
             pass
 
         def on_tick(self, instrument):
