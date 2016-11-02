@@ -93,6 +93,7 @@ class Algo(Broker):
         self.bars           = pd.DataFrame()
         self.ticks          = pd.DataFrame()
         self.quotes         = {}
+        self.books          = {}
         self.tick_count     = 0
         self.tick_bar_count = 0
         self.bar_count      = 0
@@ -174,7 +175,8 @@ class Algo(Broker):
                 continuous    = self.continuous,
                 quote_handler = self._quote_handler,
                 tick_handler  = self._tick_handler,
-                bar_handler   = self._bar_handler
+                bar_handler   = self._bar_handler,
+                book_handler  = self._book_handler
             )
 
         # -----------------------------------
@@ -203,7 +205,8 @@ class Algo(Broker):
                 tz            = self.timezone,
                 quote_handler = self._quote_handler,
                 tick_handler  = self._tick_handler,
-                bar_handler   = self._bar_handler
+                bar_handler   = self._bar_handler,
+                book_handler  = self._book_handler
             )
 
     # ---------------------------------------
@@ -263,6 +266,22 @@ class Algo(Broker):
 
         """
         # raise NotImplementedError("Should implement on_bar()")
+        pass
+
+    # ---------------------------------------
+    @abstractmethod
+    def on_orderbook(self, instrument):
+        """
+        Invoked on every change to the orderbook for the selected instrument.
+        This is where you'll write your strategy logic for orderbook changes events.
+
+        :Parameters:
+
+            symbol : string
+                `Instruments Object <#instrument-api>`_
+
+        """
+        # raise NotImplementedError("Should implement on_orderbook()")
         pass
 
     # ---------------------------------------
@@ -460,6 +479,16 @@ class Algo(Broker):
     def _caller(self, caller):
         stack = [x[3] for x in inspect.stack()][1:-1]
         return caller in stack
+
+    # ---------------------------------------
+    def _book_handler(self, book):
+        symbol = book['symbol']
+        del book['symbol']
+        del book['kind']
+
+        self.books[symbol] = book
+        self.on_orderbook(self.get_instrument(symbol))
+
 
     # ---------------------------------------
     def _quote_handler(self, quote):
