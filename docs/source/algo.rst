@@ -4,10 +4,11 @@ Writing Your Algorithm
 When creating your algorithm, there are two functions that handles
 incoming market data from the running Blotter. These are
 ``on_quote()`` which is invoked on every quote change,
-``on_tick()`` which is invoked on every tick captured, and
-``on_bar()``, which is invoked on every bar created in the
-pre-specified resolution. An `Instrument Object <./api_instrument.html>`_ is being passed
-to each method when called.
+``on_tick()`` which is invoked on every tick captured,
+``on_bar()``, which is invoked on every bar created in the pre-specified resolution, and
+``on_orderbook()``, which is invoked on every change to the Order Book.
+
+An `Instrument Object <./api_instrument.html>`_ is being passed to each method when called.
 
 If you need to set some parameters when your strategy starts,
 simply add an ``on_start()`` method to your strategy, and set
@@ -48,6 +49,10 @@ and sells when in position.
 
         def on_fill(self, instrument, order):
             # optional method that gets called on every order fill
+            pass
+
+        def on_orderbook(self, instrument):
+            # optional method that gets called on every orderbook change
             pass
 
         def on_quote(self, instrument):

@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+*November 2, 2016*
+
+1.4.98a
+-------
+
+- Added support for Orderbook-based strategies via ``on_orderbook(...)`` (requires the ``--orderbook`` flag to be added to Blotter)
+- Added bar(s), tick(s), quote and orderbook properties to the ``Instrument`` object
+
+
 *October 25, 2016*
 
 1.4.97a

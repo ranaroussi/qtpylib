@@ -1,8 +1,9 @@
 Instrument API
 --------------
 
-The Instrument object is passed to the ``on_tick(...)``,
-``on_bar(...)``, ``on_quote()`` and ``on_fill()`` methods in your strategy:
+The Instrument object is passed to the ``on_tick()``,
+``on_bar()``, ``on_quote()``, ``on_orderbook()``
+and ``on_fill()`` methods in your strategy:
 
 .. code:: python
 
@@ -14,6 +15,9 @@ The Instrument object is passed to the ``on_tick(...)``,
         instrument.MethodName(...)
 
     def on_quote(self, instrument):
+        instrument.MethodName(...)
+
+    def on_orderbook(self, instrument):
         instrument.MethodName(...)
 
     def on_fill(self, instrument, order):
