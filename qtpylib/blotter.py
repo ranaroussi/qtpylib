@@ -202,6 +202,7 @@ class Blotter():
             "ibserver": "localhost",
             "zmqport": "12345",
             "zmqtopic": "_qtpy_"+str(self.name.lower())+"_",
+            "orderbook": False,
             "dbhost": "localhost",
             "dbport": "3306",
             "dbname": "qtpy",
@@ -311,8 +312,10 @@ class Blotter():
             help='IB TWS/GW Server hostname (default: localhost)', required=False)
         parser.add_argument('--zmqport', default=self.args_defaults['zmqport'],
             help='ZeroMQ Port to use (default: 12345)', required=False)
-        # parser.add_argument('--zmqtopic', default=self.args_defaults['zmqtopic'],
-        #     help='Topic identifier for ZeroMQ (default: _qtpy_blottername_)', required=False)
+
+        parser.add_argument('--orderbook', action='store_true',
+            help='Get Order Book (Market Depth) data (default: False)', required=False)
+
         parser.add_argument('--dbhost', default=self.args_defaults['dbhost'],
             help='MySQL server hostname (default: localhost)', required=False)
         parser.add_argument('--dbport', default=self.args_defaults['dbport'],
@@ -365,7 +368,7 @@ class Blotter():
             self.run()
 
         elif caller == "handleTickString":
-            self.on_tick_string_received(msg.tickerId)
+            self.on_tick_string_received(msg.tickerId, kwargs)
 
         elif caller == "handleTickPrice" or caller == "handleTickSize":
             self.on_quote_received(msg.tickerId)
@@ -373,8 +376,11 @@ class Blotter():
         elif caller in "handleTickOptionComputation":
             self.on_option_computation_received(msg.tickerId)
 
+        elif caller == "handleMarketDepth":
+            self.on_orderbook_received(msg.tickerId)
+
     # -------------------------------------------
-    def on_tick_string_received(self, tickerId):
+    def on_tick_string_received(self, tickerId, kwargs):
         data = None
         symbol = self.ibConn.tickerSymbol(tickerId)
 
@@ -542,6 +548,21 @@ class Blotter():
 
         # except:
             # pass
+
+    # -------------------------------------------
+    def on_orderbook_received(self, tickerId):
+        orderbook = self.ibConn.marketDepthData[tickerId].dropna(
+            subset=['bid', 'ask']).fillna(0).to_dict(orient='list')
+
+        # add symbol data to list
+        symbol = self.ibConn.tickerSymbol(tickerId)
+        orderbook['symbol'] = symbol
+        orderbook["symbol_group"]  = _gen_symbol_group(symbol)
+        orderbook["asset_class"] = _gen_asset_class(symbol)
+        orderbook["kind"] = "ORDERBOOK"
+
+        # broadcast
+        self.broadcast(orderbook, "ORDERBOOK")
 
     # -------------------------------------------
     def on_tick_received(self, tick):
@@ -823,6 +844,8 @@ class Blotter():
                             for contract in prev_contracts:
                                 if contract not in contracts:
                                     self.ibConn.cancelMarketData(self.ibConn.createContract(contract))
+                                    if self.args['orderbook']:
+                                        self.ibConn.cancelMarketDepth(self.ibConn.createContract(contract))
                                     time.sleep(0.1)
                                     contract_string = self.ibConn.contractString(contract).split('_')[0]
                                     logging.info('Contract Removed ['+contract_string+']')
@@ -831,6 +854,8 @@ class Blotter():
                     for contract in contracts:
                         if contract not in prev_contracts:
                             self.ibConn.requestMarketData(self.ibConn.createContract(contract))
+                            if self.args['orderbook']:
+                                self.ibConn.requestMarketDepth(self.ibConn.createContract(contract))
                             time.sleep(0.1)
                             contract_string = self.ibConn.contractString(contract).split('_')[0]
                             logging.info('Contract Added ['+contract_string+']')
@@ -923,7 +948,8 @@ class Blotter():
         return data
 
     # -------------------------------------------
-    def listen(self, symbols, tick_handler=None, bar_handler=None, quote_handler=None, tz="UTC"):
+    def listen(self, symbols, tick_handler=None, bar_handler=None, \
+        quote_handler=None, book_handler=None, tz="UTC"):
         # load runtime/default data
         if isinstance(symbols, str):
             symbols = symbols.split(',')
@@ -949,6 +975,11 @@ class Blotter():
                     # convert None to np.nan !!
                     data.update((k, npnan) for k,v in data.items() if v is None)
 
+                    # quote
+                    if data['kind'] == "ORDERBOOK":
+                        if book_handler is not None:
+                            book_handler(data)
+                            continue
                     # quote
                     if data['kind'] == "QUOTE":
                         if quote_handler is not None:
@@ -984,8 +1015,8 @@ class Blotter():
 
     # -------------------------------------------
     def drip(self, symbols, start, end=None, tick_handler=None, \
-        bar_handler=None, quote_handler=None, resolution="1T", \
-        tz="UTC", continuous=True):
+        bar_handler=None, quote_handler=None, book_handler=None, \
+        resolution="1T", tz="UTC", continuous=True):
 
         handler = None
         if ("K" in resolution or "V" in resolution) and tick_handler is not None:
