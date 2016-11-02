@@ -798,18 +798,6 @@ class Broker():
         return {}
 
     # ---------------------------------------
-    def get_orderbook(self, symbol):
-        symbol = self._getsymbol_(symbol)
-
-        if symbol in self.ibConn.orderbook:
-            return self.ibConn.orderbook[symbol]
-
-        return {
-            "bid":0, "bidsize":0,
-            "ask":0, "asksize":0
-        }
-
-    # ---------------------------------------
     def get_positions(self, symbol):
         symbol = self._getsymbol_(symbol)
 
