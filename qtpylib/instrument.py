@@ -520,6 +520,42 @@ class Instrument(str):
 
     # ---------------------------------------
     @property
+    def bars(self):
+        """(Property) Shortcut to self.get_bars()"""
+        return self.get_bars()
+
+    # ---------------------------------------
+    @property
+    def bar(self):
+        """(Property) Shortcut to self.get_bars()"""
+        return self.get_bars(lookback=1, as_dict=True)
+
+    # ---------------------------------------
+    @property
+    def ticks(self):
+        """(Property) Shortcut to self.get_ticks()"""
+        return self.get_ticks()
+
+    # ---------------------------------------
+    @property
+    def tick(self):
+        """(Property) Shortcut to self.get_ticks()"""
+        return self.get_ticks(lookback=1, as_dict=True)
+
+    # ---------------------------------------
+    @property
+    def quote(self):
+        """(Property) Shortcut to self.get_quote()"""
+        return self.get_quote()
+
+    # ---------------------------------------
+    @property
+    def orderbook(self):
+        """(Property) Shortcut to self.get_orderbook()"""
+        return self.get_orderbook()
+
+    # ---------------------------------------
+    @property
     def symbol(self):
         """(Property) Shortcut to self.get_symbol()"""
         return self
@@ -559,12 +595,6 @@ class Instrument(str):
     def pending_orders(self):
         """(Property) Shortcut to self.get_pending_orders()"""
         return self.get_pending_orders()
-
-    # ---------------------------------------
-    @property
-    def orderbook(self):
-        """(Property) Shortcut to self.get_orderbook()"""
-        return self.get_orderbook()
 
     # ---------------------------------------
     @property
