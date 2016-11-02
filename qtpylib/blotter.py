@@ -365,68 +365,113 @@ class Blotter():
             self.run()
 
         elif caller == "handleTickString":
-            data = None
-            symbol = self.ibConn.tickerSymbol(msg.tickerId)
-
-            # for instruments that receive RTVOLUME events
-            if "tick" in kwargs:
-                self.rtvolume.add(symbol)
-                data = {
-                    # available data from ib
-                    "symbol":       symbol,
-                    "symbol_group": _gen_symbol_group(symbol), # ES_F, ...
-                    "asset_class":  _gen_asset_class(symbol),
-                    "timestamp":    kwargs['tick']['time'],
-                    "last":         float(Decimal(kwargs['tick']['last'])),
-                    "lastsize":     int(kwargs['tick']['size']),
-                    "bid":          float(Decimal(kwargs['tick']['bid'])),
-                    "ask":          float(Decimal(kwargs['tick']['ask'])),
-                    "bidsize":      int(kwargs['tick']['bidsize']),
-                    "asksize":      int(kwargs['tick']['asksize']),
-                    # "wap":          kwargs['tick']['wap'],
-                }
-
-            # for instruments that DOESN'T receive RTVOLUME events (exclude options)
-            elif symbol not in self.rtvolume and \
-                self.ibConn.contracts[msg.tickerId].m_secType not in ("OPT", "FOP"):
-
-                tick = self.ibConn.marketData[msg.tickerId]
-
-                if len(tick) > 0 and tick['last'].values[-1] > 0 < tick['lastsize'].values[-1]:
-                    data = {
-                        # available data from ib
-                        "symbol":       symbol,
-                        "symbol_group": _gen_symbol_group(symbol), # ES_F, ...
-                        "asset_class":  _gen_asset_class(symbol),
-                        "timestamp":    tick.index.values[-1],
-                        "last":         float(Decimal(tick['last'].values[-1])),
-                        "lastsize":     int(tick['lastsize'].values[-1]),
-                        "bid":          float(Decimal(tick['bid'].values[-1])),
-                        "ask":          float(Decimal(tick['ask'].values[-1])),
-                        "bidsize":      int(tick['bidsize'].values[-1]),
-                        "asksize":      int(tick['asksize'].values[-1]),
-                        # "wap":          kwargs['tick']['wap'],
-                    }
-
-            if data is not None:
-                # cache last tick
-                if symbol in self.cash_ticks.keys():
-                    if data == self.cash_ticks[symbol]:
-                        return
-
-                self.cash_ticks[symbol] = data
-
-                # add options fields
-                data = _force_options_columns(data)
-
-                # print('.', end="", flush=True)
-                self.on_tick_received(data)
+            self.on_tick_string_received(msg.tickerId)
 
         elif caller == "handleTickPrice" or caller == "handleTickSize":
             self.on_quote_received(msg.tickerId)
 
         elif caller in "handleTickOptionComputation":
             self.on_option_computation_received(msg.tickerId)
+
+    # -------------------------------------------
+    def on_tick_string_received(self, tickerId):
+        data = None
+        symbol = self.ibConn.tickerSymbol(tickerId)
+
+        # for instruments that receive RTVOLUME events
+        if "tick" in kwargs:
+            self.rtvolume.add(symbol)
+            data = {
+                # available data from ib
+                "symbol":       symbol,
+                "symbol_group": _gen_symbol_group(symbol), # ES_F, ...
+                "asset_class":  _gen_asset_class(symbol),
+                "timestamp":    kwargs['tick']['time'],
+                "last":         float(Decimal(kwargs['tick']['last'])),
+                "lastsize":     int(kwargs['tick']['size']),
+                "bid":          float(Decimal(kwargs['tick']['bid'])),
+                "ask":          float(Decimal(kwargs['tick']['ask'])),
+                "bidsize":      int(kwargs['tick']['bidsize']),
+                "asksize":      int(kwargs['tick']['asksize']),
+                # "wap":          kwargs['tick']['wap'],
+            }
+
+        # for instruments that DOESN'T receive RTVOLUME events (exclude options)
+        elif symbol not in self.rtvolume and \
+            self.ibConn.contracts[tickerId].m_secType not in ("OPT", "FOP"):
+
+            tick = self.ibConn.marketData[tickerId]
+
+            if len(tick) > 0 and tick['last'].values[-1] > 0 < tick['lastsize'].values[-1]:
+                data = {
+                    # available data from ib
+                    "symbol":       symbol,
+                    "symbol_group": _gen_symbol_group(symbol), # ES_F, ...
+                    "asset_class":  _gen_asset_class(symbol),
+                    "timestamp":    tick.index.values[-1],
+                    "last":         float(Decimal(tick['last'].values[-1])),
+                    "lastsize":     int(tick['lastsize'].values[-1]),
+                    "bid":          float(Decimal(tick['bid'].values[-1])),
+                    "ask":          float(Decimal(tick['ask'].values[-1])),
+                    "bidsize":      int(tick['bidsize'].values[-1]),
+                    "asksize":      int(tick['asksize'].values[-1]),
+                    # "wap":          kwargs['tick']['wap'],
+                }
+
+        if data is not None:
+            # cache last tick
+            if symbol in self.cash_ticks.keys():
+                if data == self.cash_ticks[symbol]:
+                    return
+
+            self.cash_ticks[symbol] = data
+
+            # add options fields
+            data = _force_options_columns(data)
+
+            # print('.', end="", flush=True)
+            self.on_tick_received(data)
+
+    # -------------------------------------------
+    def on_quote_received(self, tickerId):
+        try:
+
+            symbol = self.ibConn.tickerSymbol(tickerId)
+
+            if self.ibConn.contracts[tickerId].m_secType in ("OPT", "FOP"):
+                quote = self.ibConn.optionsData[tickerId].to_dict(orient='records')[0]
+                quote['type']   = self.ibConn.contracts[tickerId].m_right
+                quote['strike'] = float(Decimal(self.ibConn.contracts[tickerId].m_strike))
+                quote["symbol_group"] = self.ibConn.contracts[tickerId].m_symbol+'_'+self.ibConn.contracts[tickerId].m_secType
+                quote = self._mark_options_values(quote)
+            else:
+                quote = self.ibConn.marketData[tickerId].to_dict(orient='records')[0]
+                quote["symbol_group"] = _gen_symbol_group(symbol)
+
+            quote["symbol"] = symbol
+            quote["asset_class"] = _gen_asset_class(symbol)
+            quote['bid']  = float(Decimal(quote['bid']))
+            quote['ask']  = float(Decimal(quote['ask']))
+            quote['last'] = float(Decimal(quote['last']))
+            quote["kind"] = "QUOTE"
+
+            # cash markets do not get RTVOLUME (handleTickString)
+            if quote["asset_class"] == "CSH":
+                quote['last'] = round(float((quote['bid']+quote['ask'])/2), 5)
+                quote['timestamp'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")
+
+                # create synthetic tick
+                if symbol in self.cash_ticks.keys() and quote['last'] != self.cash_ticks[symbol]:
+                    self.on_tick_received(quote)
+                else:
+                    self.broadcast(quote, "QUOTE")
+
+                self.cash_ticks[symbol] = quote['last']
+            else:
+                self.broadcast(quote, "QUOTE")
+
+        except:
+            pass
 
     # -------------------------------------------
     def on_option_computation_received(self, tickerId):
@@ -497,47 +542,6 @@ class Blotter():
 
         # except:
             # pass
-
-    # -------------------------------------------
-    def on_quote_received(self, tickerId):
-        try:
-
-            symbol = self.ibConn.tickerSymbol(tickerId)
-
-            if self.ibConn.contracts[tickerId].m_secType in ("OPT", "FOP"):
-                quote = self.ibConn.optionsData[tickerId].to_dict(orient='records')[0]
-                quote['type']   = self.ibConn.contracts[tickerId].m_right
-                quote['strike'] = float(Decimal(self.ibConn.contracts[tickerId].m_strike))
-                quote["symbol_group"] = self.ibConn.contracts[tickerId].m_symbol+'_'+self.ibConn.contracts[tickerId].m_secType
-                quote = self._mark_options_values(quote)
-            else:
-                quote = self.ibConn.marketData[tickerId].to_dict(orient='records')[0]
-                quote["symbol_group"] = _gen_symbol_group(symbol)
-
-            quote["symbol"] = symbol
-            quote["asset_class"] = _gen_asset_class(symbol)
-            quote['bid']  = float(Decimal(quote['bid']))
-            quote['ask']  = float(Decimal(quote['ask']))
-            quote['last'] = float(Decimal(quote['last']))
-            quote["kind"] = "QUOTE"
-
-            # cash markets do not get RTVOLUME (handleTickString)
-            if quote["asset_class"] == "CSH":
-                quote['last'] = round(float((quote['bid']+quote['ask'])/2), 5)
-                quote['timestamp'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")
-
-                # create synthetic tick
-                if symbol in self.cash_ticks.keys() and quote['last'] != self.cash_ticks[symbol]:
-                    self.on_tick_received(quote)
-                else:
-                    self.broadcast(quote, "QUOTE")
-
-                self.cash_ticks[symbol] = quote['last']
-            else:
-                self.broadcast(quote, "QUOTE")
-
-        except:
-            pass
 
     # -------------------------------------------
     def on_tick_received(self, tick):
