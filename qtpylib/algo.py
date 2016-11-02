@@ -492,7 +492,7 @@ class Algo(Broker):
 
     # ---------------------------------------
     def _quote_handler(self, quote):
-        # self._cancel_expired_pending_orders()
+        del quote['kind']
         self.quotes[quote['symbol']] = quote
         self.on_quote(self.get_instrument(quote))
 
