@@ -114,6 +114,22 @@ class Instrument(str):
             return self.parent.quotes[self]
 
     # ---------------------------------------
+    def get_orderbook(self):
+        """Get orderbook for the instrument
+
+        :Retruns:
+            orderbook : dict
+                orderbook dict for the instrument
+        """
+        if self in self.parent.books.keys():
+            return self.parent.books[self]
+
+        return {
+            "bid": [0], "bidsize": [0],
+            "ask": [0], "asksize": [0]
+        }
+
+    # ---------------------------------------
     def order(self, direction, quantity, **kwargs):
         """ Send an order for this instrument
 
@@ -363,17 +379,6 @@ class Instrument(str):
                 IB Order object of instrument
         """
         return self.parent.active_order_id(self)
-
-
-    # ---------------------------------------
-    def get_orderbook(self):
-        """Get orderbook for the instrument
-
-        :Retruns:
-            orderbook : pd.DataFrame
-                orderbook DataFrame for the instrument
-        """
-        return self.parent.get_orderbook(self)
 
 
     # ---------------------------------------
