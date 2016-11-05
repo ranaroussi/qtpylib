@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+
+Development
+-----------
+- Use IbPy2 (>= 0.8.0) from PyPI, same code as IbPy; no separate install required.
+
+
 *November 2, 2016*
 
 1.4.98a

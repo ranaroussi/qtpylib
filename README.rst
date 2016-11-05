@@ -231,13 +231,7 @@ Now, point your browser to http://localhost:5000 and use the password generated 
 Installation
 ============
 
-First, install IbPy (for some reason I can't get this installed automatically):
-
-.. code:: bash
-
-    $ pip install git+git://github.com/blampe/IbPy --user --upgrade
-
-Then, install QTPyLib using ``pip``:
+Install using ``pip``:
 
 .. code:: bash
 
@@ -259,7 +253,7 @@ Requirements
 * `Flask <http://flask.pocoo.org>`__ for the Dashboard (tested to work with >=0.11)
 * `Requests <https://github.com/kennethreitz/requests>`__ (tested to with with >=2.10.0)
 * `Beautiful Soup <https://pypi.python.org/pypi/beautifulsoup4>`_ (tested to work with >=4.3.2)
-* `IbPy <https://github.com/blampe/IbPy>`__ (tested to work with >=0.7.2-9.00)
+* `IbPy2 <https://github.com/blampe/IbPy>`__ (tested to work with >=0.8.0)
 * `ezIBpy <https://github.com/ranaroussi/ezibpy>`__ (IbPy wrapper, tested to with with >=1.12.24)
 * Latest Interactive Brokers’ `TWS <https://www.interactivebrokers.com/en/index.php?f=15875>`__ or `IB Gateway <https://www.interactivebrokers.com/en/index.php?f=16457>`__ installed and running on the machine
 
