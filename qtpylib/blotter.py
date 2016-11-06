@@ -60,90 +60,6 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO,
     format='%(asctime)s [%(levelname)s]: %(message)s')
 
 # =============================================
-def _gen_symbol_group(sym):
-    sym = sym.strip()
-
-    if "_FUT" in sym:
-        sym = sym.split("_FUT")
-        return sym[0][:-5]+"_F"
-
-    elif "_CASH" in sym:
-        return "CASH"
-
-    if "_FOP" in sym or "_OPT" in sym:
-        return sym[:-12]
-
-    return sym
-
-def _gen_asset_class(sym):
-    sym_class = str(sym).split("_")
-    if len(sym_class) > 1:
-        return sym_class[-1].replace("CASH", "CSH")
-    return "STK"
-
-
-def _mark_options_values(data):
-    if isinstance(data, dict):
-        data['opt_price']      = data.pop('price')
-        data['opt_underlying'] = data.pop('underlying')
-        data['opt_dividend']   = data.pop('dividend')
-        data['opt_volume']     = data.pop('volume')
-        data['opt_iv']         = data.pop('iv')
-        data['opt_oi']         = data.pop('oi')
-        data['opt_delta']      = data.pop('delta')
-        data['opt_gamma']      = data.pop('gamma')
-        data['opt_vega']       = data.pop('vega')
-        data['opt_theta']      = data.pop('theta')
-        return data
-
-    elif isinstance(data, pd.DataFrame):
-        return data.rename(columns={
-            'price': 'opt_price',
-            'underlying': 'opt_underlying',
-            'dividend': 'opt_dividend',
-            'volume': 'opt_volume',
-            'iv': 'opt_iv',
-            'oi': 'opt_oi',
-            'delta': 'opt_delta',
-            'gamma': 'opt_gamma',
-            'vega': 'opt_vega',
-            'theta': 'opt_theta'
-        })
-
-    return data
-
-
-def _force_options_columns(data):
-    opt_cols = ['opt_price', 'opt_underlying', 'opt_dividend', 'opt_volume',
-        'opt_iv', 'opt_oi', 'opt_delta', 'opt_gamma', 'opt_vega', 'opt_theta']
-
-    if isinstance(data, dict):
-        if not set(opt_cols).issubset(data.keys()):
-            data['opt_price'] = None
-            data['opt_underlying'] = None
-            data['opt_dividend'] = None
-            data['opt_volume'] = None
-            data['opt_iv'] = None
-            data['opt_oi'] = None
-            data['opt_delta'] = None
-            data['opt_gamma'] = None
-            data['opt_vega'] = None
-            data['opt_theta'] = None
-
-    elif isinstance(data, pd.DataFrame):
-        if not set(opt_cols).issubset(data.columns):
-            data.loc[:, 'opt_price']      = npnan
-            data.loc[:, 'opt_underlying'] = npnan
-            data.loc[:, 'opt_dividend']   = npnan
-            data.loc[:, 'opt_volume']     = npnan
-            data.loc[:, 'opt_iv']         = npnan
-            data.loc[:, 'opt_oi']         = npnan
-            data.loc[:, 'opt_delta']      = npnan
-            data.loc[:, 'opt_gamma']      = npnan
-            data.loc[:, 'opt_vega']       = npnan
-            data.loc[:, 'opt_theta']      = npnan
-
-    return data
 
 class Blotter():
     """Broker class initilizer
@@ -390,8 +306,8 @@ class Blotter():
             data = {
                 # available data from ib
                 "symbol":       symbol,
-                "symbol_group": _gen_symbol_group(symbol), # ES_F, ...
-                "asset_class":  _gen_asset_class(symbol),
+                "symbol_group": self._gen_symbol_group(symbol), # ES_F, ...
+                "asset_class":  self._gen_asset_class(symbol),
                 "timestamp":    kwargs['tick']['time'],
                 "last":         float(Decimal(kwargs['tick']['last'])),
                 "lastsize":     int(kwargs['tick']['size']),
@@ -412,8 +328,8 @@ class Blotter():
                 data = {
                     # available data from ib
                     "symbol":       symbol,
-                    "symbol_group": _gen_symbol_group(symbol), # ES_F, ...
-                    "asset_class":  _gen_asset_class(symbol),
+                    "symbol_group": self._gen_symbol_group(symbol), # ES_F, ...
+                    "asset_class":  self._gen_asset_class(symbol),
                     "timestamp":    tick.index.values[-1],
                     "last":         float(Decimal(tick['last'].values[-1])),
                     "lastsize":     int(tick['lastsize'].values[-1]),
@@ -433,7 +349,7 @@ class Blotter():
             self.cash_ticks[symbol] = data
 
             # add options fields
-            data = _force_options_columns(data)
+            data = self._force_options_columns(data)
 
             # print('.', end="", flush=True)
             self.on_tick_received(data)
@@ -449,13 +365,13 @@ class Blotter():
                 quote['type']   = self.ibConn.contracts[tickerId].m_right
                 quote['strike'] = float(Decimal(self.ibConn.contracts[tickerId].m_strike))
                 quote["symbol_group"] = self.ibConn.contracts[tickerId].m_symbol+'_'+self.ibConn.contracts[tickerId].m_secType
-                quote = self._mark_options_values(quote)
+                quote = self.self._mark_options_values(quote)
             else:
                 quote = self.ibConn.marketData[tickerId].to_dict(orient='records')[0]
-                quote["symbol_group"] = _gen_symbol_group(symbol)
+                quote["symbol_group"] = self._gen_symbol_group(symbol)
 
             quote["symbol"] = symbol
-            quote["asset_class"] = _gen_asset_class(symbol)
+            quote["asset_class"] = self._gen_asset_class(symbol)
             quote['bid']  = float(Decimal(quote['bid']))
             quote['ask']  = float(Decimal(quote['ask']))
             quote['last'] = float(Decimal(quote['last']))
@@ -515,10 +431,10 @@ class Blotter():
         tick['theta']         = float(Decimal(tick['theta']))
 
         tick["symbol"]        = symbol
-        tick["symbol_group"]  = _gen_symbol_group(symbol)
-        tick["asset_class"]   = _gen_asset_class(symbol)
+        tick["symbol_group"]  = self._gen_symbol_group(symbol)
+        tick["asset_class"]   = self._gen_asset_class(symbol)
 
-        tick = _mark_options_values(tick)
+        tick = self._mark_options_values(tick)
 
         # is this a really new tick?
         prev_last = 0
@@ -557,8 +473,8 @@ class Blotter():
         # add symbol data to list
         symbol = self.ibConn.tickerSymbol(tickerId)
         orderbook['symbol'] = symbol
-        orderbook["symbol_group"]  = _gen_symbol_group(symbol)
-        orderbook["asset_class"] = _gen_asset_class(symbol)
+        orderbook["symbol_group"]  = self._gen_symbol_group(symbol)
+        orderbook["asset_class"] = self._gen_asset_class(symbol)
         orderbook["kind"] = "ORDERBOOK"
 
         # broadcast
@@ -880,8 +796,8 @@ class Blotter():
             symbols = symbols.split(',')
 
         # work with symbol groups
-        # symbols = list(map(_gen_symbol_group, symbols))
-        symbol_groups = list(map(_gen_symbol_group, symbols))
+        # symbols = list(map(self._gen_symbol_group, symbols))
+        symbol_groups = list(map(self._gen_symbol_group, symbols))
         # print(symbols)
 
         # convert datetime to string for MySQL
@@ -1000,7 +916,7 @@ class Blotter():
                         df.index = df.index.tz_localize('UTC').tz_convert(tz)
 
                     # add options columns
-                    df = _force_options_columns(df)
+                    df = self._force_options_columns(df)
 
                     if data['kind'] == "TICK":
                         if tick_handler is not None:
@@ -1122,6 +1038,102 @@ class Blotter():
                 print("[ERROR] Cannot create database schema")
                 self._remove_cached_args()
                 sys.exit(1)
+
+
+
+    # ===========================================
+    # Utility functions --->
+    # ===========================================
+
+    # -------------------------------------------
+    def _gen_symbol_group(self, sym):
+        sym = sym.strip()
+
+        if "_FUT" in sym:
+            sym = sym.split("_FUT")
+            return sym[0][:-5]+"_F"
+
+        elif "_CASH" in sym:
+            return "CASH"
+
+        if "_FOP" in sym or "_OPT" in sym:
+            return sym[:-12]
+
+        return sym
+
+    # -------------------------------------------
+    def _gen_asset_class(self, sym):
+        sym_class = str(sym).split("_")
+        if len(sym_class) > 1:
+            return sym_class[-1].replace("CASH", "CSH")
+        return "STK"
+
+
+    # -------------------------------------------
+    def _mark_options_values(self, data):
+        if isinstance(data, dict):
+            data['opt_price']      = data.pop('price')
+            data['opt_underlying'] = data.pop('underlying')
+            data['opt_dividend']   = data.pop('dividend')
+            data['opt_volume']     = data.pop('volume')
+            data['opt_iv']         = data.pop('iv')
+            data['opt_oi']         = data.pop('oi')
+            data['opt_delta']      = data.pop('delta')
+            data['opt_gamma']      = data.pop('gamma')
+            data['opt_vega']       = data.pop('vega')
+            data['opt_theta']      = data.pop('theta')
+            return data
+
+        elif isinstance(data, pd.DataFrame):
+            return data.rename(columns={
+                'price': 'opt_price',
+                'underlying': 'opt_underlying',
+                'dividend': 'opt_dividend',
+                'volume': 'opt_volume',
+                'iv': 'opt_iv',
+                'oi': 'opt_oi',
+                'delta': 'opt_delta',
+                'gamma': 'opt_gamma',
+                'vega': 'opt_vega',
+                'theta': 'opt_theta'
+            })
+
+        return data
+
+
+    # -------------------------------------------
+    def _force_options_columns(self, data):
+        opt_cols = ['opt_price', 'opt_underlying', 'opt_dividend', 'opt_volume',
+            'opt_iv', 'opt_oi', 'opt_delta', 'opt_gamma', 'opt_vega', 'opt_theta']
+
+        if isinstance(data, dict):
+            if not set(opt_cols).issubset(data.keys()):
+                data['opt_price'] = None
+                data['opt_underlying'] = None
+                data['opt_dividend'] = None
+                data['opt_volume'] = None
+                data['opt_iv'] = None
+                data['opt_oi'] = None
+                data['opt_delta'] = None
+                data['opt_gamma'] = None
+                data['opt_vega'] = None
+                data['opt_theta'] = None
+
+        elif isinstance(data, pd.DataFrame):
+            if not set(opt_cols).issubset(data.columns):
+                data.loc[:, 'opt_price']      = npnan
+                data.loc[:, 'opt_underlying'] = npnan
+                data.loc[:, 'opt_dividend']   = npnan
+                data.loc[:, 'opt_volume']     = npnan
+                data.loc[:, 'opt_iv']         = npnan
+                data.loc[:, 'opt_oi']         = npnan
+                data.loc[:, 'opt_delta']      = npnan
+                data.loc[:, 'opt_gamma']      = npnan
+                data.loc[:, 'opt_vega']       = npnan
+                data.loc[:, 'opt_theta']      = npnan
+
+        return data
+
 
 
 # -------------------------------------------
