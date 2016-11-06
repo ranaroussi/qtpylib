@@ -495,7 +495,7 @@ class Instrument(str):
 
 
     # ---------------------------------------
-    def get_margin_max_contracts(self, overnight=True):
+    def get_max_contracts_allowed(self, overnight=True):
         """ Get maximum contracts allowed to trade
         baed on required margin per contract and
         current account balance (futures only)
@@ -515,6 +515,10 @@ class Instrument(str):
                 return int(math.floor(self.parent.account['AvailableFunds']/req_margin[timeframe]))
 
         return None
+
+    def get_margin_max_contracts(self, overnight=True):
+        """ Deprecated (renamed to ``get_max_contracts_allowed``)"""
+        return self.get_max_contracts_allowed(overnight=overnight)
 
     # ---------------------------------------
     def get_ticksize(self, fallback=0.01):
@@ -636,8 +640,13 @@ class Instrument(str):
     # ---------------------------------------
     @property
     def margin_max_contracts(self):
-        """(Property) Shortcut to self.get_margin_max_contracts()"""
-        return self.get_margin_max_contracts()
+        """ Deprecated (renamed to ``max_contracts_allowed``)"""
+        return self.get_max_contracts_allowed()
+
+    @property
+    def max_contracts_allowed(self):
+        """(Property) Shortcut to self.get_max_contracts_allowed()"""
+        return self.get_max_contracts_allowed()
 
 
     # ---------------------------------------
