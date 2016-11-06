@@ -552,8 +552,8 @@ class Instrument(str):
     # ---------------------------------------
     @property
     def bar(self):
-        """(Property) Shortcut to self.get_bars()"""
-        return self.get_bars(lookback=1, as_dict=True)
+        """(Property) Shortcut to self.get_bar()"""
+        return self.get_bar()
 
     # ---------------------------------------
     @property
@@ -564,8 +564,8 @@ class Instrument(str):
     # ---------------------------------------
     @property
     def tick(self):
-        """(Property) Shortcut to self.get_ticks()"""
-        return self.get_ticks(lookback=1, as_dict=True)
+        """(Property) Shortcut to self.get_tick()"""
+        return self.get_tick()
 
     # ---------------------------------------
     @property
