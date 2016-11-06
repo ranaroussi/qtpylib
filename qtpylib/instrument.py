@@ -378,7 +378,7 @@ class Instrument(str):
             order : object
                 IB Order object of instrument
         """
-        return self.parent.active_order_id(self)
+        return self.parent.active_order(self, order_type="STOP")
 
 
     # ---------------------------------------
