@@ -59,34 +59,6 @@ Requirements
 * `IbPy2 <https://github.com/blampe/IbPy>`_ (tested to work with >=0.8.0)
 * `ezIBpy <https://github.com/ranaroussi/ezibpy>`_ (IbPy wrapper, tested to with with >=1.12.26)
 * Latest Interactive Brokers’ `TWS <https://www.interactivebrokers.com/en/index.php?f=15875>`_ or `IB Gateway <https://www.interactivebrokers.com/en/index.php?f=16457>`_ installed and running on the machine
-
------
-
-Install MySQL
--------------
-
-QTPyLib stores historical data and trades in a MySQL database.
-
-On Debian/Ubuntu:
-
-.. code:: bash
-
-    $ sudo apt install mysql-server
-
-On Redhat/Fedora:
-
-.. code:: bash
-
-    $ sudo yum install mysql-server
-
-The install will ask you to set a root password for MySQL; generate a password and enter it when prompted in the next step.
-
-Create a database called ``qtpy`` and user called ``qtpy`` with permissions.  Replace ``<password>`` with a password for the user ``qtpy``.
-This is the user and password you will use to connect to the database in your code.
-
-.. code:: bash
-
-    $ myql -u root -p -e "create database qtpy; create user 'qtpy'@'localhost' identified by '<password>'; grant all privileges on qtpy . * to 'qtpy'@'localhost';"
 * `MySQL Server <https://www.mysql.com/>`_  installed and running with a database for QTPyLib
 
 -----
@@ -132,6 +104,60 @@ Next, go to **Precautions** on the left side menu, and make sure
 .. image:: _static/tws2.jpg
     :width: 600px
     :alt: Order Confirmation
+
+-----
+
+Install MySQL
+-------------
+
+QTPyLib stores historical data and trades in a MySQL database,
+so you'll need to have MySQL (or one of its off-springs like MariaDB or Percona)
+installed and running on your machine.
+
+Installation
+~~~~~~~~~~~~
+
+To install MySQL, follow the
+`installation instructions <http://dev.mysql.com/doc/refman/5.7/en/installing.html>`_.
+
+On Debian/Ubuntu:
+
+.. code:: bash
+
+    $ sudo apt install mysql-server
+
+On Redhat/Fedora:
+
+.. code:: bash
+
+    $ sudo yum install mysql-server
+
+On macOS (using Homebrew):
+
+.. code:: bash
+
+    $ sudo brew install mysql
+
+For Windows, simply `download the installer <http://dev.mysql.com/downloads/installer/>`_ and run it.
+
+During the installation process, you will be asked to set a root password for MySQL;
+generate a password and enter it when prompted in the next step.
+
+Create the Database
+~~~~~~~~~~~~~~~~~~~
+
+Once you have MySQL installed, create a database and grant a new/exisgin user
+permissions on the database. This is the user and password you will use to
+connect to the database in your code.
+
+By default, and unless specified otherwise, QTPyLib looks for a database named ``qtpy``
+and user named ``qtpy``. To create this database and user, run this command:
+
+.. code:: bash
+
+    $ myql -u root -p -e "create database qtpy; create user 'qtpy'@'localhost' identified by '<password>'; grant all privileges on qtpy .* to 'qtpy'@'localhost';"
+
+\* Replace ``<password>`` with a password for the user ``qtpy``.
 
 -----
 
