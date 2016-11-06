@@ -146,18 +146,24 @@ generate a password and enter it when prompted in the next step.
 Create the Database
 ~~~~~~~~~~~~~~~~~~~
 
-Once you have MySQL installed, create a database and grant a new/exisgin user
+Once you have MySQL installed, create a database and grant a new/existing user
 permissions on the database. This is the user and password you will use to
 connect to the database in your code.
 
 By default, and unless specified otherwise, QTPyLib looks for a database named ``qtpy``
-and user named ``qtpy``. To create this database and user, run this command:
+and user named ``root``. To create this database and user, run this command:
 
 .. code:: bash
 
-    $ myql -u root -p -e "create database qtpy; create user 'qtpy'@'localhost' identified by '<password>'; grant all privileges on qtpy .* to 'qtpy'@'localhost';"
+    $ myql -u root -p -e "create database qtpy;"
 
-\* Replace ``<password>`` with a password for the user ``qtpy``.
+If you want ro create a dedicate user for this database (highly recommended), run this command:
+
+.. code:: bash
+
+    $ myql -u root -p -e "create database qtpy; create user '<user>'@'localhost' identified by '<password>'; grant all privileges on qtpy .* to '<user>'@'localhost';"
+
+\* Replace ``<user>`` with the desired user name and ``<password>`` with the desired password for that user.
 
 -----
 
