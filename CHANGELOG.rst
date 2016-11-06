@@ -7,6 +7,8 @@ Release Notes
 --------
 
 - Added ``move_stoploss()`` to instrument object. This method auto-discover **orderId** and **quantity** and invokes ``self.modify_order(...)``
+- Fixed bug that prevented modification of stop orders using ``modify_order(...)``
+- Fixed rederence to renamed and modified method (``active_order_id`` => ``active_order``)
 
 1.4.99a
 -------
