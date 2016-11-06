@@ -2,24 +2,15 @@ Installation
 ============
 
 Install QTPyLib using ``pip``
-------------------------------
+-----------------------------
 
 .. code:: bash
 
     $ pip install qtpylib --upgrade --no-cache-dir
 
 
-.. note::
-    QTPyLib requires `IbPy <https://github.com/blampe/IbPy>`_, which, for some reason,
-    cannot be bundled with the pip installer and requires manual installation.
-    **To install IbPy manually, run:**
-
-    .. code:: bash
-
-        $ pip install git+git://github.com/blampe/IbPy --user --upgrade
-
 Uninstall QTPyLib
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 
 To uninstall QTPyLib using ``pip``, simply use:
 
@@ -65,9 +56,37 @@ Requirements
 * `Flask <http://flask.pocoo.org>`__ for the Dashboard (tested to work with >=0.11)
 * `Requests <https://github.com/kennethreitz/requests>`__ (tested to with with >=2.10.0)
 * `Beautiful Soup <https://pypi.python.org/pypi/beautifulsoup4>`_ (tested to work with >=4.3.2)
-* `IbPy <https://github.com/blampe/IbPy>`__ (tested to work with >=0.7.2-9.00)
+* `IbPy2 <https://github.com/blampe/IbPy>`__ (tested to work with >=0.8.0)
 * `ezIBpy <https://github.com/ranaroussi/ezibpy>`__ (IbPy wrapper, tested to with with >=1.12.24)
 * Latest Interactive Brokers’ `TWS <https://www.interactivebrokers.com/en/index.php?f=15875>`_ or `IB Gateway <https://www.interactivebrokers.com/en/index.php?f=16457>`_ installed and running on the machine
+
+-----
+
+Install MySQL
+-------------
+
+QTPyLib stores historical data and trades in a MySQL database.
+
+On Debian/Ubuntu:
+
+.. code:: bash
+
+    $ sudo apt install mysql-server
+
+On Redhat/Fedora:
+
+.. code:: bash
+
+    $ sudo yum install mysql-server
+
+The install will ask you to set a root password for MySQL; generate a password and enter it when prompted in the next step.
+
+Create a database called ``qtpy`` and user called ``qtpy`` with permissions.  Replace ``<password>`` with a password for the user ``qtpy``.
+This is the user and password you will use to connect to the database in your code.
+
+.. code:: bash
+
+    $ myql -u root -p -e "create database qtpy; create user 'qtpy'@'localhost' identified by '<password>'; grant all privileges on qtpy . * to 'qtpy'@'localhost';"
 
 -----
 

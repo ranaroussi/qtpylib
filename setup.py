@@ -48,7 +48,7 @@ setup(
         'beautifulsoup4>=4.3.2','python-dateutil>=2.5.3','ezibpy>=1.12.24',
         'flask>=0.11.1','numpy>=1.11.1','pandas>=0.18.1','pymysql>=0.7.6',
         'pytz>=2016.6.1','requests>=2.10.0','pyzmq>=15.2.1',
-        'nexmo>=1.2.0','twilio>=5.4.0'
+        'nexmo>=1.2.0','twilio>=5.4.0','ibpy2>=0.8.0',
     ],
     entry_points={
         'console_scripts': [
