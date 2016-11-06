@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS `bars` (
 
 CREATE TABLE IF NOT EXISTS `ticks` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `datetime` datetime(6) NOT NULL,
+  `datetime` datetime(3) NOT NULL,
   `symbol_id` int(11) unsigned NOT NULL,
   `bid` double unsigned DEFAULT NULL,
   `bidsize` int(11) unsigned DEFAULT NULL,
