@@ -70,6 +70,11 @@ class Instrument(str):
         return bars
 
     # ---------------------------------------
+    def get_bar(self):
+        """ Shortcut to self.get_bars(lookback=1, as_dict=True) """
+        return self.get_bars(lookback=1, as_dict=True)
+
+    # ---------------------------------------
     def get_ticks(self, lookback=None, as_dict=False):
         """ Get ticks for this instrument
 
@@ -101,6 +106,11 @@ class Instrument(str):
                 ticks = ticks[0]
 
         return ticks
+
+    # ---------------------------------------
+    def get_tick(self):
+        """ Shortcut to self.get_ticks(lookback=1, as_dict=True) """
+        return self.get_ticks(lookback=1, as_dict=True)
 
     # ---------------------------------------
     def get_quote(self):
