@@ -60,7 +60,7 @@ def session(df, start='17:00', end='16:00'):
         df = df[ df.index >= prev+' '+start ]
 
 
-    return df
+    return df.copy()
 
 # ---------------------------------------------------------
 def heikinashi(df, columns=('open', 'high', 'low', 'close')):
