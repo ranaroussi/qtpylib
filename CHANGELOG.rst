@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+*November 7, 2016*
+
+1.5.01a
+--------
+
+- Wait 5ms before invoking ``on_fill()`` to allow portfolio to sync from TWS/GW
+- Rnamed Instrument object's ``margin_max_contarcts()`` to ``max_contracts_allowed()``
+- Added ``get_bar()`` and ``get_tick()`` methods to Instrument object (as well as ``tick`` and ``bar`` properties)
+- Misc bugfixes and code improvements
+
+
 *November 6, 2016*
 
 1.5.0a
