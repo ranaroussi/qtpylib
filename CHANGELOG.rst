@@ -3,10 +3,15 @@ Release Notes
 
 *November 6, 2016*
 
+1.5.0a
+--------
+
+- Added ``move_stoploss()`` to instrument object. This method auto-discover **orderId** and **quantity** and invokes ``self.modify_order(...)``
+
 1.4.99a
 -------
 
-- Using the new ``IbPy2`` (>= 0.8.0) PyPi installer; no separate install of ``IbPy`` is required
+- Using the new ``IbPy2``'s PyPi installer; no separate install of ``IbPy`` is required
 - Using latest ``ezIBpy`` (now also using ``IbPy2``)
 
 
