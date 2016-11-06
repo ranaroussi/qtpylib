@@ -34,16 +34,16 @@ QTPyLib, Pythonic Algorithmic Trading
 QTPyLib (**Q**\ uantitative **T**\ rading **Py**\ thon **Lib**\ rary)
 is a simple, event-driven algorithmic trading system written in Python 3,
 that supports backtesting and live trading using
-`Interactive Brokers <https://www.interactivebrokers.com>`__
+`Interactive Brokers <https://www.interactivebrokers.com>`_
 for market data and order execution.
 
 I originally developed QTPyLib because I wanted for a simple
 (but powerful) trading library that will let me to focus on the
 trading logic itself and ignore everything else.
 
-`Full Documentation » <http://www.qtpylib.io/>`__
+`Full Documentation » <http://www.qtpylib.io/>`_
 
-`Changelog » <./CHANGELOG.rst>`__
+`Changelog » <./CHANGELOG.rst>`_
 
 -----
 
@@ -52,12 +52,12 @@ Features
 
 - A continuously-running Blotter that lets you capture market data even when your algos aren't running.
 - Tick, Bar and Trade data is stored in MySQL for later analisys and backtesting.
-- Using pub/sub architecture using `ØMQ <http://zeromq.org>`__ (ZeroMQ) for communicating between the Algo and the Blotter allows for a single Blotter/multiple Algos running on the same machine.
+- Using pub/sub architecture using `ØMQ <http://zeromq.org>`_ (ZeroMQ) for communicating between the Algo and the Blotter allows for a single Blotter/multiple Algos running on the same machine.
 - Includes many common indicators that you can seamlessly use in your algorithm.
 - **Support for Order Book, Quote, Time, Tick or Volume based strategy resolutions**
-- Have orders delivered to your mobile via SMS (requires a `Nexmo <https://www.nexmo.com/>`__ or `Twilio <https://www.twilio.com/>`__ account)
-- Full integration with `TA-Lib <http://ta-lib.org>`__ via dedicated module (`see documentation <http://qtpylib.io/docs/latest/indicators.html#ta-lib-integration>`_)
-- Ability to import any Python library (such as `scikit-learn <http://scikit-learn.org>`__ or `TensorFlow <https://www.tensorflow.org>`__) to use them in your algorithms.
+- Have orders delivered to your mobile via SMS (requires a `Nexmo <https://www.nexmo.com/>`_ or `Twilio <https://www.twilio.com/>`_ account)
+- Full integration with `TA-Lib <http://ta-lib.org>`_ via dedicated module (`see documentation <http://qtpylib.io/docs/latest/indicators.html#ta-lib-integration>`_)
+- Ability to import any Python library (such as `scikit-learn <http://scikit-learn.org>`_ or `TensorFlow <https://www.tensorflow.org>`_) to use them in your algorithms.
 
 -----
 
@@ -223,7 +223,7 @@ Now, point your browser to http://localhost:5000 and use the password generated 
 -----
 
 .. note::
-    Please refer to the `Full Documentation <http://www.qtpylib.io/>`__ to learn
+    Please refer to the `Full Documentation <http://www.qtpylib.io/>`_ to learn
     how to enable SMS notifications, use the bundled Indicators, and more.
 
 
@@ -241,29 +241,29 @@ Install using ``pip``:
 Requirements
 ------------
 
-* `Python <https://www.python.org>`__ >=3.4
-* `Pandas <https://github.com/pydata/pandas>`__ (tested to work with >=0.18.1)
-* `Numpy <https://github.com/numpy/numpy>`__ (tested to work with >=1.11.1)
-* `ØMQ <https://github.com/zeromq/pyzmq>`__ (tested to with with >=15.2.1)
-* `PyMySQL <https://github.com/PyMySQL/PyMySQL>`__ (tested to with with >=0.7.6)
-* `pytz <http://pytz.sourceforge.net>`__ (tested to with with >=2016.6.1)
-* `dateutil <https://pypi.python.org/pypi/python-dateutil>`__ (tested to with with >=2.5.1)
-* `Nexmo <https://github.com/Nexmo/nexmo-python>`__ for SMS support (tested to with with >=1.2.0)
-* `Twilio <https://github.com/twilio/twilio-python>`__ for SMS support (tested to with with >=5.4.0)
-* `Flask <http://flask.pocoo.org>`__ for the Dashboard (tested to work with >=0.11)
-* `Requests <https://github.com/kennethreitz/requests>`__ (tested to with with >=2.10.0)
+* `Python <https://www.python.org>`_ >=3.4
+* `Pandas <https://github.com/pydata/pandas>`_ (tested to work with >=0.18.1)
+* `Numpy <https://github.com/numpy/numpy>`_ (tested to work with >=1.11.1)
+* `ØMQ <https://github.com/zeromq/pyzmq>`_ (tested to with with >=15.2.1)
+* `PyMySQL <https://github.com/PyMySQL/PyMySQL>`_ (tested to with with >=0.7.6)
+* `pytz <http://pytz.sourceforge.net>`_ (tested to with with >=2016.6.1)
+* `dateutil <https://pypi.python.org/pypi/python-dateutil>`_ (tested to with with >=2.5.1)
+* `Nexmo <https://github.com/Nexmo/nexmo-python>`_ for SMS support (tested to with with >=1.2.0)
+* `Twilio <https://github.com/twilio/twilio-python>`_ for SMS support (tested to with with >=5.4.0)
+* `Flask <http://flask.pocoo.org>`_ for the Dashboard (tested to work with >=0.11)
+* `Requests <https://github.com/kennethreitz/requests>`_ (tested to with with >=2.10.0)
 * `Beautiful Soup <https://pypi.python.org/pypi/beautifulsoup4>`_ (tested to work with >=4.3.2)
-* `IbPy2 <https://github.com/blampe/IbPy>`__ (tested to work with >=0.8.0)
-* `ezIBpy <https://github.com/ranaroussi/ezibpy>`__ (IbPy wrapper, tested to with with >=1.12.24)
-* Latest Interactive Brokers’ `TWS <https://www.interactivebrokers.com/en/index.php?f=15875>`__ or `IB Gateway <https://www.interactivebrokers.com/en/index.php?f=16457>`__ installed and running on the machine
-* `MySQL <https://www.mysql.com/>`__ server installed and running with a database for QTPyLib
+* `IbPy2 <https://github.com/blampe/IbPy>`_ (tested to work with >=0.8.0)
+* `ezIBpy <https://github.com/ranaroussi/ezibpy>`_ (IbPy wrapper, tested to with with >=1.12.24)
+* Latest Interactive Brokers’ `TWS <https://www.interactivebrokers.com/en/index.php?f=15875>`_ or `IB Gateway <https://www.interactivebrokers.com/en/index.php?f=16457>`_ installed and running on the machine
+* `MySQL Server <https://www.mysql.com/>`_ installed and running with a database for QTPyLib
 
 -----
 
 Legal Stuff
 ===========
 
-QTPyLib is distributed under the **GNU Lesser General Public License v3.0**. See the `LICENSE.txt <./LICENSE.txt>`__ file in the release for details.
+QTPyLib is distributed under the **GNU Lesser General Public License v3.0**. See the `LICENSE.txt <./LICENSE.txt>`_ file in the release for details.
 QTPyLib is not a product of Interactive Brokers, nor is it affiliated with Interactive Brokers.
 
 

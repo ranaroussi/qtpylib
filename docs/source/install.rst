@@ -44,20 +44,20 @@ To get ``conda`` to play nice with ``pip``, run this command before installing/u
 Requirements
 ~~~~~~~~~~~~
 
-* `Python <https://www.python.org>`__ >=3.4
-* `Pandas <https://github.com/pydata/pandas>`__ (tested to work with >=0.18.1)
-* `Numpy <https://github.com/numpy/numpy>`__ (tested to work with >=1.11.1)
-* `ØMQ <https://github.com/zeromq/pyzmq>`__ (tested to with with >=15.2.1)
-* `PyMySQL <https://github.com/PyMySQL/PyMySQL>`__ (tested to with with >=0.7.6)
-* `pytz <http://pytz.sourceforge.net>`__ (tested to with with >=2016.6.1)
-* `dateutil <https://pypi.python.org/pypi/python-dateutil>`__ (tested to with with >=2.5.1)
-* `Nexmo <https://github.com/Nexmo/nexmo-python>`__ for SMS support (tested to with with >=1.2.0)
-* `Twilio <https://github.com/twilio/twilio-python>`__ for SMS support (tested to with with >=5.4.0)
-* `Flask <http://flask.pocoo.org>`__ for the Dashboard (tested to work with >=0.11)
-* `Requests <https://github.com/kennethreitz/requests>`__ (tested to with with >=2.10.0)
+* `Python <https://www.python.org>`_ _ >=3.4
+* `Pandas <https://github.com/pydata/pandas>`_ (tested to work with >=0.18.1)
+* `Numpy <https://github.com/numpy/numpy>`_ (tested to work with >=1.11.1)
+* `ØMQ <https://github.com/zeromq/pyzmq>`_ (tested to with with >=15.2.1)
+* `PyMySQL <https://github.com/PyMySQL/PyMySQL>`_ (tested to with with >=0.7.6)
+* `pytz <http://pytz.sourceforge.net>`_ (tested to with with >=2016.6.1)
+* `dateutil <https://pypi.python.org/pypi/python-dateutil>`_ (tested to with with >=2.5.1)
+* `Nexmo <https://github.com/Nexmo/nexmo-python>`_ for SMS support (tested to with with >=1.2.0)
+* `Twilio <https://github.com/twilio/twilio-python>`_ for SMS support (tested to with with >=5.4.0)
+* `Flask <http://flask.pocoo.org>`_ for the Dashboard (tested to work with >=0.11)
+* `Requests <https://github.com/kennethreitz/requests>`_ (tested to with with >=2.10.0)
 * `Beautiful Soup <https://pypi.python.org/pypi/beautifulsoup4>`_ (tested to work with >=4.3.2)
-* `IbPy2 <https://github.com/blampe/IbPy>`__ (tested to work with >=0.8.0)
-* `ezIBpy <https://github.com/ranaroussi/ezibpy>`__ (IbPy wrapper, tested to with with >=1.12.24)
+* `IbPy2 <https://github.com/blampe/IbPy>`_ (tested to work with >=0.8.0)
+* `ezIBpy <https://github.com/ranaroussi/ezibpy>`_ (IbPy wrapper, tested to with with >=1.12.24)
 * Latest Interactive Brokers’ `TWS <https://www.interactivebrokers.com/en/index.php?f=15875>`_ or `IB Gateway <https://www.interactivebrokers.com/en/index.php?f=16457>`_ installed and running on the machine
 
 -----
@@ -87,6 +87,7 @@ This is the user and password you will use to connect to the database in your co
 .. code:: bash
 
     $ myql -u root -p -e "create database qtpy; create user 'qtpy'@'localhost' identified by '<password>'; grant all privileges on qtpy . * to 'qtpy'@'localhost';"
+* `MySQL Server <https://www.mysql.com/>`_  installed and running with a database for QTPyLib
 
 -----
 
