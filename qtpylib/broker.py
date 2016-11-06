@@ -678,7 +678,7 @@ class Broker():
                             quantity = order_quantity,
                             parentId = order['parentId'],
                             stop     = limit_price,
-                            trail    = False,
+                            trail    = None,
                             transmit = True
                             )
                     else:
