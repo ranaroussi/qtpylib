@@ -323,7 +323,7 @@ class Broker():
                 self._register_trade(order)
 
                 # filled
-                time.sleep(0.01)
+                time.sleep(0.005)
                 self.on_fill(self.get_instrument(order['symbol']), order)
 
     # ---------------------------------------
