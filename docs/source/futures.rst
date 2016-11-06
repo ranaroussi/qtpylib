@@ -17,7 +17,7 @@ via the `contract specification retrival functionality <#contract-specification>
     from qtpylib import futures
 
     if __name__ == "__main__":
-        strategy = CrossOver(
+        strategy = MyStrategy(
             instruments = [
                 futures.make_tuple("ES", 201612),
                 futures.make_tuple("CL", 201612),
@@ -61,13 +61,13 @@ method to pull this information automatically from the CME's website.
     from qtpylib import futures
 
     def on_start(self):
-        # self.ticksize = 0.25
-        self.ticksize = futures.get_contract_ticksize("ES")
+        # self.es_ticksize = 0.25
+        self.es_ticksize = futures.get_contract_ticksize("ES")
 
     def on_bar(self, instrument):
         ...
         instrument.buy(1,
-            ticksize = self.ticksize,
+            ticksize = self.es_ticksize,
             target = tick['last'] + 2,
             initial_stop = tick['last'] - 2,
             trail_stop_by = 0.2 # in percent = 0.2%
@@ -102,7 +102,7 @@ your algo.
         # get most active ES contract
         ACTIVE_MONTH = futures.get_active_contract("ES")
 
-        strategy = CrossOver(
+        strategy = MyStrategy(
             instruments = [ ("ES", "FUT", "GLOBEX", "USD", ACTIVE_MONTH, 0.0, "") ],
             ...
         )
@@ -120,7 +120,7 @@ In this case
     # from qtpylib import futures
     # ^^ no need to import this when using this method
 
-    strategy = CrossOver(
+    strategy = MyStrategy(
         instruments = [ "FUT.ES" ],
     )
 
