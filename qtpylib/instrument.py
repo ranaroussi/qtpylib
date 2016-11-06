@@ -442,6 +442,21 @@ class Instrument(str):
             entry=entry, target=target, stop=stop, quantity=quantity)
 
     # ---------------------------------------
+    def move_stoploss(self, stoploss):
+        """Modify stop order. Auto-discover **orderId** and **quantity** and invokes ``self.modify_order(...)``.
+
+        :Parameters:
+            stoploss : float
+                the new stoploss limit price
+
+        """
+        stopOrder = self.get_active_order(order_type="STOP")
+
+        if stopOrder is not None and "orderId" in stopOrder.keys():
+            self.modify_order(orderId=stopOrder['orderId'],
+                quantity=stopOrder['quantity'], limit_price=stoploss)
+
+    # ---------------------------------------
     def get_margin_requirement(self):
         """ Get margin requirements for intrument (futures only)
 
