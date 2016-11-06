@@ -1,10 +1,13 @@
 Release Notes
 =============
 
+*November 6, 2016*
 
-Development
------------
-- Use IbPy2 (>= 0.8.0) from PyPI, same code as IbPy; no separate install required.
+1.4.99a
+-------
+
+- Using the new ``IbPy2`` (>= 0.8.0) PyPi installer; no separate install of ``IbPy`` is required
+- Using latest ``ezIBpy`` (now also using ``IbPy2``)
 
 
 *November 2, 2016*
