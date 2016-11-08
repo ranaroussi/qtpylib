@@ -455,7 +455,8 @@ class Algo(Broker):
 
         """
         if self.record_output:
-            self.datastore.record(self.record_ts, *args, **kwargs)
+            try: self.datastore.record(self.record_ts, *args, **kwargs)
+            except: pass
 
 
     # ---------------------------------------
