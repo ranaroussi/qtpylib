@@ -61,10 +61,13 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO,
 
 # =============================================
 
+BENIGN_ERROR_CODES = (2104, 2106)       # IB API warning codes that are not actually problems; will not be logged.
+
+
 class Blotter():
     """Broker class initilizer
 
-    :Optioanl:
+    :Optional:
 
         name : string
             name of the blotter (used by other modules)
@@ -294,6 +297,15 @@ class Blotter():
 
         elif caller == "handleMarketDepth":
             self.on_orderbook_received(msg.tickerId)
+
+        elif caller == "handleError":
+            # https://www.interactivebrokers.com/en/software/api/apiguide/tables/api_message_codes.htm
+            if 1100 <= msg.errorCode < 2200:
+                if msg.errorCode not in BENIGN_ERROR_CODES:
+                    logging.warning('{} {}'.format(msg.errorCode, msg.errorMsg))
+            else:
+                logging.error('{} {}'.format(msg.errorCode, msg.errorMsg))
+
 
     # -------------------------------------------
     def on_tick_string_received(self, tickerId, kwargs):
