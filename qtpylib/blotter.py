@@ -59,9 +59,9 @@ from abc import ABCMeta
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
     format='%(asctime)s [%(levelname)s]: %(message)s')
 
+# IB API warning codes that are not actually problems; will not be logged.
+IB_BENIGN_ERROR_CODES = (2104, 2106)
 # =============================================
-
-BENIGN_ERROR_CODES = (2104, 2106)       # IB API warning codes that are not actually problems; will not be logged.
 
 
 class Blotter():
@@ -301,10 +301,10 @@ class Blotter():
         elif caller == "handleError":
             # https://www.interactivebrokers.com/en/software/api/apiguide/tables/api_message_codes.htm
             if 1100 <= msg.errorCode < 2200:
-                if msg.errorCode not in BENIGN_ERROR_CODES:
-                    logging.warning('{} {}'.format(msg.errorCode, msg.errorMsg))
+                if msg.errorCode not in IB_BENIGN_ERROR_CODES:
+                    logging.warning('[IB #{}] {}'.format(msg.errorCode, msg.errorMsg))
             else:
-                logging.error('{} {}'.format(msg.errorCode, msg.errorMsg))
+                logging.error('[IB #{}] {}'.format(msg.errorCode, msg.errorMsg))
 
 
     # -------------------------------------------
