@@ -5,12 +5,16 @@ Release Notes
 
 1.5.2a
 --------
+- Upped version number due to malformed submission to PyPi (1.5.1)
+
+
+1.5.1a
+--------
 
 - Wait 5ms before invoking ``on_fill()`` to allow portfolio to sync from TWS/GW
 - Rnamed Instrument object's ``margin_max_contarcts()`` to ``max_contracts_allowed()``
 - Added ``get_bar()`` and ``get_tick()`` methods to Instrument object (as well as ``tick`` and ``bar`` properties)
 - Misc bugfixes and code improvements
-- Skipped version 1.5.1 due to malformed submission to PyPi
 
 
 *November 6, 2016*
