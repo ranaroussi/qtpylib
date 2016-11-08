@@ -1,7 +1,7 @@
 Release Notes
 =============
 
-*November 7, 2016*
+*November 8, 2016*
 
 1.5.01a
 --------
