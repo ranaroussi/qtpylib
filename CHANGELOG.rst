@@ -3,6 +3,12 @@ Release Notes
 
 *November 8, 2016*
 
+1.5.21a
+--------
+
+- Blotter logs warnings and errors sent by TWS/GW
+
+
 1.5.2a
 --------
 - Upped version number due to malformed submission to PyPi (1.5.1)
