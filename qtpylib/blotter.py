@@ -129,6 +129,11 @@ class Blotter():
             "dbpass": ""
         }
 
+        # override default args with kwargs params
+        for kw in kwargs:
+            if kw in self.args_defaults:
+                self.args_defaults[kw] = kwargs[kw]
+
         self.cahced_args     = {}
         self.args            = self.load_cli_args()
         self.duplicate_run   = False

@@ -35,27 +35,9 @@ from qtpylib import (
     tools, sms
 )
 
-# =============================================
-# parse args
-parser = argparse.ArgumentParser(description='QTPy Algo Framework')
-parser.add_argument('--ibport', default='4001', help='IB TWS/GW Port to use (default: 4001)', required=False)
-parser.add_argument('--ibclient', default='998', help='IB TWS/GW Client ID (default: 998)', required=False)
-parser.add_argument('--ibserver', default='localhost', help='IB TWS/GW Server hostname (default: localhost)', required=False)
-parser.add_argument('--sms', nargs='+', help='Numbers to text orders', required=False)
-parser.add_argument('--log', default=None, help='Path to store trade data (default: ~/qpy/trades/)', required=False)
-
-parser.add_argument('--backtest', help='Work in Backtest mode', action='store_true', required=False)
-parser.add_argument('--start', help='Backtest start date', required=False)
-parser.add_argument('--end', help='Backtest end date', required=False)
-parser.add_argument('--output', help='Path to save the recorded data', required=False)
-
-parser.add_argument('--blotter', help='Log trades to the MySQL server used by this Blotter', required=False)
-
-args, unknown = parser.parse_known_args()
-# =============================================
-#
-
 from abc import ABCMeta, abstractmethod
+
+# =============================================
 
 class Algo(Broker):
     """Algo class initilizer (sub-class of Broker)
@@ -89,6 +71,15 @@ class Algo(Broker):
 
         self.name = str(self.__class__).split('.')[-1].split("'")[0]
 
+        # default args
+        self.args = kwargs
+        cli_args = self.load_cli_args()
+
+        # override kwargs args with cli args
+        for arg in cli_args:
+            if arg not in self.args or ( arg in self.args and cli_args[arg] is not None ):
+                self.args[arg] = cli_args[arg]
+
         # assign algo params
         self.bars           = pd.DataFrame()
         self.ticks          = pd.DataFrame()
@@ -108,25 +99,25 @@ class Algo(Broker):
         self.preload        = preload
         self.continuous     = continuous
 
-        self.backtest       = args.backtest
-        self.backtest_start = args.start
-        self.backtest_end   = args.end
+        self.backtest       = self.args["backtest"]
+        self.backtest_start = self.args["start"]
+        self.backtest_end   = self.args["end"]
 
         # -----------------------------------
-        self.sms_numbers    = [] if args.sms is None else args.sms
-        self.trade_log_dir  = args.log
-        self.blotter_name   = args.blotter if args.blotter is not None else blotter
-        self.record_output  = args.output
+        self.sms_numbers    = [] if self.args["sms"] is None else self.args["sms"]
+        self.trade_log_dir  = self.args["log"]
+        self.blotter_name   = self.args["blotter"] if self.args["blotter"] is not None else blotter
+        self.record_output  = self.args["output"]
 
         # -----------------------------------
         # load blotter settings && initilize Blotter
-        self.load_blotter_args(args.blotter)
+        self.load_blotter_args(self.args["blotter"])
         self.blotter = Blotter(**self.blotter_args)
 
         # -----------------------------------
         # initiate broker/order manager
-        super().__init__(instruments, ibclient=int(args.ibclient), \
-            ibport=int(args.ibport), ibserver=str(args.ibserver))
+        super().__init__(instruments, ibclient=int(self.args["ibclient"]), \
+            ibport=int(self.args["ibport"]), ibserver=str(self.args["ibserver"]))
 
         # -----------------------------------
         # signal collector
@@ -138,11 +129,33 @@ class Algo(Broker):
         # initilize output file
         self.record_ts = None
         if self.record_output:
-            self.datastore = tools.DataStore(args.output)
+            self.datastore = tools.DataStore(self.args["output"])
 
         # -----------------------------------
         # initiate strategy
         self.on_start()
+
+
+    # ---------------------------------------
+    def load_cli_args(self):
+        parser = argparse.ArgumentParser(description='QTPy Algo Framework')
+
+        parser.add_argument('--ibport', default='4001', help='IB TWS/GW Port to use (default: 4001)', required=False)
+        parser.add_argument('--ibclient', default='998', help='IB TWS/GW Client ID (default: 998)', required=False)
+        parser.add_argument('--ibserver', default='localhost', help='IB TWS/GW Server hostname (default: localhost)', required=False)
+        parser.add_argument('--sms', nargs='+', help='Numbers to text orders', required=False)
+        parser.add_argument('--log', default=None, help='Path to store trade data (default: ~/qpy/trades/)', required=False)
+
+        parser.add_argument('--backtest', help='Work in Backtest mode', action='store_true', required=False)
+        parser.add_argument('--start', help='Backtest start date', required=False)
+        parser.add_argument('--end', help='Backtest end date', required=False)
+        parser.add_argument('--output', help='Path to save the recorded data', required=False)
+
+        parser.add_argument('--blotter', help='Log trades to the MySQL server used by this Blotter', required=False)
+
+        args, unknown = parser.parse_known_args()
+
+        return args.__dict__
 
     # ---------------------------------------
     def run(self):
