@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+*November 10, 2016*
+
+1.5.22a
+--------
+
+- ``Blotter`` and ``Algo`` now accepts all command-line arguments as ``__init()__`` parameters (closing issue #17)
+
+
 *November 8, 2016*
 
 1.5.21a
