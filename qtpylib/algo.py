@@ -518,7 +518,7 @@ class Algo(Broker):
         if self.record_ts is None:
             self.record_ts = tick.index[0]
 
-        if "K" not in self.resolution and "V" not in self.resolution:
+        if self.resolution[-1] not in ("S", "K", "V"):
             self.ticks = self._update_window(self.ticks, tick, window=self.tick_window)
         else:
             self.ticks = self._update_window(self.ticks, tick)
@@ -544,7 +544,7 @@ class Algo(Broker):
         is_tick_or_volume_bar = False
         handle_bar  = True
 
-        if "K" in self.resolution or "V" in self.resolution:
+        if self.resolution[-1] in ("S", "K", "V"):
             is_tick_or_volume_bar = True
             handle_bar = self._caller("_tick_handler")
 
@@ -560,11 +560,11 @@ class Algo(Broker):
         newbar = (self.bar_hash != this_bar_hash)
         self.bar_hash = this_bar_hash
 
-        if newbar & handle_bar:
+        if newbar and handle_bar:
             self.record_ts = bar.index[0]
             self.on_bar(self.get_instrument(bar))
 
-            if "K" not in self.resolution and "V" not in self.resolution:
+            if self.resolution[-1] not in ("S", "K", "V"):
                 self.record(bar)
 
 
