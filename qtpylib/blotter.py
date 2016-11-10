@@ -56,9 +56,12 @@ getcontext().prec = 5
 from abc import ABCMeta
 
 # =============================================
+# Configure logging
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
     format='%(asctime)s [%(levelname)s]: %(message)s')
-logging.getLogger('ezibpy').setLevel(logging.CRITICAL)      # Blotter handles errors itself
+
+# Disable ezIBpy logging (Blotter handles errors itself)
+logging.getLogger('ezibpy').setLevel(logging.CRITICAL)
 # =============================================
 
 
