@@ -43,7 +43,7 @@ from datetime import datetime
 from dateutil.parser import parse as parse_date
 
 from ezibpy import (
-    ezIBpy, dataTypes as ibDataTypes, IB_BENIGN_ERROR_CODES
+    ezIBpy, dataTypes as ibDataTypes
 )
 
 from qtpylib import (
@@ -304,8 +304,7 @@ class Blotter():
         elif caller == "handleError":
             # https://www.interactivebrokers.com/en/software/api/apiguide/tables/api_message_codes.htm
             if 1100 <= msg.errorCode < 2200:
-                if msg.errorCode not in IB_BENIGN_ERROR_CODES:
-                    logging.warning('[IB #{}] {}'.format(msg.errorCode, msg.errorMsg))
+                logging.warning('[IB #{}] {}'.format(msg.errorCode, msg.errorMsg))
             else:
                 logging.error('[IB #{}] {}'.format(msg.errorCode, msg.errorMsg))
 
