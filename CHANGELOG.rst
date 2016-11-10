@@ -3,6 +3,15 @@ Release Notes
 
 *November 10, 2016*
 
+1.5.23a
+--------
+
+- Require ezIBpy >= 1.12.29
+- ``Blotter`` uses refactored logging in ezIBPy 1.12.29
+
+
+*November 9, 2016*
+
 1.5.22a
 --------
 
