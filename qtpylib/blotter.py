@@ -43,7 +43,7 @@ from datetime import datetime
 from dateutil.parser import parse as parse_date
 
 from ezibpy import (
-    ezIBpy, dataTypes as ibDataTypes
+    ezIBpy, dataTypes as ibDataTypes, IB_BENIGN_ERROR_CODES
 )
 
 from qtpylib import (
@@ -58,9 +58,7 @@ from abc import ABCMeta
 # =============================================
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
     format='%(asctime)s [%(levelname)s]: %(message)s')
-
-# IB API warning codes that are not actually problems; will not be logged.
-IB_BENIGN_ERROR_CODES = (2104, 2106)
+logging.getLogger('ezibpy').setLevel(logging.CRITICAL)      # Blotter handles errors itself
 # =============================================
 
 
