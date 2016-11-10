@@ -968,7 +968,7 @@ class Blotter():
                 for index, _ in data.iterrows():
                     row = data[data.index==index]
                     handler(row)
-                    time.sleep(2.5)
+                    time.sleep(.25)
 
         except (KeyboardInterrupt, SystemExit):
             print("\n\n>>> Interrupted with Ctrl-c...")
