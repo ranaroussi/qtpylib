@@ -155,13 +155,13 @@ and user named ``root``. To create this database and user, run this command:
 
 .. code:: bash
 
-    $ myql -u root -p -e "create database qtpy;"
+    $ mysql -u root -p -e "create database qtpy;"
 
 If you want ro create a dedicate user for this database (highly recommended), run this command:
 
 .. code:: bash
 
-    $ myql -u root -p -e "create database qtpy; create user '<user>'@'localhost' identified by '<password>'; grant all privileges on qtpy .* to '<user>'@'localhost';"
+    $ mysql -u root -p -e "create database qtpy; create user '<user>'@'localhost' identified by '<password>'; grant all privileges on qtpy .* to '<user>'@'localhost';"
 
 \* Replace ``<user>`` with the desired user name and ``<password>`` with the desired password for that user.
 

@@ -3,6 +3,13 @@ Release Notes
 
 *November 10, 2016*
 
+1.5.25a
+--------
+
+- Fixed bar events in backtesting mode to fire every 250ms instead of 2.5s (closing issue #21)
+- Fixed parsing of ``backtest`` param in ``Algo`` (closes issue #17)
+
+
 1.5.24a
 --------
 
