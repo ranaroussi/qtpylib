@@ -3,6 +3,12 @@ Release Notes
 
 *November 10, 2016*
 
+1.5.24a
+--------
+
+- Fixed issue that caused errors when bar resolution was set to seconds (closing issue #18)
+
+
 1.5.23a
 --------
 
