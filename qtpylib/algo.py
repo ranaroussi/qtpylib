@@ -78,7 +78,8 @@ class Algo(Broker):
         # override kwargs args with cli args
         for arg in cli_args:
             if arg not in self.args or ( arg in self.args and cli_args[arg] is not None ):
-                self.args[arg] = cli_args[arg]
+                if arg != "backtest" or (arg == "backtest" and "--backtest" in sys.argv):
+                    self.args[arg] = cli_args[arg]
 
         # assign algo params
         self.bars           = pd.DataFrame()
