@@ -65,21 +65,12 @@ class Algo(Broker):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, instruments, resolution, \
-        tick_window=1, bar_window=100, timezone="UTC", preload=None, \
-        continuous=True, blotter=None, **kwargs):
+    def __init__(self, instruments, resolution,
+        tick_window=1, bar_window=100, timezone="UTC", preload=None,
+        continuous=True, blotter=None, sms=(), log=None, backtest=False,
+        start=None, end=None, output=None, **kwargs):
 
         self.name = str(self.__class__).split('.')[-1].split("'")[0]
-
-        # default args
-        self.args = kwargs
-        cli_args = self.load_cli_args()
-
-        # override kwargs args with cli args
-        for arg in cli_args:
-            if arg not in self.args or ( arg in self.args and cli_args[arg] is not None ):
-                if arg != "backtest" or (arg == "backtest" and "--backtest" in sys.argv):
-                    self.args[arg] = cli_args[arg]
 
         # assign algo params
         self.bars           = pd.DataFrame()
@@ -100,25 +91,24 @@ class Algo(Broker):
         self.preload        = preload
         self.continuous     = continuous
 
-        self.backtest       = self.args["backtest"]
-        self.backtest_start = self.args["start"]
-        self.backtest_end   = self.args["end"]
+        self.backtest       = backtest
+        self.backtest_start = start
+        self.backtest_end   = end
 
         # -----------------------------------
-        self.sms_numbers    = [] if self.args["sms"] is None else self.args["sms"]
-        self.trade_log_dir  = self.args["log"]
-        self.blotter_name   = self.args["blotter"] if self.args["blotter"] is not None else blotter
-        self.record_output  = self.args["output"]
+        self.sms_numbers    = tuple(sms)
+        self.trade_log_dir  = log
+        self.blotter_name   = blotter
+        self.record_output  = output
 
         # -----------------------------------
         # load blotter settings && initilize Blotter
-        self.load_blotter_args(self.args["blotter"])
+        self.load_blotter_args(blotter)     # sets self.blotter_args
         self.blotter = Blotter(**self.blotter_args)
 
         # -----------------------------------
         # initiate broker/order manager
-        super().__init__(instruments, ibclient=int(self.args["ibclient"]), \
-            ibport=int(self.args["ibport"]), ibserver=str(self.args["ibserver"]))
+        super().__init__(instruments, **kwargs)
 
         # -----------------------------------
         # signal collector
@@ -130,33 +120,36 @@ class Algo(Broker):
         # initilize output file
         self.record_ts = None
         if self.record_output:
-            self.datastore = tools.DataStore(self.args["output"])
-
-        # -----------------------------------
-        # initiate strategy
-        self.on_start()
+            self.datastore = tools.DataStore(output)
 
 
     # ---------------------------------------
-    def load_cli_args(self):
-        parser = argparse.ArgumentParser(description='QTPy Algo Framework')
+    @staticmethod
+    def with_cmd_args(**kwargs):
+        """:Return: a new `Algo` instantiated from the command line arguments.
 
-        parser.add_argument('--ibport', default='4001', help='IB TWS/GW Port to use (default: 4001)', required=False)
-        parser.add_argument('--ibclient', default='998', help='IB TWS/GW Client ID (default: 998)', required=False)
-        parser.add_argument('--ibserver', default='localhost', help='IB TWS/GW Server hostname (default: localhost)', required=False)
-        parser.add_argument('--sms', nargs='+', help='Numbers to text orders', required=False)
-        parser.add_argument('--log', default=None, help='Path to store trade data (default: ~/qpy/trades/)', required=False)
+        `kwargs` are passed to Algo().  Command line args override any kwargs.
+        """
+        parser = argparse.ArgumentParser(description='QTPy Algo Framework', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-        parser.add_argument('--backtest', help='Work in Backtest mode', action='store_true', required=False)
-        parser.add_argument('--start', help='Backtest start date', required=False)
-        parser.add_argument('--end', help='Backtest end date', required=False)
-        parser.add_argument('--output', help='Path to save the recorded data', required=False)
+        parser.add_argument('--ibport', default=4001, type=int, help='IB TWS/GW Port')
+        parser.add_argument('--ibclient', default=998, type=int, help='IB TWS/GW Client ID')
+        parser.add_argument('--ibserver', default='localhost', help='IB TWS/GW Server hostname')
+        parser.add_argument('--sms', nargs='+', default=(), help='Numbers to text orders')
+        parser.add_argument('--log', help='Path to store trade data')
 
-        parser.add_argument('--blotter', help='Log trades to the MySQL server used by this Blotter', required=False)
+        parser.add_argument('--backtest', help='Work in Backtest mode', action='store_true')
+        parser.add_argument('--start', help='Backtest start date')
+        parser.add_argument('--end', help='Backtest end date')
+        parser.add_argument('--output', help='Path to save the recorded data')
 
-        args, unknown = parser.parse_known_args()
+        parser.add_argument('--blotter', help='Log trades to the MySQL server used by this Blotter')
 
-        return args.__dict__
+        # Override kwargs with non-default cmd line args (meaning only those actually given)
+        cmd_args = vars(parser.parse_args())
+        kwargs.update({arg: val for arg, val in cmd_args.items() if val != parser.get_default(arg)})
+
+        return Algo(**kwargs)
 
     # ---------------------------------------
     def run(self):
@@ -166,6 +159,11 @@ class Algo(Broker):
         tick data to the ``on_tick`` function and bar data to the
         ``on_bar`` methods.
         """
+
+        # -----------------------------------
+        # initiate strategy
+        self.on_start()
+
 
         # -----------------------------------
         # backtest mode?

@@ -154,7 +154,7 @@ While the Blotter running in the background, write and execute your algorithm:
 
 
     if __name__ == "__main__":
-        strategy = CrossOver(
+        strategy = CrossOver.with_cmd_args(
             instruments = [ ("CL", "FUT", "NYMEX", "USD", 201609) ],
             resolution  = "1H"
         )
@@ -169,8 +169,8 @@ With your Blotter running in the background, run your algo from the command line
     $ python strategy.py --log ~/qtpy/
 
 
-By adding ``--log ~/qtpy/`` we ask that the resulting trade journal be saved
-in ``~/qtpy/STRATEGY_YYYYMMDD.csv`` for later analysis **in additioan** to
+By adding ``.with_cmd_args()`` and running with ``--log ~/qtpy/`` we ask that the resulting trade journal be saved
+in ``~/qtpy/STRATEGY_YYYYMMDD.csv`` for later analysis **in addition** to
 being saved in the database.
 
 -----
@@ -247,7 +247,9 @@ Available Arguments
 -------------------
 
 Below are all the parameters that can either be set via the ``Algo()``
-or via CLI (**all are optional**).
+or via CLI (**all are optional**).  To have your algorithm use command line parameters,
+use the ``with_cmd_args()`` factory, which works just like the constructor
+but overrides any kwargs with command line args.
 
 Algo Parameters
 ~~~~~~~~~~~~~~~
@@ -268,7 +270,7 @@ Algo Parameters
     # strategy.py
     ...
 
-    strategy = MyStrategy(
+    strategy = MyStrategy.with_cmd_args(
         instruments = [ "AAPL" ],
         resolution  = "512K", # 512 tick bars
         tick_window = 10, # keep last 10 ticks bars

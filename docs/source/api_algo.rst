@@ -22,6 +22,6 @@ For example:
 
 
 .. autoclass:: qtpylib.algo.Algo
-    :members: run, on_start, on_quote, on_tick, on_bar, on_fill, record, sms, get_instrument, order, cancel_order, get_history
+    :members: run, on_start, on_quote, on_tick, on_bar, on_fill, record, sms, get_instrument, order, cancel_order, get_history, with_cmd_args
     :member-order: bysource
     :noindex:

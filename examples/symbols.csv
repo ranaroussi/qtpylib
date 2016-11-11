@@ -1,2 +1,4 @@
 symbol,sec_type,exchange,currency,expiry,strike,opt_type
-ES,FUT,GLOBEX,USD,201609.0,0.0,
+ES,FUT,GLOBEX,USD,201612.0,0.0,
+AAPL,STK,SMART,USD,,0.0,
+ES,FUT,GLOBEX,USD,201612.0,0.0,
