@@ -3,10 +3,18 @@ Release Notes
 
 *November 10, 2016*
 
+1.5.27a
+--------
+
+- Introduced ``force_resolution`` parameter in ``Algo`` to force a new bar on every ``resolution`` even if no new ticks received (default is False)
+
 1.5.26a
 --------
 
 - Fixed parsing of flag params (related to issue #17)
+
+
+*November 10, 2016*
 
 
 1.5.25a

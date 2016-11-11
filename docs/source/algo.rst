@@ -260,6 +260,11 @@ Algo Parameters
 - ``preload`` Preload history upon start (eg. 1H, 2D, etc, or K for tick bars).
 - ``continuous`` Tells preloader to construct continuous Futures contracts (default is ``True``)
 - ``blotter`` Log trades to MySQL server used by this Blotter (default: ``auto-detect``).
+- ``backtest`` Work in Backtest mode (default: ``False``)
+- ``start`` Backtest start date (``YYYY-MM-DD [HH:MM:SS[.MS]``)
+- ``end`` Backtest end date (``YYYY-MM-DD [HH:MM:SS[.MS]``)
+- ``output`` Path to save the recorded data (default: ``None``)
+- ``force_resolution`` Force new bar on every ``resolution`` even if no new ticks received (default: ``False``)
 
 **Example:**
 
