@@ -30,6 +30,20 @@ from dateutil.relativedelta import relativedelta, FR
 from dateutil.parser import parse as parse_date
 from pytz import timezone
 
+import threading
+
+# =============================================
+stopInterval = False
+def setInterval(func, sec):
+    def func_wrapper():
+        if not stopInterval:
+            setInterval(func, sec)
+            func()
+
+    timer = threading.Timer(sec, func_wrapper)
+    timer.start()
+    return timer
+
 # =============================================
 def chmod(f):
     """ change mod to writeable """
