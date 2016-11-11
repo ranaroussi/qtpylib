@@ -103,7 +103,7 @@ if __name__ == "__main__":
     ACTIVE_MONTH = futures.get_active_contract("ES")
     print("Active month for ES is:", ACTIVE_MONTH)
 
-    strategy = TestStrategy(
+    strategy = TestStrategy.with_cmd_args(
         instruments = [ ("ES", "FUT", "GLOBEX", "USD", ACTIVE_MONTH, 0.0, "") ],
         resolution  = "1T",
         tick_window = 10,

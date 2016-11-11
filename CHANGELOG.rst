@@ -3,6 +3,12 @@ Release Notes
 
 *November 10, 2016*
 
+1.5.26a
+-------
+- Add Algo.with_cmd_args() factory to handle command line arguments cleanly and explicitly.
+- Call Algo.on_start() from run() rather than __init__() so fields set in __init__ are available
+  to on_start() in subclasses.
+
 1.5.25a
 --------
 

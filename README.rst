@@ -170,7 +170,7 @@ While the Blotter running in the background, write and execute your algorithm:
 
 
     if __name__ == "__main__":
-        strategy = CrossOver(
+        strategy = CrossOver.with_cmd_args(
             instruments = [ ("ES", "FUT", "GLOBEX", "USD", 201609, 0.0, "") ], # ib tuples
             resolution  = "1T", # Pandas resolution (use "K" for tick bars)
             tick_window = 20, # no. of ticks to keep
