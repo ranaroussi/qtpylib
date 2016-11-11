@@ -178,10 +178,10 @@ class Algo(Broker):
         # backtest mode?
         if self.backtest:
             if self.record_output is None:
-                print("ERROR: Must provide an output file for backtesting mode")
+                logging.error("Must provide an output file for Backtest mode")
                 sys.exit(0)
             if self.backtest_start is None:
-                print("ERROR: Must provide start date for backtesting mode")
+                logging.error("Must provide start date for Backtest mode")
                 sys.exit(0)
             if self.backtest_end is None:
                 self.backtest_end = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
