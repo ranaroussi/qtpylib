@@ -143,6 +143,18 @@ class Algo(Broker):
         # initiate strategy
         self.on_start()
 
+    # ---------------------------------------
+    def add_stale_tick(self):
+        if len(self.ticks) > 0:
+            tick = self.ticks[-1:].to_dict(orient='records')[0]
+            tick['timestamp'] = datetime.utcnow()
+
+            tick = pd.DataFrame(index=[0], data=tick)
+            tick.set_index('timestamp', inplace=True)
+            tick = tools.set_timezone(tick, tz=self.timezone)
+
+            self._tick_handler(tick, real_tick=False)
+
 
     # ---------------------------------------
     def load_cli_args(self):
@@ -519,7 +531,7 @@ class Algo(Broker):
         self.on_quote(self.get_instrument(quote))
 
     # ---------------------------------------
-    def _tick_handler(self, tick):
+    def _tick_handler(self, tick, real_tick=True):
         self._cancel_expired_pending_orders()
 
         # initial value
@@ -543,7 +555,8 @@ class Algo(Broker):
             # record tick bar
             self.record(bar)
 
-        self.on_tick(self.get_instrument(tick))
+        if real_tick:
+            self.on_tick(self.get_instrument(tick))
 
 
     # ---------------------------------------
