@@ -60,14 +60,15 @@ class Algo(Broker):
             Tells preloader to construct continuous Futures contracts (default is True)
         blotter : str
             Log trades to MySQL server used by this Blotter (default is "auto detect")
-
+        force_resolution : bool
+            Force new bar on every ``resolution`` even if no new ticks received (default is False)
     """
 
     __metaclass__ = ABCMeta
 
     def __init__(self, instruments, resolution, \
         tick_window=1, bar_window=100, timezone="UTC", preload=None, \
-        continuous=True, blotter=None, **kwargs):
+        continuous=True, blotter=None, force_resolution=False, **kwargs):
 
         self.name = str(self.__class__).split('.')[-1].split("'")[0]
 
@@ -142,6 +143,11 @@ class Algo(Broker):
         # -----------------------------------
         # initiate strategy
         self.on_start()
+
+        # ---------------------------------------
+        # add stale ticks to allow for interval-based bars
+        if force_resolution and self.resolution[-1] not in ("K", "V"):
+            tools.setInterval(self.add_stale_tick, 1)
 
     # ---------------------------------------
     def add_stale_tick(self):
