@@ -39,6 +39,7 @@ from abc import ABCMeta, abstractmethod
 
 # =============================================
 
+
 class Algo(Broker):
     """Algo class initilizer (sub-class of Broker)
 
@@ -66,8 +67,8 @@ class Algo(Broker):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, instruments, resolution, \
-        tick_window=1, bar_window=100, timezone="UTC", preload=None, \
+    def __init__(self, instruments, resolution,
+        tick_window=1, bar_window=100, timezone="UTC", preload=None,
         continuous=True, blotter=None, force_resolution=False, **kwargs):
 
         self.name = str(self.__class__).split('.')[-1].split("'")[0]
@@ -125,7 +126,7 @@ class Algo(Broker):
 
         # -----------------------------------
         # initiate broker/order manager
-        super().__init__(instruments, ibclient=int(self.args["ibclient"]), \
+        super().__init__(instruments, ibclient=int(self.args["ibclient"]),
             ibport=int(self.args["ibport"]), ibserver=str(self.args["ibserver"]))
 
         # -----------------------------------
@@ -147,7 +148,7 @@ class Algo(Broker):
         # ---------------------------------------
         # add stale ticks to allow for interval-based bars
         if force_resolution and self.resolution[-1] not in ("K", "V"):
-            tools.setInterval(self.add_stale_tick, 1)
+            self.bar_timer = tools.RecurringTask(self.add_stale_tick, interval_sec=1, init_sec=1, daemon=True)
 
     # ---------------------------------------
     def add_stale_tick(self):
