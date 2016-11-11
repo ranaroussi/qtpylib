@@ -575,6 +575,9 @@ class Algo(Broker):
             is_tick_or_volume_bar = True
             handle_bar = self._caller("_tick_handler")
 
+        # drip is also ok
+        handle_bar = handle_bar or self._caller("drip")
+
         if is_tick_or_volume_bar:
             # just add a bar (used by tick bar bandler)
             self.bars = self._update_window(self.bars, bar, window=self.bar_window)
