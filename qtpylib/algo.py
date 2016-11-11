@@ -71,15 +71,22 @@ class Algo(Broker):
 
         self.name = str(self.__class__).split('.')[-1].split("'")[0]
 
+        # ----------------------------------------------------
         # default args
-        self.args = kwargs
-        cli_args = self.load_cli_args()
+        self.args = kwargs.copy()
+        cli_args  = self.load_cli_args()
 
         # override kwargs args with cli args
         for arg in cli_args:
             if arg not in self.args or ( arg in self.args and cli_args[arg] is not None ):
-                if arg != "backtest" or (arg == "backtest" and "--backtest" in sys.argv):
-                    self.args[arg] = cli_args[arg]
+                self.args[arg] = cli_args[arg]
+
+        # fix flag args (no value)
+        for arg in ["backtest"]:
+            if arg in kwargs and "--"+str(arg) not in sys.argv:
+                self.args[arg] = kwargs["backtest"]
+        # ----------------------------------------------------
+
 
         # assign algo params
         self.bars           = pd.DataFrame()
