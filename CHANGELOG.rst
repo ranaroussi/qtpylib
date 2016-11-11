@@ -3,6 +3,12 @@ Release Notes
 
 *November 10, 2016*
 
+1.5.26a
+--------
+
+- Fixed parsing of flag params (related to issue #17)
+
+
 1.5.25a
 --------
 
