@@ -3,6 +3,11 @@ Release Notes
 
 *November 10, 2016*
 
+1.5.28a
+--------
+
+- Fixed a bug that prevented backtesting second-level resolution strategies
+
 1.5.27a
 --------
 
