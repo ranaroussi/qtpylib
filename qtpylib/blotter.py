@@ -943,6 +943,7 @@ class Blotter():
                             bar_handler(df)
 
         except (KeyboardInterrupt, SystemExit):
+            tools.stopInterval = True # stop timed bars interval
             print("\n\n>>> Interrupted with Ctrl-c...")
             sys.exit(1)
 
