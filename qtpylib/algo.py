@@ -550,18 +550,19 @@ class Algo(Broker):
             self.ticks = self._update_window(self.ticks, tick, window=self.tick_window)
         else:
             self.ticks = self._update_window(self.ticks, tick)
-            bar = tools.resample(self.ticks, self.resolution)
-            if len(bar.index) > self.tick_bar_count > 0:
+            bars = tools.resample(self.ticks, self.resolution)
+
+            if len(bars.index) > self.tick_bar_count > 0 or stale_tick:
                 self.record_ts = tick.index[0]
-                self._bar_handler(bar)
+                self._bar_handler(bars)
 
                 periods = int("".join([s for s in self.resolution if s.isdigit()]))
                 self.ticks = self.ticks[-periods:]
 
-            self.tick_bar_count = len(bar)
+            self.tick_bar_count = len(bars)
 
-            # record tick bar
-            self.record(bar)
+            # record tick bars
+            self.record(bars[-1:])
 
         if not stale_tick:
             self.on_tick(self.get_instrument(tick))
