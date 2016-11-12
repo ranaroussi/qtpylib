@@ -199,6 +199,8 @@ def get_active_contract(symbol, url=None, n=1):
 # -------------------------------------------
 def get_contract_ticksize(symbol, fallback=0.01, ttl=84600):
 
+    logging.warning("DEPRECATED! Use instrument.get_ticksize() or instrument.ticksize instead.")
+
     cache_file = tempfile.gettempdir()+"/ticksizes.pkl"
     used_fallback = False
 
