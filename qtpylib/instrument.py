@@ -323,6 +323,16 @@ class Instrument(str):
         return self.parent.get_contract(self)
 
     # ---------------------------------------
+    def get_contract_details(self):
+        """Get contract details for this instrument
+
+        :Retruns:
+            contract_details : dict
+                IB Contract details
+        """
+        return self.parent.get_contract_details(self)
+
+        # ---------------------------------------
     def get_tickerId(self):
         """Get contract's tickerId for this instrument
 
@@ -529,21 +539,19 @@ class Instrument(str):
         return self.get_max_contracts_allowed(overnight=overnight)
 
     # ---------------------------------------
-    def get_ticksize(self, fallback=0.01):
+    def get_ticksize(self, fallback=None):
         """ Get instrument ticksize
 
         :Parameters:
             fallback : flaot
-                fallback ticksize (used when cannot retrive data from exchange)
+                fallback ticksize (deprecated and ignored)
 
+        :Retruns:
+            ticksize : int
+                Min. tick size
         """
-        if hasattr(self, "ticksize_float"):
-            return self.ticksize_float
-
-        contract = self.get_contract()
-        if contract.m_secType == "FUT":
-            self.ticksize_float = futures.get_contract_ticksize(contract.m_symbol, fallback)
-            return self.ticksize_float
+        ticksize = self.parent.get_contract_details(self)['m_minTick']
+        return float(ticksize)
 
     # ---------------------------------------
     def log_signal(self, signal):
@@ -605,6 +613,12 @@ class Instrument(str):
 
     # ---------------------------------------
     @property
+    def contract_details(self):
+        """(Property) Shortcut to self.get_contract_details()"""
+        return self.get_contract_details()
+
+    # ---------------------------------------
+    @property
     def tickerId(self):
         """(Property) Shortcut to self.get_tickerId()"""
         return self.get_tickerId()
@@ -661,7 +675,6 @@ class Instrument(str):
     def max_contracts_allowed(self):
         """(Property) Shortcut to self.get_max_contracts_allowed()"""
         return self.get_max_contracts_allowed()
-
 
     # ---------------------------------------
     @property
