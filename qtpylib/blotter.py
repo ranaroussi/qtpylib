@@ -306,7 +306,7 @@ class Blotter():
 
         elif caller == "handleError":
             # https://www.interactivebrokers.com/en/software/api/apiguide/tables/api_message_codes.htm
-            if 1100 <= msg.errorCode < 2200:
+            if 1100 <= msg.errorCode or 0 < 2200:       # errorCode can be None...
                 logging.warning('[IB #{}] {}'.format(msg.errorCode, msg.errorMsg))
             elif msg.errorCode not in (502, 504): # 502, 504 = connection error
                 logging.error('[IB #{}] {}'.format(msg.errorCode, msg.errorMsg))
