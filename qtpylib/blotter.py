@@ -943,7 +943,6 @@ class Blotter():
                             bar_handler(df)
 
         except (KeyboardInterrupt, SystemExit):
-            tools.stopInterval = True # stop timed bars interval
             print("\n\n>>> Interrupted with Ctrl-c...")
             sys.exit(1)
 
@@ -953,7 +952,7 @@ class Blotter():
         resolution="1T", tz="UTC", continuous=True):
 
         handler = None
-        if ("K" in resolution or "V" in resolution) and tick_handler is not None:
+        if resolution[-1] in ("K", "V") and tick_handler is not None:
             handler = tick_handler
         elif bar_handler is not None:
             handler = bar_handler
