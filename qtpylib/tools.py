@@ -502,26 +502,34 @@ class DataStore():
 
         chmod(self.output_file)
 
-
+# =============================================
 class RecurringTask(threading.Thread):
     """Calls a function at a sepecified interval."""
     def __init__(self, func, interval_sec, init_sec=0, *args, **kwargs):
         """Call `func` every `interval_sec` seconds.
 
         Starts the timer.
+
         Accounts for the runtime of `func` to make intervals as close to `interval_sec` as possible.
         args and kwargs are passed to Thread().
 
-        :param float init_sec: Wait this many seconds initially before the first call.
+        :Parameters:
+            func : object
+                Function to invoke every N seconds
+            interval_sec : int
+                Call func every this many seconds
+            init_sec : int
+                Wait this many seconds initially before the first call
         """
 
         # threading.Thread.__init__(self, *args, **kwargs) # For some reason super() doesn't work
         super().__init__(*args, **kwargs) # Works!
         self._func        = func
         self.interval_sec = interval_sec
-        self.init_sec = init_sec
-        self._running = True
-        self._functime = None    # Time the next call should be made
+        self.init_sec     = init_sec
+        self._running     = True
+        self._functime    = None # Time the next call should be made
+
         self.start()
 
     def __repr__(self):
