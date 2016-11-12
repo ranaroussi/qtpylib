@@ -29,56 +29,6 @@ via the `contract specification retrival functionality <#contract-specification>
     ...
 
 
-
-
-Minimum Contract Tick Size
---------------------------
-
-When using a trailing stop order, you're required to specify the
-``ticksize`` of the contract you're trading in order to round the
-trailing stop to the closest valid price, based on the contract's
-minimum price fluctuation.
-
-**For Example:**
-You're trading the S&P E-mini Futures and you've specified that the
-traling stop should be 0.2% below the current price. Without specifying
-the ``ticksize`` information, the stop order's price will come out as
-in a stop order of **2,188.3645** when the contract's trading at
-**2,192.75**  -- *which will result in a rejected order*.
-
-By using **0.25** as the ``ticksize``, the stop order will be
-rounded down to **2,188.25**, which is a valid price for the ES.
-
-You can pass the tick size manually (ie. 1.0 for YM, 0.25 for ES,
-0.01 for CL), or you can use the ``futures.get_contract_ticksize()``
-method to pull this information automatically from the CME's website.
-
-.. code:: python
-
-    # strategy.oy
-    ...
-
-    from qtpylib import futures
-
-    def on_start(self):
-        # self.es_ticksize = 0.25
-        self.es_ticksize = futures.get_contract_ticksize("ES")
-
-    def on_bar(self, instrument):
-        ...
-        instrument.buy(1,
-            ticksize = self.es_ticksize,
-            target = tick['last'] + 2,
-            initial_stop = tick['last'] - 2,
-            trail_stop_by = 0.2 # in percent = 0.2%
-        )
-        ...
-
-.. note::
-    * This functionality currently only works for the CME Group's futures (inc. CME, GLOBEX, CBOT, NYMEX and COMEX).
-    * The default ticksize is 0.01, so this parameter isn't required for contracts with 0.01 min. price fluctuation.
-    * Refer to the `Instruments API <./api.html#qtpylib.instrument.Instrument.order>`_ for more information.
-
 -----
 
 

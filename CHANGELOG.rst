@@ -3,6 +3,14 @@ Release Notes
 
 *November 12, 2016*
 
+1.5.30a
+--------
+
+- Require ezIBpy >= 1.12.31
+- Added ``instrument.get_contract_details()`` and ``instrument.tickerId()`` methods (see API reference section in docs for more info)
+- ``futures.get_contract_ticksize()`` marked as deprecated (``instrument.get_ticksize()`` or ``instrument.ticksize`` instead)
+- Ignoring ``ticksize`` parameter in ``order()`` (ezIBpy's auto detects min. tick size based on contract spec.)
+
 1.5.29a
 --------
 
