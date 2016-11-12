@@ -1,7 +1,15 @@
 Release Notes
 =============
 
-*November 10, 2016*
+*November 12, 2016*
+
+1.5.29a
+--------
+
+- Interval-based bars are now tread-safe and working correctly when ``"force_resolution" = True``
+
+
+*November 11, 2016*
 
 1.5.28a
 --------
