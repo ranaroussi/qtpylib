@@ -514,8 +514,10 @@ class RecurringTask(threading.Thread):
 
         :param float init_sec: Wait this many seconds initially before the first call.
         """
-        threading.Thread.__init__(self, *args, **kwargs)        # For some reason super() doesn't work
-        self._func = func
+
+        # threading.Thread.__init__(self, *args, **kwargs) # For some reason super() doesn't work
+        super().__init__(*args, **kwargs) # Works!
+        self._func        = func
         self.interval_sec = interval_sec
         self.init_sec = init_sec
         self._running = True
