@@ -160,7 +160,7 @@ class Algo(Broker):
             tick.set_index('timestamp', inplace=True)
             tick = tools.set_timezone(tick, tz=self.timezone)
 
-            self._tick_handler(tick, real_tick=False)
+            self._tick_handler(tick, stale_tick=True)
 
 
     # ---------------------------------------
@@ -538,7 +538,7 @@ class Algo(Broker):
         self.on_quote(self.get_instrument(quote))
 
     # ---------------------------------------
-    def _tick_handler(self, tick, real_tick=True):
+    def _tick_handler(self, tick, stale_tick=False):
         self._cancel_expired_pending_orders()
 
         # initial value
@@ -562,7 +562,7 @@ class Algo(Broker):
             # record tick bar
             self.record(bar)
 
-        if real_tick:
+        if not stale_tick:
             self.on_tick(self.get_instrument(tick))
 
 
