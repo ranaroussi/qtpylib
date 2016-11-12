@@ -546,10 +546,9 @@ class Broker():
         return locals
 
      # ---------------------------------------
-    def _create_order(self, symbol, direction, quantity, order_type="", \
-        limit_price=0, expiry=0, orderId=0, ticksize=0.01, \
-        target=0, initial_stop=0, trail_stop_at=0, trail_stop_by=0, \
-        stop_limit=False, **kwargs):
+    def _create_order(self, symbol, direction, quantity, order_type="",
+        limit_price=0, expiry=0, orderId=0, target=0, initial_stop=0,
+        trail_stop_at=0, trail_stop_by=0, stop_limit=False, **kwargs):
 
         # force BUY/SELL (not LONG/SHORT)
         direction = direction.replace("LONG", "BUY").replace("SHORT", "SELL")
@@ -612,8 +611,7 @@ class Broker():
                     trailPercent  = trail_stop_by,
                     # trailAmount   = trail_stop_by,
                     parentId      = order['entryOrderId'],
-                    stopOrderId   = order["stopOrderId"],
-                    ticksize      = ticksize
+                    stopOrderId   = order["stopOrderId"]
                 )
 
             # add all orders to history
