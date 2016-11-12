@@ -787,6 +787,10 @@ class Broker():
         return self.ibConn.contracts[self.ibConn.tickerId(symbol)]
 
     # ---------------------------------------
+    def get_tickerId(self, symbol):
+        return self.ibConn.tickerId(symbol)
+
+    # ---------------------------------------
     def get_orders(self, symbol):
         symbol = self._getsymbol_(symbol)
 
