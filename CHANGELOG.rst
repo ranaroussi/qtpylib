@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+*November 13, 2016*
+
+1.5.31a
+--------
+
+- Require ezIBpy >= 1.12.32
+- Added support for ``tif`` (time in force) parameter in order creation. Options are: ``DAY`` (default), ``GTC``, ``IOC`` and ``GTD``.
+
+
 *November 12, 2016*
 
 1.5.30a
