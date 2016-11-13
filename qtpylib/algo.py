@@ -429,6 +429,8 @@ class Algo(Broker):
                 fill entire quantiry or none at all
             iceberg: bool
                 is this an iceberg (hidden) order
+            tif: str
+                time in force (DAY, GTC, IOC, GTD). default is ``DAY``
         """
         if signal.upper() == "EXIT" or signal.upper() == "FLATTEN":
             position = self.get_positions(symbol)

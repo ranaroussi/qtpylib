@@ -174,7 +174,8 @@ class Instrument(str):
                 fill entire quantiry or none at all
             iceberg: bool
                 is this an iceberg (hidden) order
-
+            tif: str
+                time in force (DAY, GTC, IOC, GTD). default is ``DAY``
         """
         self.parent.order(direction.upper(), self, quantity, **kwargs)
 

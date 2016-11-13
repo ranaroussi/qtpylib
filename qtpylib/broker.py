@@ -564,9 +564,9 @@ class Broker():
             initial_stop = kwargs['stoploss']
 
         order_type = "MARKET" if limit_price == 0 else "LIMIT"
-
         fillorkill = kwargs["fillorkill"] if "fillorkill" in kwargs else False
-        iceberg = kwargs["iceberg"] if "iceberg" in kwargs else False
+        iceberg    = kwargs["iceberg"] if "iceberg" in kwargs else False
+        tif        = kwargs["tif"] if "tif" in kwargs else "DAY"
 
         # clear expired pending orders
         self._cancel_expired_pending_orders()
@@ -595,13 +595,13 @@ class Broker():
         if bracket == False:
             # simple order
             order    = self.ibConn.createOrder(order_quantity, limit_price,
-                fillorkill=fillorkill, iceberg=iceberg)
+                fillorkill=fillorkill, iceberg=iceberg, tif=tif)
             orderId  = self.ibConn.placeOrder(contract, order)
         else:
             # bracket order
             order = self.ibConn.createBracketOrder(contract, order_quantity,
-                entry=limit_price, target=target, stop=initial_stop,
-                fillorkill=fillorkill, iceberg=iceberg, stop_limit=stop_limit)
+                entry=limit_price, target=target, stop=initial_stop, stop_limit=stop_limit,
+                fillorkill=fillorkill, iceberg=iceberg, tif=tif)
             orderId = order["entryOrderId"]
 
             # triggered trailing stop?
