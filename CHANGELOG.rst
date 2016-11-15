@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+*November 15, 2016*
+
+1.5.32a
+--------
+
+- Set ``ticksize`` to ``0`` for stale ticks (for when using ``"force_resolution" = True``)
+
+
 *November 13, 2016*
 
 1.5.31a
