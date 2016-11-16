@@ -170,20 +170,20 @@ class Blotter():
         if "as_client" in self.args:
             return
 
-        logging.info("Blotter stopped...")
+        self.log.info("Blotter stopped...")
 
         if self.ibConn is not None:
-            logging.info("Cancel market data...")
+            self.log.info("Cancel market data...")
             self.ibConn.cancelMarketData()
 
-            logging.info("Disconnecting...")
+            self.log.info("Disconnecting...")
             self.ibConn.disconnect()
 
         if not self.duplicate_run:
-            logging.info("Deleting runtime args...")
+            self.log.info("Deleting runtime args...")
             self._remove_cached_args()
 
-        logging.info("Disconnecting from MySQL...")
+        self.log.info("Disconnecting from MySQL...")
         try:
             self.dbcurr.close()
             self.dbconn.close()
@@ -215,11 +215,11 @@ class Blotter():
             # temp file found - check if really running
             # or if this file wasn't deleted due to crash
             if not self._blotter_file_running():
-                print("REMOVING OLD TEMP")
+                # print("REMOVING OLD TEMP")
                 self._remove_cached_args()
             else:
                 self.duplicate_run = True
-                print("[ERROR]  Blotter is already running...")
+                self.log.error("Blotter is already running...")
                 sys.exit(1)
 
         self._write_cached_args()
@@ -282,7 +282,7 @@ class Blotter():
             return
 
         if caller == "handleConnectionClosed":
-            logging.info("Lost conncetion to Interactive Brokers...")
+            self.log.info("Lost conncetion to Interactive Brokers...")
             self._on_exit(terminate=False)
             self.run()
 
@@ -306,9 +306,9 @@ class Blotter():
 
             # https://www.interactivebrokers.com/en/software/api/apiguide/tables/api_message_codes.htm
             if 1100 <= msg.errorCode or 0 < 2200: # errorCode can be None...
-                logging.warning('[IB #{}] {}'.format(msg.errorCode, msg.errorMsg))
+                self.log.warning('[IB #{}] {}'.format(msg.errorCode, msg.errorMsg))
             elif msg.errorCode not in (502, 504): # 502, 504 = connection error
-                logging.error('[IB #{}] {}'.format(msg.errorCode, msg.errorMsg))
+                self.log.error('[IB #{}] {}'.format(msg.errorCode, msg.errorMsg))
 
 
     # -------------------------------------------
@@ -705,7 +705,7 @@ class Blotter():
         prev_contracts = []
         first_run      = True
 
-        logging.info("Connecting to Interactive Brokers...")
+        self.log.info("Connecting to Interactive Brokers...")
         self.ibConn = ezIBpy()
         self.ibConn.ibCallback = self.ibCallback
 
@@ -715,7 +715,7 @@ class Blotter():
             time.sleep(1)
             if not self.ibConn.connected:
                 print('*', end="", flush=True)
-        logging.info("Connection established...")
+        self.log.info("Connection established...")
 
         try:
             while True:
@@ -736,7 +736,7 @@ class Blotter():
                     # empty file
                     if db_size == 0:
                         if len(prev_contracts) > 0:
-                            logging.info('Cancel market data...')
+                            self.log.info('Cancel market data...')
                             self.ibConn.cancelMarketData()
                             time.sleep(0.1)
                             prev_contracts = []
@@ -780,7 +780,7 @@ class Blotter():
                                         self.ibConn.cancelMarketDepth(self.ibConn.createContract(contract))
                                     time.sleep(0.1)
                                     contract_string = self.ibConn.contractString(contract).split('_')[0]
-                                    logging.info('Contract Removed ['+contract_string+']')
+                                    self.log.info('Contract Removed ['+contract_string+']')
 
                     # request market data
                     for contract in contracts:
@@ -790,7 +790,7 @@ class Blotter():
                                 self.ibConn.requestMarketDepth(self.ibConn.createContract(contract))
                             time.sleep(0.1)
                             contract_string = self.ibConn.contractString(contract).split('_')[0]
-                            logging.info('Contract Added ['+contract_string+']')
+                            self.log.info('Contract Added ['+contract_string+']')
 
                     # update latest contracts
                     prev_contracts = contracts
@@ -1052,7 +1052,7 @@ class Blotter():
 
             except:
                 self.dbconn.rollback()
-                print("[ERROR] Cannot create database schema")
+                self.log.error("Cannot create database schema")
                 self._remove_cached_args()
                 sys.exit(1)
 
