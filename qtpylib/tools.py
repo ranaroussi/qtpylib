@@ -32,7 +32,7 @@ from dateutil.relativedelta import relativedelta, FR
 from dateutil.parser import parse as parse_date
 from pytz import timezone
 
-from ezibpy.utils import create_logger      # For re-export
+from ezibpy.utils import createLogger      # For re-export
 
 
 # =============================================

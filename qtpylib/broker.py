@@ -46,7 +46,7 @@ getcontext().prec = 5
 
 from abc import ABCMeta
 
-tools.create_logger(__name__)
+tools.createLogger(__name__)
 
 
 class Broker():
