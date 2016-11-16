@@ -98,6 +98,10 @@ class Algo(Broker):
         # initilize algo logger
         self.log_algo = logging.getLogger(__name__)
 
+        # initilize strategy logger
+        tools.createLogger(self.name)
+        self.log = logging.getLogger(self.name)
+
         # override args with any (non-default) command-line args
         self.args = {arg: val for arg, val in locals().items() if arg not in ('__class__', 'self', 'kwargs')}
         self.args.update(kwargs)
