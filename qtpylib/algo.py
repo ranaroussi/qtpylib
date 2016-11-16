@@ -75,8 +75,8 @@ class Algo(Broker):
         self.name = str(self.__class__).split('.')[-1].split("'")[0]
         self.log = logging.getLogger(__name__)
 
-        # Override args with any (non-default) command-line args
-        self.args = {arg: val for arg, val in locals().items() if arg not in ('self', 'kwargs')}
+        # override args with any (non-default) command-line args
+        self.args = {arg: val for arg, val in locals().items() if arg not in ('__class__', 'self', 'kwargs')}
         self.args.update(kwargs)
         self.args.update(self.load_cli_args())
 
