@@ -153,7 +153,7 @@ class Blotter():
 
 
     # -------------------------------------------
-    def _on_exit(self):
+    def _on_exit(self, terminate=True):
         if "as_client" in self.args:
             return
 
@@ -177,7 +177,8 @@ class Blotter():
         except:
             pass
 
-        os._exit(0)
+        if terminate:
+            os._exit(0)
 
     # -------------------------------------------
     def _detect_running_blotter(self, name):
@@ -289,7 +290,7 @@ class Blotter():
 
         if caller == "handleConnectionClosed":
             logging.info("Lost conncetion to Interactive Brokers...")
-            self._on_exit()
+            self._on_exit(terminate=False)
             self.run()
 
         elif caller == "handleTickString":
