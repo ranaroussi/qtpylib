@@ -39,6 +39,8 @@ from abc import ABCMeta, abstractmethod
 
 # =============================================
 
+tools.create_logger(__name__)
+
 
 class Algo(Broker):
     """Algo class initilizer (sub-class of Broker)
@@ -69,26 +71,16 @@ class Algo(Broker):
 
     def __init__(self, instruments, resolution,
         tick_window=1, bar_window=100, timezone="UTC", preload=None,
-        continuous=True, blotter=None, force_resolution=False, **kwargs):
+        continuous=True, blotter=None, sms=(), log=None, backtest=False,
+        start=None, end=None, output=None, force_resolution=False, **kwargs):
 
         self.name = str(self.__class__).split('.')[-1].split("'")[0]
+        self.log = logging.getLogger(__name__)
 
-        # ----------------------------------------------------
-        # default args
-        self.args = kwargs.copy()
-        cli_args  = self.load_cli_args()
-
-        # override kwargs args with cli args
-        for arg in cli_args:
-            if arg not in self.args or ( arg in self.args and cli_args[arg] is not None ):
-                self.args[arg] = cli_args[arg]
-
-        # fix flag args (no value)
-        for arg in ["backtest"]:
-            if arg in kwargs and "--"+str(arg) not in sys.argv:
-                self.args[arg] = kwargs["backtest"]
-        # ----------------------------------------------------
-
+        # Override args with any (non-default) command-line args
+        self.args = {arg: val for arg, val in locals().items() if arg not in ('self', 'kwargs')}
+        self.args.update(kwargs)
+        self.args.update(self.load_cli_args())
 
         # assign algo params
         self.bars           = pd.DataFrame()
@@ -114,9 +106,9 @@ class Algo(Broker):
         self.backtest_end   = self.args["end"]
 
         # -----------------------------------
-        self.sms_numbers    = [] if self.args["sms"] is None else self.args["sms"]
+        self.sms_numbers    = self.args["sms"]
         self.trade_log_dir  = self.args["log"]
-        self.blotter_name   = self.args["blotter"] if self.args["blotter"] is not None else blotter
+        self.blotter_name   = self.args["blotter"]
         self.record_output  = self.args["output"]
 
         # -----------------------------------
@@ -126,8 +118,8 @@ class Algo(Broker):
 
         # -----------------------------------
         # initiate broker/order manager
-        super().__init__(instruments, ibclient=int(self.args["ibclient"]),
-            ibport=int(self.args["ibport"]), ibserver=str(self.args["ibserver"]))
+
+        super().__init__(instruments, **{arg: val for arg, val in self.args.items() if arg in ('ibport', 'ibclient', 'ibhost')})
 
         # -----------------------------------
         # signal collector
@@ -140,10 +132,6 @@ class Algo(Broker):
         self.record_ts = None
         if self.record_output:
             self.datastore = tools.DataStore(self.args["output"])
-
-        # -----------------------------------
-        # initiate strategy
-        self.on_start()
 
         # ---------------------------------------
         # add stale ticks to allow for interval-based bars
@@ -166,25 +154,28 @@ class Algo(Broker):
 
 
     # ---------------------------------------
-    def load_cli_args(self):
-        parser = argparse.ArgumentParser(description='QTPy Algo Framework')
+    @staticmethod
+    def load_cli_args():
+        """:Return: a dict of any non-default args passed on the command-line."""
+        parser = argparse.ArgumentParser(description='QTPy Algo Framework', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-        parser.add_argument('--ibport', default='4001', help='IB TWS/GW Port to use (default: 4001)', required=False)
-        parser.add_argument('--ibclient', default='998', help='IB TWS/GW Client ID (default: 998)', required=False)
-        parser.add_argument('--ibserver', default='localhost', help='IB TWS/GW Server hostname (default: localhost)', required=False)
-        parser.add_argument('--sms', nargs='+', help='Numbers to text orders', required=False)
-        parser.add_argument('--log', default=None, help='Path to store trade data (default: ~/qpy/trades/)', required=False)
+        parser.add_argument('--ibport', default=4001, type=int, help='IB TWS/GW Port')
+        parser.add_argument('--ibclient', default=998, type=int, help='IB TWS/GW Client ID')
+        parser.add_argument('--ibserver', default='localhost', help='IB TWS/GW Server hostname')
+        parser.add_argument('--sms', nargs='+', default=(), help='Numbers to text orders')
+        parser.add_argument('--log', help='Path to store trade data')
 
-        parser.add_argument('--backtest', help='Work in Backtest mode', action='store_true', required=False)
-        parser.add_argument('--start', help='Backtest start date', required=False)
-        parser.add_argument('--end', help='Backtest end date', required=False)
-        parser.add_argument('--output', help='Path to save the recorded data', required=False)
+        parser.add_argument('--backtest', help='Work in Backtest mode', action='store_true')
+        parser.add_argument('--start', help='Backtest start date')
+        parser.add_argument('--end', help='Backtest end date')
+        parser.add_argument('--output', help='Path to save the recorded data')
 
-        parser.add_argument('--blotter', help='Log trades to the MySQL server used by this Blotter', required=False)
+        parser.add_argument('--blotter', help='Log trades to the MySQL server used by this Blotter')
 
-        args, unknown = parser.parse_known_args()
-
-        return args.__dict__
+        # Only return non-default cmd line args (meaning only those actually given)
+        cmd_args = vars(parser.parse_args())
+        args = {arg: val for arg, val in cmd_args.items() if val != parser.get_default(arg)}
+        return args
 
     # ---------------------------------------
     def run(self):
@@ -195,17 +186,21 @@ class Algo(Broker):
         ``on_bar`` methods.
         """
 
+
         # -----------------------------------
         # backtest mode?
         if self.backtest:
+            # TODO: This really should be done in the command-line parser
             if self.record_output is None:
-                logging.error("Must provide an output file for Backtest mode")
+                self.log.error("Must provide an output file for Backtest mode")
                 sys.exit(0)
             if self.backtest_start is None:
-                logging.error("Must provide start date for Backtest mode")
+                self.log.error("Must provide start date for Backtest mode")
                 sys.exit(0)
             if self.backtest_end is None:
                 self.backtest_end = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+
+            self.on_start()
 
             # backtest history
             self.blotter.drip(
@@ -240,6 +235,8 @@ class Algo(Broker):
 
             # add instruments to blotter in case they do not exist
             self.blotter.register(self.instruments)
+
+            self.on_start()
 
             # listen for RT data
             self.blotter.listen(
@@ -433,6 +430,7 @@ class Algo(Broker):
             tif: str
                 time in force (DAY, GTC, IOC, GTD). default is ``DAY``
         """
+        self.log.debug('ORDER: %s %4d %s %s', signal, quantity, symbol, kwargs)
         if signal.upper() == "EXIT" or signal.upper() == "FLATTEN":
             position = self.get_positions(symbol)
             if position['position'] == 0:
