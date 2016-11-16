@@ -69,8 +69,9 @@ class Algo(Broker):
 
     def __init__(self, instruments, resolution,
         tick_window=1, bar_window=100, timezone="UTC", preload=None,
-        continuous=True, blotter=None, sms=(), log=None, backtest=False,
-        start=None, end=None, output=None, force_resolution=False, **kwargs):
+        continuous=True, blotter=None, sms=[], log=None, backtest=False,
+        start=None, end=None, output=None, force_res=False,
+        ibclient=998, ibport=4001, ibserver="localhost", **kwargs):
 
         self.name = str(self.__class__).split('.')[-1].split("'")[0]
         self.log = logging.getLogger(__name__)
