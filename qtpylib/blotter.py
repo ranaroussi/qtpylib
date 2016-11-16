@@ -81,6 +81,8 @@ class Blotter():
             IB TWS/GW Server hostname (default: localhost)
         zmqport : str
             ZeroMQ Port to use (default: 12345)
+        zmqtopic : str
+            ZeroMQ string to use (default: _qtpy_BLOTTERNAME_)
         orderbook : str
             Get Order Book (Market Depth) data (default: False)
         dbhost : str
@@ -102,8 +104,8 @@ class Blotter():
     def __init__(self, name=None, symbols="symbols.csv",
         ibport="4001", ibclient="999", ibserver="localhost",
         dbhost="localhost", dbport="3306", dbname="qtpy",
-        dbuser="root", dbpass="", dbskip=False,
-        zmqport="12345", orderbook=False, **kwargs):
+        dbuser="root", dbpass="", dbskip=False, orderbook=False,
+        zmqport="12345", zmqtopic=None, **kwargs):
 
         # whats my name?
         self.name = str(self.__class__).split('.')[-1].split("'")[0].lower()
