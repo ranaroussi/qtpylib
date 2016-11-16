@@ -153,25 +153,45 @@ class Algo(Broker):
 
 
     # ---------------------------------------
-    @staticmethod
-    def load_cli_args():
-        """:Return: a dict of any non-default args passed on the command-line."""
-        parser = argparse.ArgumentParser(description='QTPy Algo Framework', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    def load_cli_args(self):
+        """
+        Parse command line arguments and return only the non-default ones
 
-        parser.add_argument('--ibport', default=4001, type=int, help='IB TWS/GW Port')
-        parser.add_argument('--ibclient', default=998, type=int, help='IB TWS/GW Client ID')
-        parser.add_argument('--ibserver', default='localhost', help='IB TWS/GW Server hostname')
-        parser.add_argument('--sms', nargs='+', default=(), help='Numbers to text orders')
-        parser.add_argument('--log', help='Path to store trade data')
+        :Retruns: dict
+            a dict of any non-default args passed on the command-line.
+        """
+        parser = argparse.ArgumentParser(description='QTPyLib Algo',
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-        parser.add_argument('--backtest', help='Work in Backtest mode', action='store_true')
-        parser.add_argument('--start', help='Backtest start date')
-        parser.add_argument('--end', help='Backtest end date')
-        parser.add_argument('--output', help='Path to save the recorded data')
+        parser.add_argument('--ibport', default=self.args["ibport"],
+            help='IB TWS/GW Port', type=int)
+        parser.add_argument('--ibclient', default=self.args["ibclient"],
+            help='IB TWS/GW Client ID', type=int)
+        parser.add_argument('--ibserver', default=self.args["ibserver"],
+            help='IB TWS/GW Server hostname')
+        parser.add_argument('--sms', default=self.args["sms"],
+            help='Numbers to text orders', nargs='+')
+        parser.add_argument('--log', default=self.args["log"],
+            help='Path to store trade data')
 
-        parser.add_argument('--blotter', help='Log trades to the MySQL server used by this Blotter')
+        parser.add_argument('--backtest', default=self.args["backtest"],
+            help='Work in Backtest mode (flag)', action='store_true')
+        parser.add_argument('--start', default=self.args["start"],
+            help='Backtest start date')
+        parser.add_argument('--end', default=self.args["end"],
+            help='Backtest end date')
+        parser.add_argument('--output', default=self.args["output"],
+            help='Path to save the recorded data')
 
-        # Only return non-default cmd line args (meaning only those actually given)
+        parser.add_argument('--blotter',
+            help='Log trades to the MySQL server used by this Blotter')
+        parser.add_argument('--continuous', default=self.args["continuous"],
+            help='Construct continuous Futures contracts (flag)', action='store_true')
+        parser.add_argument('--force_res', default=self.args["force_res"],
+            help='Force new bar on every resolution (flag)', action='store_true')
+
+        # only return non-default cmd line args
+        # (meaning only those actually given)
         cmd_args = vars(parser.parse_args())
         args = {arg: val for arg, val in cmd_args.items() if val != parser.get_default(arg)}
         return args
