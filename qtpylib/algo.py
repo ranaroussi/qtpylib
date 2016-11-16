@@ -39,6 +39,7 @@ from abc import ABCMeta, abstractmethod
 
 # =============================================
 tools.createLogger(__name__)
+# =============================================
 
 class Algo(Broker):
     """Algo class initilizer (sub-class of Broker)
@@ -61,6 +62,24 @@ class Algo(Broker):
             Tells preloader to construct continuous Futures contracts (default is True)
         blotter : str
             Log trades to MySQL server used by this Blotter (default is "auto detect")
+        sms: set
+            List of numbers to text orders (default: None)
+        log: str
+            Path to store trade data (default: None)
+        backtest: bool
+            Whether to operate in Backtest mode (default: False)
+        start: str
+            Backtest start date (YYYY-MM-DD [HH:MM:SS[.MS]). Default is None
+        end: str
+            Backtest end date (YYYY-MM-DD [HH:MM:SS[.MS]). Default is None
+        output: str
+            Path to save the recorded data (default: None)
+        ibport: int
+            IB TWS/GW Port to use (default: 4001)
+        ibclient: int
+            IB TWS/GW Client ID (default: 998)
+        ibserver: str
+            IB TWS/GW Server hostname (default: localhost)
         force_res : bool
             Force new bar on every ``resolution`` even if no new ticks received (default is False)
     """
@@ -73,7 +92,10 @@ class Algo(Broker):
         start=None, end=None, output=None, force_res=False,
         ibclient=998, ibport=4001, ibserver="localhost", **kwargs):
 
+        # detect algo name
         self.name = str(self.__class__).split('.')[-1].split("'")[0]
+
+        # initilize class logger
         self.log = logging.getLogger(__name__)
 
         # override args with any (non-default) command-line args
@@ -117,8 +139,9 @@ class Algo(Broker):
 
         # -----------------------------------
         # initiate broker/order manager
-
-        super().__init__(instruments, **{arg: val for arg, val in self.args.items() if arg in ('ibport', 'ibclient', 'ibhost')})
+        super().__init__(instruments,
+            **{arg: val for arg, val in self.args.items() if arg in (
+                'ibport', 'ibclient', 'ibhost')})
 
         # -----------------------------------
         # signal collector
@@ -137,6 +160,7 @@ class Algo(Broker):
         if force_res and self.resolution[-1] not in ("K", "V"):
             self.bar_timer = tools.RecurringTask(
                 self.add_stale_tick, interval_sec=1, init_sec=1, daemon=True)
+
 
     # ---------------------------------------
     def add_stale_tick(self):
@@ -219,6 +243,7 @@ class Algo(Broker):
             if self.backtest_end is None:
                 self.backtest_end = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
 
+            # initiate strategy
             self.on_start()
 
             # backtest history
@@ -255,6 +280,7 @@ class Algo(Broker):
             # add instruments to blotter in case they do not exist
             self.blotter.register(self.instruments)
 
+            # initiate strategy
             self.on_start()
 
             # listen for RT data
