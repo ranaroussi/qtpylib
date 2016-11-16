@@ -82,7 +82,7 @@ class Blotter():
         zmqport : str
             ZeroMQ Port to use (default: 12345)
         zmqtopic : str
-            ZeroMQ string to use (default: _qtpy_BLOTTERNAME_)
+            ZeroMQ string to use (default: _qtpylib_BLOTTERNAME_)
         orderbook : str
             Get Order Book (Market Depth) data (default: False)
         dbhost : str
@@ -143,7 +143,7 @@ class Blotter():
         # work default values
         # -------------------------------
         if zmqtopic is None:
-            zmqtopic = "_qtpy_"+str(self.name.lower())+"_"
+            zmqtopic = "_qtpylib_"+str(self.name.lower())+"_"
 
         # if no path given for symbols' csv, use same dir
         if symbols == "symbols.csv":
