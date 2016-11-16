@@ -252,19 +252,29 @@ or via CLI (**all are optional**).
 Algo Parameters
 ~~~~~~~~~~~~~~~
 
+**Required Parameters:**
+
 - ``instruments`` List of stock symbols (for US Stocks) / IB Contract Tuples
-- ``resolution`` Bar resolution (pandas resample resolution: 1T/4H/etc - use **K** for tick bars or **V** for volume bars).
-- ``tick_window`` Length of tick lookback window to keep (defaults to 1)
-- ``bar_window`` Length of bar lookback window to keep (defaults to 100)
-- ``timezone`` Convert IB timestamps to this timezone, eg. "US/Central" (defaults to UTC)
-- ``preload`` Preload history upon start (eg. 1H, 2D, etc, or K for tick bars).
+- ``resolution`` Bar resolution (pandas resample resolution: 1T/4H/etc - use ``K`` for tick bars or ``V`` for volume bars).
+
+**Optional Parameters:**
+
+- ``tick_window`` Length of tick lookback window to keep (defaults to ``1``)
+- ``bar_window`` Length of bar lookback window to keep (defaults to ``100``)
+- ``timezone`` Convert IB timestamps to this timezone, eg. "US/Central" (defaults to ``UTC``)
+- ``preload`` Preload history upon start (eg. 1H, 2D, etc, or K for tick bars). (defaults to ``None``)
 - ``continuous`` Tells preloader to construct continuous Futures contracts (default is ``True``)
 - ``blotter`` Log trades to MySQL server used by this Blotter (default: ``auto-detect``).
 - ``backtest`` Work in Backtest mode (default: ``False``)
 - ``start`` Backtest start date (``YYYY-MM-DD [HH:MM:SS[.MS]``)
 - ``end`` Backtest end date (``YYYY-MM-DD [HH:MM:SS[.MS]``)
 - ``output`` Path to save the recorded data (default: ``None``)
-- ``force_resolution`` Force new bar on every ``resolution`` even if no new ticks received (default: ``False``)
+- ``sms`` List of numbers to text orders (default: ``None``)
+- ``log`` Path to store trade data (default: ``None``)
+- ``ibport`` IB TWS/GW Port to use (default: ``4001``)
+- ``ibclient`` IB TWS/GW Client ID (default: ``998``)
+- ``ibserver`` IB TWS/GW Server hostname (default: ``localhost``)
+- ``force_res`` Force new bar on every ``resolution`` even if no new ticks received (default: ``False``)
 
 **Example:**
 
@@ -289,13 +299,20 @@ Algo Parameters
 Runtime (CLI) Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-- ``--sms`` List of numbers to text orders (default: ``None``)
-- ``--log`` Path to store trade data (default: ``None``)
+You can override any of the above paramaters using run-time using command line arguments:
+
 - ``--ibport`` IB TWS/GW Port to use (default: ``4001``)
 - ``--ibclient`` IB TWS/GW Client ID (default: ``998``)
 - ``--ibserver`` IB TWS/GW Server hostname (default: ``localhost``)
-- ``--blotter`` Log trades to MySQL server used by this Blotter (default: ``auto-detect``)
+- ``--sms`` List of numbers to text orders (default: ``None``)
+- ``--log`` Path to store trade data (default: ``None``)
+- ``--backtest`` Work in Backtest mode (flag, default: ``False``)
+- ``--start`` Backtest start date (``YYYY-MM-DD [HH:MM:SS[.MS]``)
+- ``--end`` Backtest end date (``YYYY-MM-DD [HH:MM:SS[.MS]``)
 - ``--output`` Path to save the recorded data (default: ``None``)
+- ``--blotter`` Log trades to MySQL server used by this Blotter (default: ``auto-detect``)
+- ``--continuous`` Construct continuous Futures contracts (flag, default: ``True``)
+- ``--force_res`` Force new bar on every ``resolution`` (flag, default: ``False``)
 
 **Example:**
 

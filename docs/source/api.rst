@@ -13,8 +13,8 @@ API Reference
 
 -----
 
-.. include:: ./api_reports.rst
+.. include:: ./api_broker.rst
 
 -----
 
-.. include:: ./api_broker.rst
+.. include:: ./api_reports.rst

@@ -1,6 +1,20 @@
 Release Notes
 =============
 
+*November 16, 2016*
+
+1.5.33a
+--------
+
+- Fixed command line agrument parsing issues
+- All params in ``Algo()`` and ``Blotter()`` are now explicit and are overridden in runtime using command line arguments
+- Make sure expiry values aren't decimals
+- Require ezIBpy >= 1.12.36
+- Renamed ``force_resolution`` to ``force_res`` in ``Algo()``
+- Using unified logging from latest ``ezIBpy`` (use ``self.log.LEVEL(...)`` instead of ``loggig.LEVEL(...)`` in your strategies)
+- Misc bugfixes and code improvements
+
+
 *November 15, 2016*
 
 1.5.32a
