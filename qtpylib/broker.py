@@ -72,7 +72,7 @@ class Broker():
         self.strategy = str(self.__class__).split('.')[-1].split("'")[0]
 
         # initilize class logger
-        self.log = logging.getLogger(__name__)
+        self.log_broker = logging.getLogger(__name__)
 
         # -----------------------------------
         # connect to IB
@@ -215,14 +215,14 @@ class Broker():
         if self.blotter_name is not None: # and self.blotter_name != 'auto-detect':
             args_cache_file = tempfile.gettempdir()+"/"+self.blotter_name.lower()+".qtpylib"
             if not os.path.exists(args_cache_file):
-                self.log.critical("Cannot connect to running Blotter [%s]" % (self.blotter_name))
+                self.log_broker.critical("Cannot connect to running Blotter [%s]" % (self.blotter_name))
                 sys.exit(0)
 
         # no name provided - connect to last running
         else:
             blotter_files = sorted(glob.glob(tempfile.gettempdir()+"/*.qtpylib"), key=os.path.getmtime)
             if len(blotter_files) == 0:
-                self.log.critical("Cannot connect to running Blotter [%s]" % (self.blotter_name))
+                self.log_broker.critical("Cannot connect to running Blotter [%s]" % (self.blotter_name))
                 sys.exit(0)
 
             args_cache_file = blotter_files[-1]
@@ -245,13 +245,13 @@ class Broker():
 
     # -------------------------------------------
     def _on_exit(self):
-        self.log.info("Algo stopped...")
+        self.log_broker.info("Algo stopped...")
 
         if self.ibConn is not None:
-            self.log.info("Disconnecting...")
+            self.log_broker.info("Disconnecting...")
             self.ibConn.disconnect()
 
-        self.log.info("Disconnecting from MySQL...")
+        self.log_broker.info("Disconnecting from MySQL...")
         try:
             self.dbcurr.close()
             self.dbconn.close()
@@ -271,7 +271,7 @@ class Broker():
 
         if caller == "handleConnectionClosed":
 
-            self.log.info("Lost conncetion to Interactive Brokers...")
+            self.log_broker.info("Lost conncetion to Interactive Brokers...")
 
             while not self.ibConn.connected:
                 self.ibConnect()
@@ -279,7 +279,7 @@ class Broker():
                 if not self.ibConn.connected:
                     print('*', end="", flush=True)
 
-            self.log.info("Connection established...")
+            self.log_broker.info("Connection established...")
 
         elif caller == "handleOrders":
 
@@ -558,7 +558,7 @@ class Broker():
         trail_stop_at=0, trail_stop_by=0, stop_limit=False, **kwargs):
 
 
-        self.log.debug('CREATE ORDER: %s %4d %s %s', direction, quantity, symbol, dict(locals(), **kwargs))
+        self.log_broker.debug('CREATE ORDER: %s %4d %s %s', direction, quantity, symbol, dict(locals(), **kwargs))
 
         # force BUY/SELL (not LONG/SHORT)
         direction = direction.replace("LONG", "BUY").replace("SHORT", "SELL")
@@ -583,7 +583,7 @@ class Broker():
 
         # don't submit order if a pending one is waiting
         if symbol in self.orders.pending:
-            self.log.warning('Not submitting %s order, orders pending: %s', symbol, self.orders.pending)
+            self.log_broker.warning('Not submitting %s order, orders pending: %s', symbol, self.orders.pending)
             return
 
         # @TODO - decide on quantity here
@@ -604,7 +604,7 @@ class Broker():
             order = self.ibConn.createOrder(order_quantity, limit_price,
                 fillorkill=fillorkill, iceberg=iceberg, tif=tif)
             orderId  = self.ibConn.placeOrder(contract, order)
-            self.log.debug('PLACE ORDER: %s %s', tools.contract_to_dict(contract), tools.order_to_dict(order))
+            self.log_broker.debug('PLACE ORDER: %s %s', tools.contract_to_dict(contract), tools.order_to_dict(order))
         else:
             # bracket order
             order = self.ibConn.createBracketOrder(contract, order_quantity,

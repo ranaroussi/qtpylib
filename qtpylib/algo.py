@@ -95,8 +95,8 @@ class Algo(Broker):
         # detect algo name
         self.name = str(self.__class__).split('.')[-1].split("'")[0]
 
-        # initilize class logger
-        self.log = logging.getLogger(__name__)
+        # initilize algo logger
+        self.log_algo = logging.getLogger(__name__)
 
         # override args with any (non-default) command-line args
         self.args = {arg: val for arg, val in locals().items() if arg not in ('__class__', 'self', 'kwargs')}
@@ -235,10 +235,10 @@ class Algo(Broker):
         if self.backtest:
             # TODO: This really should be done in the command-line parser
             if self.record_output is None:
-                self.log.error("Must provide an output file for Backtest mode")
+                self.log_algo.error("Must provide an output file for Backtest mode")
                 sys.exit(0)
             if self.backtest_start is None:
-                self.log.error("Must provide start date for Backtest mode")
+                self.log_algo.error("Must provide start date for Backtest mode")
                 sys.exit(0)
             if self.backtest_end is None:
                 self.backtest_end = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
@@ -475,7 +475,7 @@ class Algo(Broker):
             tif: str
                 time in force (DAY, GTC, IOC, GTD). default is ``DAY``
         """
-        self.log.debug('ORDER: %s %4d %s %s', signal, quantity, symbol, kwargs)
+        self.log_algo.debug('ORDER: %s %4d %s %s', signal, quantity, symbol, kwargs)
         if signal.upper() == "EXIT" or signal.upper() == "FLATTEN":
             position = self.get_positions(symbol)
             if position['position'] == 0:
