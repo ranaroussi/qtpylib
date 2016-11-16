@@ -32,8 +32,10 @@ from dateutil.relativedelta import relativedelta, FR
 from dateutil.parser import parse as parse_date
 from pytz import timezone
 
-from ezibpy.utils import create_logger      # For re-export
-
+# for re-export
+from ezibpy.utils import (
+    createLogger, order_to_dict, contract_to_dict
+)
 
 # =============================================
 def chmod(f):
