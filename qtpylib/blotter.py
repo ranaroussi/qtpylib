@@ -113,6 +113,8 @@ class Blotter():
         self.rtvolume   = set() # has RTVOLUME?
 
         self.implicit_args = False
+        # don't display connection errors on ctrl+c
+        self.quitting = False
 
         # load args
         self.args_defaults = {
@@ -306,8 +308,13 @@ class Blotter():
             self.on_orderbook_received(msg.tickerId)
 
         elif caller == "handleError":
+            # don't display connection errors on ctrl+c
+            if self.quitting and \
+                msg.errorCode in ibDataTypes["DISCONNECT_ERROR_CODES"]:
+                return
+
             # https://www.interactivebrokers.com/en/software/api/apiguide/tables/api_message_codes.htm
-            if 1100 <= msg.errorCode or 0 < 2200:       # errorCode can be None...
+            if 1100 <= msg.errorCode or 0 < 2200: # errorCode can be None...
                 logging.warning('[IB #{}] {}'.format(msg.errorCode, msg.errorMsg))
             elif msg.errorCode not in (502, 504): # 502, 504 = connection error
                 logging.error('[IB #{}] {}'.format(msg.errorCode, msg.errorMsg))
@@ -802,6 +809,7 @@ class Blotter():
 
         except (KeyboardInterrupt, SystemExit):
             print("\n\n>>> Interrupted with Ctrl-c...")
+            self.quitting = True # don't display connection errors on ctrl+c
             sys.exit(1)
 
 
