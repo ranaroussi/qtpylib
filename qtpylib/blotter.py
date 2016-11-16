@@ -57,8 +57,7 @@ from abc import ABCMeta
 
 # =============================================
 # Configure logging
-logging.basicConfig(stream=sys.stdout, level=logging.INFO,
-    format='%(asctime)s [%(levelname)s]: %(message)s')
+tools.createLogger(__name__, logging.INFO)
 
 # Disable ezIBpy logging (Blotter handles errors itself)
 logging.getLogger('ezibpy').setLevel(logging.CRITICAL)
@@ -110,6 +109,9 @@ class Blotter():
         self.name = str(self.__class__).split('.')[-1].split("'")[0].lower()
         if name is not None:
             self.name = name
+
+        # initilize class logger
+        self.log = logging.getLogger(__name__)
 
         """ returns: running true/false """
         self._bars = pd.DataFrame(columns=['open','high','low','close','volume'])
