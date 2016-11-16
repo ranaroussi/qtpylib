@@ -38,9 +38,7 @@ from qtpylib import (
 from abc import ABCMeta, abstractmethod
 
 # =============================================
-
-tools.create_logger(__name__)
-
+tools.createLogger(__name__)
 
 class Algo(Broker):
     """Algo class initilizer (sub-class of Broker)
