@@ -72,16 +72,39 @@ class Blotter():
 
         name : string
             name of the blotter (used by other modules)
-
-        ** kwargs : mixed
-            The names and values of the setting to set.
-            (refer to the `Blotter Documentation <./blotter.html#available-arguments>`_)
-            for full list of available parameters.
+        symbols : str
+            IB contracts CSV database (default: ./symbols.csv)
+        ibport : int
+            TWS/GW Port to use (default: 4001)
+        ibclient : int
+            TWS/GW Client ID (default: 999)
+        ibserver : str
+            IB TWS/GW Server hostname (default: localhost)
+        zmqport : str
+            ZeroMQ Port to use (default: 12345)
+        orderbook : str
+            Get Order Book (Market Depth) data (default: False)
+        dbhost : str
+            MySQL server hostname (default: localhost)
+        dbport : str
+            MySQL server port (default: 3306)
+        dbname : str
+            MySQL server database (default: qpy)
+        dbuser : str
+            MySQL server username (default: root)
+        dbpass : str
+            MySQL server password (default: none)
+        dbskip : str
+            Skip MySQL logging (default: False)
     """
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, name=None, **kwargs):
+    def __init__(self, name=None, symbols="symbols.csv",
+        ibport="4001", ibclient="999", ibserver="localhost",
+        dbhost="localhost", dbport="3306", dbname="qtpy",
+        dbuser="root", dbpass="", dbskip=False,
+        zmqport="12345", orderbook=False, **kwargs):
 
         # whats my name?
         self.name = str(self.__class__).split('.')[-1].split("'")[0].lower()
@@ -112,43 +135,27 @@ class Blotter():
         self.cash_ticks = {} # cache
         self.rtvolume   = set() # has RTVOLUME?
 
-        self.implicit_args = False
         # don't display connection errors on ctrl+c
         self.quitting = False
 
-        # load args
-        self.args_defaults = {
-            "symbols": "symbols.csv",
-            "ibport": "4001",
-            "ibclient": "999",
-            "ibserver": "localhost",
-            "zmqport": "12345",
-            "zmqtopic": "_qtpy_"+str(self.name.lower())+"_",
-            "orderbook": False,
-            "dbhost": "localhost",
-            "dbport": "3306",
-            "dbname": "qtpy",
-            "dbuser": "root",
-            "dbpass": ""
-        }
-
-        # override default args with kwargs params
-        for kw in kwargs:
-            if kw in self.args_defaults:
-                self.args_defaults[kw] = kwargs[kw]
-
-        self.cahced_args     = {}
-        self.args            = self.load_cli_args()
+        # read cached args to detect duplicate blotters
         self.duplicate_run   = False
-
+        self.cahced_args     = {}
         self.args_cache_file = tempfile.gettempdir()+"/"+self.name+".ezq"
-
-        # read cached args
         if os.path.exists(self.args_cache_file):
             self.cahced_args = self._read_cached_args()
 
-        if len(kwargs) > 0:
-            self.set(**kwargs)
+        # override args with any (non-default) command-line args
+        self.args = {arg: val for arg, val in locals().items() if arg not in ('__class__', 'self', 'kwargs')}
+        self.args.update(kwargs)
+        self.args.update(self.load_cli_args())
+
+        # if no path given for symbols' csv, use same dir
+        if self.args["symbols"] == "symbols.csv":
+            self.args["symbols"] = path['caller']+'/'+self.args["symbols"]
+
+        # zmq topic
+        self.zmqtopic = "_qtpy_"+str(self.name.lower())+"_"
 
         # do stuff on exit
         atexit.register(self._on_exit)
@@ -229,61 +236,41 @@ class Blotter():
 
     # -------------------------------------------
     def load_cli_args(self):
-        parser = argparse.ArgumentParser(description='ibBlotter')
-        parser.add_argument('--symbols', default=self.args_defaults['symbols'],
-            help='IB contracts CSV database (defaults ./symbols.csv)', required=False)
-        parser.add_argument('--ibport', default=self.args_defaults['ibport'],
-            help='TWS/IBGW Port to use (default: 4001)', required=False)
-        parser.add_argument('--ibclient', default=self.args_defaults['ibclient'],
-            help='TWS/IBGW Client ID (default: 999)', required=False)
-        parser.add_argument('--ibserver', default=self.args_defaults['ibserver'],
-            help='IB TWS/GW Server hostname (default: localhost)', required=False)
-        parser.add_argument('--zmqport', default=self.args_defaults['zmqport'],
-            help='ZeroMQ Port to use (default: 12345)', required=False)
+        parser = argparse.ArgumentParser(description='QTPyLib Blotter',
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+        parser.add_argument('--symbols', default=self.args['symbols'],
+            help='IB contracts CSV database', required=False)
+        parser.add_argument('--ibport', default=self.args['ibport'],
+            help='TWS/GW Port to use', required=False)
+        parser.add_argument('--ibclient', default=self.args['ibclient'],
+            help='TWS/GW Client ID', required=False)
+        parser.add_argument('--ibserver', default=self.args['ibserver'],
+            help='IB TWS/GW Server hostname', required=False)
+        parser.add_argument('--zmqport', default=self.args['zmqport'],
+            help='ZeroMQ Port to use', required=False)
 
         parser.add_argument('--orderbook', action='store_true',
-            help='Get Order Book (Market Depth) data (default: False)', required=False)
+            help='Get Order Book (Market Depth) data', required=False)
 
-        parser.add_argument('--dbhost', default=self.args_defaults['dbhost'],
-            help='MySQL server hostname (default: localhost)', required=False)
-        parser.add_argument('--dbport', default=self.args_defaults['dbport'],
-            help='MySQL server port (default: 3306)', required=False)
-        parser.add_argument('--dbname', default=self.args_defaults['dbname'],
-            help='MySQL server database (default: qpy)', required=False)
-        parser.add_argument('--dbuser', default=self.args_defaults['dbuser'],
-            help='MySQL server username (default: root)', required=False)
-        parser.add_argument('--dbpass', default=self.args_defaults['dbpass'],
-            help='MySQL server password (default: none)', required=False)
-        parser.add_argument('--dbskip', action='store_true',
-            help='Skip MySQL logging (default: False)', required=False)
+        parser.add_argument('--dbhost', default=self.args['dbhost'],
+            help='MySQL server hostname', required=False)
+        parser.add_argument('--dbport', default=self.args['dbport'],
+            help='MySQL server port', required=False)
+        parser.add_argument('--dbname', default=self.args['dbname'],
+            help='MySQL server database', required=False)
+        parser.add_argument('--dbuser', default=self.args['dbuser'],
+            help='MySQL server username', required=False)
+        parser.add_argument('--dbpass', default=self.args['dbpass'],
+            help='MySQL server password', required=False)
+        parser.add_argument('--dbskip', default=self.args['dbskip'], action='store_true',
+            help='Skip MySQL logging (flag)', required=False)
 
-        args, unknown = parser.parse_known_args()
-
-        # if no path, use same dir
-        if args.symbols == "symbols.csv":
-            args.symbols = path['caller']+'/'+args.symbols
-
-        # hard-coded
-        args.zmqtopic = self.args_defaults['zmqtopic']
-
-        return args.__dict__
-
-    # -------------------------------------------
-    def set(self, **kwargs):
-        self.implicit_args = True
-
-        # load args
-        set_args = {}
-        for kw in kwargs:
-            set_args[kw] = kwargs[kw]
-
-        # override with cli args
-        for arg in self.args:
-            if arg not in set_args or (self.args[arg] != set_args[arg] and \
-                self.args[arg] != self.args_defaults[arg]):
-                set_args[arg] = self.args[arg]
-
-        self.args = set_args
+        # only return non-default cmd line args
+        # (meaning only those actually given)
+        cmd_args, unknown = parser.parse_known_args()
+        args = {arg: val for arg, val in vars(cmd_args).items() if val != parser.get_default(arg)}
+        return args
 
     # -------------------------------------------
     def ibCallback(self, caller, msg, **kwargs):
@@ -564,7 +551,7 @@ class Blotter():
 
     # -------------------------------------------
     def broadcast(self, data, kind):
-        string2send = "%s %s" % (self.args['zmqtopic'], json.dumps(data))
+        string2send = "%s %s" % (self.zmqtopic, json.dumps(data))
         # print(kind, string2send)
         try:
             self.socket.send_string(string2send)
@@ -907,8 +894,8 @@ class Blotter():
             while True:
                 message = sock.recv_string()
 
-                if (self.args['zmqtopic'] in message):
-                    message = message.split(self.args['zmqtopic'])[1].strip()
+                if (self.zmqtopic in message):
+                    message = message.split(self.zmqtopic)[1].strip()
                     data    = json.loads(message)
 
                     if data['symbol'] not in symbols:
