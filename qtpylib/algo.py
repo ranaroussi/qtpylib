@@ -61,7 +61,7 @@ class Algo(Broker):
             Tells preloader to construct continuous Futures contracts (default is True)
         blotter : str
             Log trades to MySQL server used by this Blotter (default is "auto detect")
-        force_resolution : bool
+        force_res : bool
             Force new bar on every ``resolution`` even if no new ticks received (default is False)
     """
 
@@ -134,7 +134,7 @@ class Algo(Broker):
 
         # ---------------------------------------
         # add stale ticks to allow for interval-based bars
-        if force_resolution and self.resolution[-1] not in ("K", "V"):
+        if force_res and self.resolution[-1] not in ("K", "V"):
             self.bar_timer = tools.RecurringTask(
                 self.add_stale_tick, interval_sec=1, init_sec=1, daemon=True)
 
