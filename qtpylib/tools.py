@@ -32,6 +32,8 @@ from dateutil.relativedelta import relativedelta, FR
 from dateutil.parser import parse as parse_date
 from pytz import timezone
 
+from ezibpy.utils import create_logger      # For re-export
+
 
 # =============================================
 def chmod(f):
@@ -544,7 +546,8 @@ class RecurringTask(threading.Thread):
             start = time.time()
             self._func()
             self._functime += self.interval_sec
-            time.sleep(self._functime - start)
+            if self._functime - start > 0:
+                time.sleep(self._functime - start)
 
     def stop(self):
         """Stop the recurring task."""

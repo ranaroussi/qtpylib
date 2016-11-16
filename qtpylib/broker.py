@@ -24,6 +24,7 @@ import ezibpy
 import glob
 import hashlib
 import logging
+
 import numpy as np
 import os
 import pandas as pd
@@ -35,6 +36,7 @@ import time
 
 from datetime import datetime, timedelta
 
+from ezibpy.utils import order_to_dict, contract_to_dict
 from qtpylib import (
     tools, sms, futures
 )
@@ -43,6 +45,9 @@ from decimal import *
 getcontext().prec = 5
 
 from abc import ABCMeta
+
+tools.create_logger(__name__)
+
 
 class Broker():
     """Broker class initilizer (abstracted, parent class of ``Algo``)
@@ -66,6 +71,7 @@ class Broker():
         # -----------------------------------
         # detect running strategy
         self.strategy = str(self.__class__).split('.')[-1].split("'")[0]
+        self.log = logging.getLogger(__name__)
 
         # -----------------------------------
         # connect to IB
@@ -238,13 +244,13 @@ class Broker():
 
     # -------------------------------------------
     def _on_exit(self):
-        logging.info("Algo stopped...")
+        self.log.info("Algo stopped...")
 
         if self.ibConn is not None:
-            logging.info("Disconnecting...")
+            self.log.info("Disconnecting...")
             self.ibConn.disconnect()
 
-        logging.info("Disconnecting from MySQL...")
+        self.log.info("Disconnecting from MySQL...")
         try:
             self.dbcurr.close()
             self.dbconn.close()
@@ -264,7 +270,7 @@ class Broker():
 
         if caller == "handleConnectionClosed":
 
-            logging.info("Lost conncetion to Interactive Brokers...")
+            self.log.info("Lost conncetion to Interactive Brokers...")
 
             while not self.ibConn.connected:
                 self.ibConnect()
@@ -272,7 +278,7 @@ class Broker():
                 if not self.ibConn.connected:
                     print('*', end="", flush=True)
 
-            logging.info("Connection established...")
+            self.log.info("Connection established...")
 
         elif caller == "handleOrders":
 
@@ -550,6 +556,9 @@ class Broker():
         limit_price=0, expiry=0, orderId=0, target=0, initial_stop=0,
         trail_stop_at=0, trail_stop_by=0, stop_limit=False, **kwargs):
 
+
+        self.log.debug('CREATE ORDER: %s %4d %s %s', direction, quantity, symbol, dict(locals(), **kwargs))
+
         # force BUY/SELL (not LONG/SHORT)
         direction = direction.replace("LONG", "BUY").replace("SHORT", "SELL")
 
@@ -573,10 +582,7 @@ class Broker():
 
         # don't submit order if a pending one is waiting
         if symbol in self.orders.pending:
-            # print("--------------------------------------------------")
-            # print("pending order")
-            # print(self.orders.pending)
-            # print("--------------------------------------------------")
+            self.log.warning('Not submitting %s order, orders pending: %s', symbol, self.orders.pending)
             return
 
         # @TODO - decide on quantity here
@@ -596,6 +602,7 @@ class Broker():
             # simple order
             order    = self.ibConn.createOrder(order_quantity, limit_price,
                 fillorkill=fillorkill, iceberg=iceberg, tif=tif)
+            self.log.debug('PLACE ORDER: %s %s', contract_to_dict(contract), order_to_dict(order))
             orderId  = self.ibConn.placeOrder(contract, order)
         else:
             # bracket order
