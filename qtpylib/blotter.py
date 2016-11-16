@@ -139,27 +139,31 @@ class Blotter():
         self.cash_ticks = {} # cache
         self.rtvolume   = set() # has RTVOLUME?
 
-        # don't display connection errors on ctrl+c
-        self.quitting = False
+        # -------------------------------
+        # work default values
+        # -------------------------------
+        if zmqtopic is None:
+            zmqtopic = "_qtpy_"+str(self.name.lower())+"_"
 
-        # read cached args to detect duplicate blotters
-        self.duplicate_run   = False
-        self.cahced_args     = {}
-        self.args_cache_file = tempfile.gettempdir()+"/"+self.name+".ezq"
-        if os.path.exists(self.args_cache_file):
-            self.cahced_args = self._read_cached_args()
+        # if no path given for symbols' csv, use same dir
+        if symbols == "symbols.csv":
+            symbols = path['caller']+'/'+symbols
+        # -------------------------------
 
         # override args with any (non-default) command-line args
         self.args = {arg: val for arg, val in locals().items() if arg not in ('__class__', 'self', 'kwargs')}
         self.args.update(kwargs)
         self.args.update(self.load_cli_args())
 
-        # if no path given for symbols' csv, use same dir
-        if self.args["symbols"] == "symbols.csv":
-            self.args["symbols"] = path['caller']+'/'+self.args["symbols"]
+        # read cached args to detect duplicate blotters
+        self.duplicate_run   = False
+        self.cahced_args     = {}
+        self.args_cache_file = tempfile.gettempdir()+"/"+self.name+".qtpylib"
+        if os.path.exists(self.args_cache_file):
+            self.cahced_args = self._read_cached_args()
 
-        # zmq topic
-        self.zmqtopic = "_qtpy_"+str(self.name.lower())+"_"
+        # don't display connection errors on ctrl+c
+        self.quitting = False
 
         # do stuff on exit
         atexit.register(self._on_exit)
@@ -555,7 +559,7 @@ class Blotter():
 
     # -------------------------------------------
     def broadcast(self, data, kind):
-        string2send = "%s %s" % (self.zmqtopic, json.dumps(data))
+        string2send = "%s %s" % (self.args["zmqtopic"], json.dumps(data))
         # print(kind, string2send)
         try:
             self.socket.send_string(string2send)
@@ -898,8 +902,8 @@ class Blotter():
             while True:
                 message = sock.recv_string()
 
-                if (self.zmqtopic in message):
-                    message = message.split(self.zmqtopic)[1].strip()
+                if (self.args["zmqtopic"] in message):
+                    message = message.split(self.args["zmqtopic"])[1].strip()
                     data    = json.loads(message)
 
                     if data['symbol'] not in symbols:
