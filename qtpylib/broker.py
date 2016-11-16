@@ -68,9 +68,10 @@ class Broker():
 
     def __init__(self, instruments, ibclient=999, ibport=4001, ibserver="localhost", **kwargs):
 
-        # -----------------------------------
         # detect running strategy
         self.strategy = str(self.__class__).split('.')[-1].split("'")[0]
+
+        # initilize class logger
         self.log = logging.getLogger(__name__)
 
         # -----------------------------------
