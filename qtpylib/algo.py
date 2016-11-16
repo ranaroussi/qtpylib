@@ -216,8 +216,8 @@ class Algo(Broker):
 
         # only return non-default cmd line args
         # (meaning only those actually given)
-        cmd_args = vars(parser.parse_args())
-        args = {arg: val for arg, val in cmd_args.items() if val != parser.get_default(arg)}
+        cmd_args, unknown = parser.parse_known_args()
+        args = {arg: val for arg, val in vars(cmd_args).items() if val != parser.get_default(arg)}
         return args
 
     # ---------------------------------------
