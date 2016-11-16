@@ -213,14 +213,14 @@ class Broker():
 
         # find specific name
         if self.blotter_name is not None: # and self.blotter_name != 'auto-detect':
-            args_cache_file = tempfile.gettempdir()+"/"+self.blotter_name.lower()+".ezq"
+            args_cache_file = tempfile.gettempdir()+"/"+self.blotter_name.lower()+".qtpylib"
             if not os.path.exists(args_cache_file):
                 print("[ERROR] Cannot connect to running Blotter [%s]" % (self.blotter_name))
                 sys.exit(0)
 
         # no name provided - connect to last running
         else:
-            blotter_files = sorted(glob.glob(tempfile.gettempdir()+"/*.ezq"), key=os.path.getmtime)
+            blotter_files = sorted(glob.glob(tempfile.gettempdir()+"/*.qtpylib"), key=os.path.getmtime)
             if len(blotter_files) == 0:
                 print("[ERROR] Cannot connect to running Blotter [%s]" % (self.blotter_name))
                 sys.exit(0)
