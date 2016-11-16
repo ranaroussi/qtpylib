@@ -36,7 +36,6 @@ import time
 
 from datetime import datetime, timedelta
 
-from ezibpy.utils import order_to_dict, contract_to_dict
 from qtpylib import (
     tools, sms, futures
 )
@@ -46,8 +45,9 @@ getcontext().prec = 5
 
 from abc import ABCMeta
 
-tools.create_logger(__name__)
-
+# =============================================
+tools.createLogger(__name__)
+# =============================================
 
 class Broker():
     """Broker class initilizer (abstracted, parent class of ``Algo``)
@@ -600,10 +600,10 @@ class Broker():
         # create & submit order
         if bracket == False:
             # simple order
-            order    = self.ibConn.createOrder(order_quantity, limit_price,
+            order = self.ibConn.createOrder(order_quantity, limit_price,
                 fillorkill=fillorkill, iceberg=iceberg, tif=tif)
-            self.log.debug('PLACE ORDER: %s %s', contract_to_dict(contract), order_to_dict(order))
             orderId  = self.ibConn.placeOrder(contract, order)
+            self.log.debug('PLACE ORDER: %s %s', tools.contract_to_dict(contract), tools.order_to_dict(order))
         else:
             # bracket order
             order = self.ibConn.createBracketOrder(contract, order_quantity,
