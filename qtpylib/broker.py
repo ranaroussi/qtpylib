@@ -66,7 +66,7 @@ class Broker():
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, instruments, ibclient=999, ibport=4001, ibserver="localhost", **kwargs):
+    def __init__(self, instruments, ibclient=998, ibport=4001, ibserver="localhost", **kwargs):
 
         # detect running strategy
         self.strategy = str(self.__class__).split('.')[-1].split("'")[0]
