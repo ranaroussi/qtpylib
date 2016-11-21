@@ -156,11 +156,11 @@ def get_active_contract(symbol, url=None, n=1):
         rows = data.findAll('tr')
         text = '\n'.join(map(lambda row: ",".join(read_cells(row)), rows[2:]))
 
-        # # Convert to DataFrame
+        # Convert to DataFrame
         df = pd.read_csv(StringIO(text), names=['_', 'expiry', 'volume'], index_col=['_'], parse_dates=['_'])
         df.index = df.index.str.replace('JLY', 'JUL')
         for index, row in df.iterrows():
-            try: df.loc[index, 'expiry'] = parse_date(index).strftime('%Y%m')
+            try: df.loc[index, 'expiry'] = parse_date("01-"+index).strftime('%Y%m')
             except: pass
 
         # remove duplidates
