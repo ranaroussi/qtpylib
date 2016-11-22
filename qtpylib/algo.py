@@ -168,7 +168,7 @@ class Algo(Broker):
 
     # ---------------------------------------
     def add_stale_tick(self):
-        if len(self.ticks) > 0:
+        if len(self.ticks.index) > 0:
             tick = self.ticks[-1:].to_dict(orient='records')[0]
             tick['timestamp'] = datetime.utcnow()
 
@@ -607,7 +607,7 @@ class Algo(Broker):
                 periods = int("".join([s for s in self.resolution if s.isdigit()]))
                 self.ticks = self.ticks[-periods:]
 
-            self.tick_bar_count = len(bars)
+            self.tick_bar_count = len(bars.index)
 
             # record tick bars
             self.record(bars[-1:])
@@ -674,11 +674,11 @@ class Algo(Broker):
     def _add_signal_history(self, df, symbol):
         """ Initilize signal history """
         if symbol not in self.signals.keys() or len(self.signals[symbol]) == 0:
-            self.signals[symbol] = [nan]*len(df)
+            self.signals[symbol] = [nan]*len(df.index)
         else:
             self.signals[symbol].append(nan)
 
-        self.signals[symbol] = self.signals[symbol][-len(df):]
+        self.signals[symbol] = self.signals[symbol][-len(df.index):]
         df.loc[-len(self.signals[symbol]):, 'signal'] = self.signals[symbol]
 
         return df
