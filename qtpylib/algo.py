@@ -137,15 +137,15 @@ class Algo(Broker):
         self.record_output  = self.args["output"]
 
         # -----------------------------------
-        # load blotter settings && initilize Blotter
-        self.load_blotter_args(self.args["blotter"])
-        self.blotter = Blotter(**self.blotter_args)
-
-        # -----------------------------------
         # initiate broker/order manager
         super().__init__(instruments,
             **{arg: val for arg, val in self.args.items() if arg in (
                 'ibport', 'ibclient', 'ibhost')})
+
+        # -----------------------------------
+        # load blotter settings && initilize Blotter
+        self.load_blotter_args(self.args["blotter"])
+        self.blotter = Blotter(**self.blotter_args)
 
         # -----------------------------------
         # signal collector
