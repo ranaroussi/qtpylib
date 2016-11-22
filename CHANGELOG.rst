@@ -3,6 +3,11 @@ Release Notes
 
 *November 22, 2016*
 
+1.5.36a
+--------
+
+- Blotter saves expiration dates for Futures and Options based on ezIBpy's ``contractDetails()`` data
+
 1.5.35a
 --------
 

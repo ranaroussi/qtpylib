@@ -435,7 +435,7 @@ following data information:
 
 ``(symbol, sec_type, exchange, currency [, expiry [, strike, opt_type]])``
 
-Where ``expiry`` must be provided for Futures (YYYYMM) and Options (YYYYMMDD)
+Where ``expiry`` must be provided for Futures (YYYYMM or YYYYMMDD) and Options (YYYYMMDD)
 whereas ``strike`` and ``opt_type`` must be a provided for Options (PUT/CALL).
 
 
