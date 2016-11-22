@@ -7,6 +7,7 @@ Release Notes
 --------
 
 - Misc bugfixes and code improvements
+- Requires ezIBpy >= 1.12.38
 
 
 *November 21, 2016*
@@ -24,7 +25,7 @@ Release Notes
 - Fixed command line agrument parsing issues
 - All params in ``Algo()`` and ``Blotter()`` are now explicit and are overridden in runtime using command line arguments
 - Make sure expiry values aren't decimals
-- Require ezIBpy >= 1.12.36
+- Requires ezIBpy >= 1.12.36
 - Renamed ``force_resolution`` to ``force_res`` in ``Algo()``
 - Using unified logging from latest ``ezIBpy`` (use ``self.log.LEVEL(...)`` instead of ``loggig.LEVEL(...)`` in your strategies)
 - Misc bugfixes and code improvements
@@ -43,7 +44,7 @@ Release Notes
 1.5.31a
 --------
 
-- Require ezIBpy >= 1.12.32
+- Requires ezIBpy >= 1.12.32
 - Added support for ``tif`` (time in force) parameter in order creation. Options are: ``DAY`` (default), ``GTC``, ``IOC`` and ``GTD``.
 
 
@@ -52,7 +53,7 @@ Release Notes
 1.5.30a
 --------
 
-- Require ezIBpy >= 1.12.31
+- Requires ezIBpy >= 1.12.31
 - Added ``instrument.get_contract_details()`` and ``instrument.tickerId()`` methods (see API reference section in docs for more info)
 - ``futures.get_contract_ticksize()`` marked as deprecated (``instrument.get_ticksize()`` or ``instrument.ticksize`` instead)
 - Ignoring ``ticksize`` parameter in ``order()`` (ezIBpy's auto detects min. tick size based on contract spec.)
@@ -100,7 +101,7 @@ Release Notes
 1.5.23a
 --------
 
-- Require ezIBpy >= 1.12.29
+- Requires ezIBpy >= 1.12.29
 - ``Blotter`` uses refactored logging in ezIBPy 1.12.29
 
 
