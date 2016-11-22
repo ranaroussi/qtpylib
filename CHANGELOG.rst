@@ -1,13 +1,20 @@
 Release Notes
 =============
 
+*November 22, 2016*
+
+1.5.35a
+--------
+
+- Misc bugfixes and code improvements
+
+
 *November 21, 2016*
 
 1.5.34a
 --------
 
 - Fix parsing of contract expiration
-
 
 *November 16, 2016*
 
