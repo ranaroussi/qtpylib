@@ -57,7 +57,7 @@ class Instrument(str):
         if lookback is not None:
             bars = bars[-lookback:]
 
-        if bars['asset_class'].values[-1] not in ("OPT", "FOP"):
+        if len(bars.index) > 0 and bars['asset_class'].values[-1] not in ("OPT", "FOP"):
             bars.drop(['opt_underlying', 'opt_dividend', 'opt_volume', 'opt_iv', 'opt_oi',
                 'opt_delta', 'opt_gamma', 'opt_vega', 'opt_theta'], inplace=True, axis=1)
 
@@ -95,7 +95,7 @@ class Instrument(str):
         if lookback is not None:
             ticks = ticks[-lookback:]
 
-        if ticks['asset_class'].values[-1] not in ("OPT", "FOP"):
+        if len(ticks.index) > 0 and ticks['asset_class'].values[-1] not in ("OPT", "FOP"):
             ticks.drop(['opt_underlying', 'opt_dividend', 'opt_volume', 'opt_iv', 'opt_oi',
                 'opt_delta', 'opt_gamma', 'opt_vega', 'opt_theta'], inplace=True, axis=1)
 
