@@ -3,6 +3,12 @@ Release Notes
 
 *November 22, 2016*
 
+1.5.37a
+--------
+
+- Fixed ``Broker`` logging initilizer
+- Requires ezIBpy >= 1.12.39 (solves misc issues with expired contracts)
+
 1.5.36a
 --------
 
