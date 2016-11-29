@@ -813,16 +813,16 @@ class Broker():
                 if "symbol" in portfolio:
                     return portfolio
 
-                return {
-                    "symbol":        symbol,
-                    "position":      0.0,
-                    "marketPrice":   0.0,
-                    "marketValue":   0.0,
-                    "averageCost":   0.0,
-                    "unrealizedPNL": 0.0,
-                    "realizedPNL":   0.0,
-                    "account":       None
-                }
+            return {
+                "symbol":        symbol,
+                "position":      0.0,
+                "marketPrice":   0.0,
+                "marketValue":   0.0,
+                "averageCost":   0.0,
+                "unrealizedPNL": 0.0,
+                "realizedPNL":   0.0,
+                "account":       None
+            }
 
         return self.ibConn.portfolio
 
