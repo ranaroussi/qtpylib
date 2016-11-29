@@ -1,7 +1,7 @@
 beautifulsoup4>=4.3.2
 python-dateutil>=2.5.3
 ibpy2>=0.8.0
-ezibpy>=1.12.39
+ezibpy>=1.12.41
 flask>=0.11.1
 nexmo>=1.2.0
 numpy>=1.11.1
