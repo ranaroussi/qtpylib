@@ -27,12 +27,12 @@ import os
 import pandas as pd
 import pickle
 import pymysql
-import re
 import subprocess
 import sys
 import tempfile
 import time
 import zmq
+import glob
 
 from numpy import (
     isnan as npisnan,
@@ -1177,7 +1177,32 @@ class Blotter():
 
         return data
 
+# -------------------------------------------
+def load_blotter_args(blotter_name=None, logger=None):
+    """ load running blotter's settings (used by clients) """
+    if logger is None:
+        logger= tools.createLogger(__name__, logging.WARNING)
 
+    # find specific name
+    if blotter_name is not None: # and blotter_name != 'auto-detect':
+        args_cache_file = tempfile.gettempdir()+"/"+blotter_name.lower()+".qtpylib"
+        if not os.path.exists(args_cache_file):
+            logger.critical("Cannot connect to running Blotter [%s]" % (blotter_name))
+            sys.exit(0)
+
+    # no name provided - connect to last running
+    else:
+        blotter_files = sorted(glob.glob(tempfile.gettempdir()+"/*.qtpylib"), key=os.path.getmtime)
+        if len(blotter_files) == 0:
+            logger.critical("Cannot connect to running Blotter [%s]" % (blotter_name))
+            sys.exit(0)
+
+        args_cache_file = blotter_files[-1]
+
+    args = pickle.load( open(args_cache_file, "rb" ) )
+    args['as_client'] = True
+
+    return args
 
 # -------------------------------------------
 if __name__ == "__main__":
