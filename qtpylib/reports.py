@@ -13,31 +13,14 @@ import hashlib
 import logging
 import numpy as np
 import pandas as pd
-import tempfile
-import pickle
-import os
-import sys
 import pymysql
-import glob
 
 from qtpylib import path, tools
-
-from qtpylib.blotter import Blotter
-
-log = logging.getLogger('werkzeug')
-log.setLevel(logging.WARNING)
+from qtpylib.blotter import (
+    Blotter, load_blotter_args
+)
 
 # =============================================
-# parse args
-parser = argparse.ArgumentParser(description='QTPy Algo Framework')
-parser.add_argument('--port', help='HTTP port to use (default: 5000)', required=False)
-parser.add_argument('--host', help='Host to bind the http process to (defaults 0.0.0.0)', required=False)
-parser.add_argument('--blotter', help='Use this Blotter\'s MySQL server settings', required=False)
-parser.add_argument('--nopass', help='Skip password for web app', action='store_true', required=False)
-args, unknown = parser.parse_known_args()
-# =============================================
-#
-#
 class datetimeJSONEncoder(JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime.datetime) | \
@@ -49,7 +32,6 @@ class datetimeJSONEncoder(JSONEncoder):
 
 app = Flask(__name__, template_folder=path['library']+"/_webapp")
 app.json_encoder = datetimeJSONEncoder
-
 
 @app.template_filter('strftime')
 def _jinja2_strftime(date, fmt=None):
@@ -87,54 +69,60 @@ class Reports():
 
         # initilize class logger
         self.log = logging.getLogger(__name__)
+
+        # override args with any (non-default) command-line args
+        self.args = {arg: val for arg, val in locals().items() if arg not in ('__class__', 'self', 'kwargs')}
+        self.args.update(kwargs)
+        self.args.update(self.load_cli_args())
+
         self.dbconn = None
         self.dbcurr = None
 
-        self.host  = args.host if args.host is not None else host
-        self.port  = args.port if args.port is not None else port
+        self.host  = self.args['host'] if self.args['host'] is not None else host
+        self.port  = self.args['port'] if self.args['port'] is not None else port
 
-        self.blotter_name = args.blotter if args.blotter is not None else blotter
-        self.load_blotter_args(self.blotter_name)
-
+        # blotter / db connection
+        self.blotter_name = self.args['blotter'] if self.args['blotter'] is not None else blotter
+        self.blotter_args = load_blotter_args(self.blotter_name)
         self.blotter = Blotter(**self.blotter_args)
 
+        # connect to mysql using blotter's settings
+        self.dbconn = pymysql.connect(
+            host   = str(self.blotter_args['dbhost']),
+            port   = int(self.blotter_args['dbport']),
+            user   = str(self.blotter_args['dbuser']),
+            passwd = str(self.blotter_args['dbpass']),
+            db     = str(self.blotter_args['dbname']),
+            autocommit = True
+        )
+        self.dbcurr = self.dbconn.cursor()
+
     # ---------------------------------------
-    def load_blotter_args(self, name=None):
-        if name is not None:
-            self.blotter_name = name
+    def load_cli_args(self):
+        """
+        Parse command line arguments and return only the non-default ones
 
-        # find specific name
-        if self.blotter_name is not None: # and self.blotter_name != 'auto-detect':
-            args_cache_file = tempfile.gettempdir()+"/"+self.blotter_name.lower()+".ezq"
-            if not os.path.exists(args_cache_file):
-                print("[ERROR] Cannot connect to running Blotter [%s]" % (self.blotter_name))
-                sys.exit(0)
+        :Retruns: dict
+            a dict of any non-default args passed on the command-line.
+        """
+        parser = argparse.ArgumentParser(description='QTPyLib Reporting',
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-        # no name provided - connect to last running
-        else:
-            blotter_files = sorted(glob.glob(tempfile.gettempdir()+"/*.ezq"), key=os.path.getmtime)
-            if len(blotter_files) == 0:
-                print("[ERROR] Cannot connect to running Blotter [%s]" % (self.blotter_name))
-                sys.exit(0)
+        parser.add_argument('--port', default=self.args["port"],
+            help='HTTP port to use', type=int)
+        parser.add_argument('--host', default=self.args["host"],
+            help='Host to bind the http process to')
+        parser.add_argument('--blotter',
+            help='Use this Blotter\'s MySQL server settings')
+        parser.add_argument('--nopass',
+            help='Skip password for web app (flag)', action='store_true')
 
-            args_cache_file = blotter_files[-1]
+        # only return non-default cmd line args
+        # (meaning only those actually given)
+        cmd_args, unknown = parser.parse_known_args()
+        args = {arg: val for arg, val in vars(cmd_args).items() if val != parser.get_default(arg)}
+        return args
 
-        args = pickle.load( open(args_cache_file, "rb" ) )
-        args['as_client'] = True
-
-        if args:
-            # connect to mysql
-            self.dbconn = pymysql.connect(
-                host   = str(args['dbhost']),
-                port   = int(args['dbport']),
-                user   = str(args['dbuser']),
-                passwd = str(args['dbpass']),
-                db     = str(args['dbname']),
-                autocommit = True
-            )
-            self.dbcurr = self.dbconn.cursor()
-
-        self.blotter_args = args
 
     # ---------------------------------------
     def send_static(self, path):
@@ -285,7 +273,7 @@ class Reports():
 
     # ---------------------------------------
     def index(self, start=None, end=None):
-        if not args.nopass:
+        if not self.args['nopass']:
             if self._password != "" and self._password != request.cookies.get('password'):
                 return render_template('login.html')
 
@@ -329,11 +317,11 @@ class Reports():
         app.add_url_rule('/static/<path>', 'send_static', view_func=self.send_static)
 
         # let user know what the temp password is
-        if not args.nopass and self._password != "":
+        if not self.args['nopass'] and self._password != "":
             print(" * Web app password is:", self._password)
 
         # notice
-        print(" * Running on http://"+ str(self.host) +":"+str(self.port)+"/ (Press CTRL+C to quit)")
+        # print(" * Running on http://"+ str(self.host) +":"+str(self.port)+"/ (Press CTRL+C to quit)")
 
         # -----------------------------------
         # run flask app
