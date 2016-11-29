@@ -17,7 +17,7 @@ mechanism using ZeroMQ - a blazing fast Message Queue.
     QTPyLib was designed with a **"One Blotter To Rule Them All"**
     design in mind. All your algorithms can listen to a single
     Blotter running in the background without a problem and without
-    consuming any unnessecery system resources.
+    consuming any unnecessary system resources.
     Simply put: **do not run multiple Blotters unless you have
     a very specific reason to do so.**
 

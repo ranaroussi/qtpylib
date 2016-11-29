@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+*November 29, 2016*
+
+1.5.38a
+--------
+- ``load_blotter_args()`` moved to ``Broker`` class file to be used by clients
+- ``Broker.get_portfolio()`` now returns empty portfolio object as default when symbol is specified
+- ``Reports`` uses unified logger and arg parsing
+- Misc bugfixes and code improvements
+- Requires ezIBpy >= 1.12.41
+
 *November 22, 2016*
 
 1.5.37a
