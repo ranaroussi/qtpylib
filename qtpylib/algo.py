@@ -28,7 +28,6 @@ import logging
 
 from datetime import datetime
 
-from qtpylib.blotter import Blotter
 from qtpylib.broker import Broker
 from qtpylib.instrument import Instrument
 from qtpylib import (
@@ -142,10 +141,10 @@ class Algo(Broker):
             **{arg: val for arg, val in self.args.items() if arg in (
                 'ibport', 'ibclient', 'ibhost')})
 
-        # -----------------------------------
-        # load blotter settings && initilize Blotter
-        self.load_blotter_args(self.args["blotter"])
-        self.blotter = Blotter(**self.blotter_args)
+        # # -----------------------------------
+        # # load blotter settings && initilize Blotter
+        # self.load_blotter_args(self.args["blotter"])
+        # self.blotter = Blotter(**self.blotter_args)
 
         # -----------------------------------
         # signal collector
