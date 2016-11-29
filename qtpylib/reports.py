@@ -79,7 +79,7 @@ class Reports():
     """
 
     # ---------------------------------------
-    def __init__(self, blotter=None, port=5000, host="0.0.0.0", password=None):
+    def __init__(self, blotter=None, port=5000, host="0.0.0.0", password=None, nopass=False, **kwargs):
         # return
         self._password = password if password is not None else hashlib.sha1(
             str(datetime.datetime.now()
