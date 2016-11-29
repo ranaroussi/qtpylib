@@ -59,6 +59,9 @@ def _jinja2_strftime(date, fmt=None):
     format='%Y-%m-%d %H:%M:%S%z'
     return native.strftime(format)
 
+# =============================================
+tools.createLogger(__name__)
+# =============================================
 
 class Reports():
     """Reports class initilizer
@@ -82,6 +85,8 @@ class Reports():
             str(datetime.datetime.now()
         ).encode()).hexdigest()[:6]
 
+        # initilize class logger
+        self.log = logging.getLogger(__name__)
         self.dbconn = None
         self.dbcurr = None
 
