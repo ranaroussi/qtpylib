@@ -39,6 +39,9 @@ from datetime import datetime, timedelta
 from qtpylib import (
     tools, sms, futures
 )
+from qtpylib.blotter import (
+    Blotter, load_blotter_args
+)
 
 from decimal import *
 getcontext().prec = 5
@@ -198,50 +201,24 @@ class Broker():
 
         # -----------------------------------
         # load blotter settings
-        self.blotter_args = {}
-        self.load_blotter_args(self.blotter_name)
+        self.blotter_args = load_blotter_args(self.blotter_name)
+        self.blotter = Blotter(**self.blotter_args)
+
+        # connect to mysql using blotter's settings
+        self.dbconn = pymysql.connect(
+            host   = str(self.blotter_args['dbhost']),
+            port   = int(self.blotter_args['dbport']),
+            user   = str(self.blotter_args['dbuser']),
+            passwd = str(self.blotter_args['dbpass']),
+            db     = str(self.blotter_args['dbname']),
+            autocommit = True
+        )
+        self.dbcurr = self.dbconn.cursor()
 
         # -----------------------------------
         # do stuff on exit
         atexit.register(self._on_exit)
 
-
-    # -------------------------------------------
-    def load_blotter_args(self, name=None):
-        if name is not None:
-            self.blotter_name = name
-
-        # find specific name
-        if self.blotter_name is not None: # and self.blotter_name != 'auto-detect':
-            args_cache_file = tempfile.gettempdir()+"/"+self.blotter_name.lower()+".qtpylib"
-            if not os.path.exists(args_cache_file):
-                self.log_broker.critical("Cannot connect to running Blotter [%s]" % (self.blotter_name))
-                sys.exit(0)
-
-        # no name provided - connect to last running
-        else:
-            blotter_files = sorted(glob.glob(tempfile.gettempdir()+"/*.qtpylib"), key=os.path.getmtime)
-            if len(blotter_files) == 0:
-                self.log_broker.critical("Cannot connect to running Blotter [%s]" % (self.blotter_name))
-                sys.exit(0)
-
-            args_cache_file = blotter_files[-1]
-
-        args = pickle.load( open(args_cache_file, "rb" ) )
-        args['as_client'] = True
-
-        if args:
-            # connect to mysql
-            self.dbconn = pymysql.connect(
-                host   = str(args['dbhost']),
-                port   = int(args['dbport']),
-                user   = str(args['dbuser']),
-                passwd = str(args['dbpass']),
-                db     = str(args['dbname'])
-            )
-            self.dbcurr = self.dbconn.cursor()
-
-        self.blotter_args = args
 
     # -------------------------------------------
     def _on_exit(self):
