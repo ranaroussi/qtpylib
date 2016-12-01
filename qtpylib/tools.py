@@ -474,7 +474,6 @@ class DataStore():
         if len(kwargs) > 0:
             data.update(dict(kwargs))
 
-
         # set the datetime
         data['datetime'] = timestamp
 
@@ -505,17 +504,32 @@ class DataStore():
             combined.append(symdata)
 
         self.recorded = pd.concat(combined)
+
+        # cleanup: remove non-option data if not working with options 
+        opt_cols = df.columns[df.columns.str.startswith('opt_')].tolist()
+        if len(opt_cols) == len(df[ opt_cols ].isnull().all()):
+            self.recorded.drop(opt_cols, axis=1, inplace=True)
+
+        # cleanup: positions
         if "position" in self.recorded.columns:
             self.recorded['position'].ffill(inplace=True)
         else:
-            self.recorded.loc[:, 'position'] = np.nan
+            self.recorded.loc[:, 'position'] = 0
 
+        self.recorded['position'] = self.recorded['position'].astype(int)
+
+        # cleanup: symbol names
+        data = self.recorded.copy()
+        for asset_class in data['asset_class'].unique().tolist():
+            data['symbol'] = data['symbol'].str.replace("_"+str(asset_class), "")
+
+        # save
         if ".csv" in self.output_file:
-            self.recorded.to_csv(self.output_file)
+            data.to_csv(self.output_file)
         elif ".h5" in self.output_file:
-            self.recorded.to_hdf(self.output_file, 0)
+            data.to_hdf(self.output_file, 0)
         elif (".pickle" in self.output_file) | (".pkl" in self.output_file):
-            self.recorded.to_pickle(self.output_file)
+            data.to_pickle(self.output_file)
 
         chmod(self.output_file)
 
