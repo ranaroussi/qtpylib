@@ -274,7 +274,6 @@ Algo Parameters
 - ``ibport`` IB TWS/GW Port to use (default: ``4001``)
 - ``ibclient`` IB TWS/GW Client ID (default: ``998``)
 - ``ibserver`` IB TWS/GW Server hostname (default: ``localhost``)
-- ``force_res`` Force new bar on every ``resolution`` even if no new ticks received (default: ``False``)
 
 **Example:**
 
@@ -312,7 +311,6 @@ You can override any of the above paramaters using run-time using command line a
 - ``--output`` Path to save the recorded data (default: ``None``)
 - ``--blotter`` Log trades to MySQL server used by this Blotter (default: ``auto-detect``)
 - ``--continuous`` Construct continuous Futures contracts (flag, default: ``True``)
-- ``--force_res`` Force new bar on every ``resolution`` (flag, default: ``False``)
 
 **Example:**
 

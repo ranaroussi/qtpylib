@@ -79,8 +79,6 @@ class Algo(Broker):
             IB TWS/GW Client ID (default: 998)
         ibserver: str
             IB TWS/GW Server hostname (default: localhost)
-        force_res : bool
-            Force new bar on every ``resolution`` even if no new ticks received (default is False)
     """
 
     __metaclass__ = ABCMeta
@@ -88,7 +86,7 @@ class Algo(Broker):
     def __init__(self, instruments, resolution,
         tick_window=1, bar_window=100, timezone="UTC", preload=None,
         continuous=True, blotter=None, sms=[], log=None, backtest=False,
-        start=None, end=None, output=None, force_res=False,
+        start=None, end=None, output=None,
         ibclient=998, ibport=4001, ibserver="localhost", **kwargs):
 
         # detect algo name
@@ -159,8 +157,8 @@ class Algo(Broker):
             self.datastore = tools.DataStore(self.args["output"])
 
         # ---------------------------------------
-        # add stale ticks to allow for interval-based bars
-        if force_res and self.resolution[-1] not in ("K", "V"):
+        # add stale ticks for more accurate time--based bars
+        if self.resolution[-1] not in ("K", "V"):
             self.bar_timer = tools.RecurringTask(
                 self.add_stale_tick, interval_sec=1, init_sec=1, daemon=True)
 
@@ -214,8 +212,6 @@ class Algo(Broker):
             help='Log trades to the MySQL server used by this Blotter')
         parser.add_argument('--continuous', default=self.args["continuous"],
             help='Construct continuous Futures contracts (flag)', action='store_true')
-        parser.add_argument('--force_res', default=self.args["force_res"],
-            help='Force new bar on every resolution (flag)', action='store_true')
 
         # only return non-default cmd line args
         # (meaning only those actually given)
