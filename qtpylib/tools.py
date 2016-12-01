@@ -489,11 +489,22 @@ class DataStore():
             self.recorded.merge(row)
             self.recorded = pd.concat([self.recorded, row])
 
-        # merge rows
-        self.recorded = self.recorded.groupby(self.recorded.index).sum()
-        self.recorded.index.rename('datetime', inplace=True)
+        # merge rows (play nice with multi-symbol portfolios)
+        meta_data = self.recorded.groupby(["symbol"])[['symbol', 'symbol_group', 'asset_class']].last()
+        combined = []
 
-        # forward fill positions
+        for sym in meta_data.index.values:
+            df = self.recorded[self.recorded['symbol']==sym].copy()
+            symdata = df.groupby(df.index).sum()
+            symdata.index.rename('datetime', inplace=True)
+
+            symdata['symbol'] = sym
+            symdata['symbol_group'] = df['symbol_group'].values[0]
+            symdata['asset_class'] = df['asset_class'].values[0]
+
+            combined.append(symdata)
+
+        self.recorded = pd.concat(combined)
         if "position" in self.recorded.columns:
             self.recorded['position'].ffill(inplace=True)
         else:
