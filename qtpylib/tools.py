@@ -323,7 +323,6 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False):
                     if len(symdata) > original_length:
                         # volume is 0 on rows created using resample
                         symdata['volume'].fillna(0, inplace=True)
-                        symdata['volume'] = symdata['volume'].astype(int)
                         symdata.ffill(inplace=True)
 
                         # no fill / return original index
@@ -353,6 +352,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False):
                 combined.append(symdata)
 
             data = pd.concat(combined)
+            data['volume'] = data['volume'].astype(int)
 
     # figure out timezone
     if tz is None:
