@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+*December 1, 2016*
+
+1.5.39a
+--------
+- Portfolio playing nice with multi-symbol portfolios
+- Cleanup portfolio data before saving
+- Implemented shorter delay and more elegant code in ``Blotter.drip()`` (used by the backtester)
+- ``force_res`` is now always on for time-based bars
+- Renamed ``Blotter.listen()`` to ``Blotter.stream()``
+- Misc bugfixes and code improvements
+
 *November 29, 2016*
 
 1.5.38a
