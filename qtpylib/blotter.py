@@ -991,9 +991,8 @@ class Blotter():
         # stream
         try:
             while True:
-                for index, _ in data.iterrows():
-                    row = data[data.index==index]
-                    handler(row)
+                for i in range(len(data)):
+                    handler(data.iloc[i:i + 1])
                     time.sleep(.25)
 
         except (KeyboardInterrupt, SystemExit):
