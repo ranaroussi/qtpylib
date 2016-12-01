@@ -990,10 +990,11 @@ class Blotter():
 
         # stream
         try:
-            while True:
-                for i in range(len(data)):
-                    handler(data.iloc[i:i + 1])
-                    time.sleep(.25)
+            for i in range(len(data)):
+                handler(data.iloc[i:i + 1])
+                time.sleep(.1)
+
+            print("\n\n>>> Backtesting Completed.")
 
         except (KeyboardInterrupt, SystemExit):
             print("\n\n>>> Interrupted with Ctrl-c...")
