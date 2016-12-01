@@ -907,7 +907,7 @@ class Blotter():
         return data
 
     # -------------------------------------------
-    def listen(self, symbols, tick_handler=None, bar_handler=None, \
+    def stream(self, symbols, tick_handler=None, bar_handler=None, \
         quote_handler=None, book_handler=None, tz="UTC"):
         # load runtime/default data
         if isinstance(symbols, str):

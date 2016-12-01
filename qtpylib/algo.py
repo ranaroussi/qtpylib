@@ -287,7 +287,7 @@ class Algo(Broker):
             self.on_start()
 
             # listen for RT data
-            self.blotter.listen(
+            self.blotter.stream(
                 symbols       = self.symbols,
                 tz            = self.timezone,
                 quote_handler = self._quote_handler,
