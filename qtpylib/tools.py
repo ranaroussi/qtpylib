@@ -496,6 +496,8 @@ class DataStore():
         # forward fill positions
         if "position" in self.recorded.columns:
             self.recorded['position'].ffill(inplace=True)
+        else:
+            self.recorded.loc[:, 'position'] = np.nan
 
         if ".csv" in self.output_file:
             self.recorded.to_csv(self.output_file)
