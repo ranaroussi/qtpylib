@@ -115,7 +115,9 @@ class Blotter():
         # initilize class logger
         self.log_blotter = logging.getLogger(__name__)
 
-        """ returns: running true/false """
+        # do not act on first tick (timezone is incorrect)
+        self.first_tick = True
+
         self._bars = pd.DataFrame(columns=['open','high','low','close','volume'])
         self._bars.index.names = ['datetime']
         self._bars.index = pd.to_datetime(self._bars.index, utc=True)
@@ -507,8 +509,12 @@ class Blotter():
         timestamp = datetime.strptime(tick['timestamp'],
             ibDataTypes["DATE_TIME_FORMAT_LONG_MILLISECS"])
 
-        try:
-            timestamp = parse_date(timestamp)
+        # do not act on first tick (timezone is incorrect)
+        if self.first_tick:
+            self.first_tick = False
+            return
+
+        try: timestamp = parse_date(timestamp)
         except: pass
 
         # placeholders
