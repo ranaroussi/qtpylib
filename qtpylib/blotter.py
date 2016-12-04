@@ -895,6 +895,9 @@ class Blotter():
         data.index = pd.to_datetime(data.index, utc=True)
         data['expiry'] = pd.to_datetime(data['expiry'], utc=True)
 
+        # remove _STK from symbol to match ezIBpy's formatting
+        data['symbol'] = data['symbol'].str.replace("_STK", "")
+
         if continuous and "K" not in resolution and "S" not in resolution:
             # construct continuous contracts for futures
             all_dfs = [ data[data['asset_class']!='FUT'] ]
