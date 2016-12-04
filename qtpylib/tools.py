@@ -62,7 +62,6 @@ def get_timezone():
         offsetHour = time.timezone / 3600
     return 'Etc/GMT%+d' % offsetHour
 
-
 def datetime_to_timezone(date, tz="UTC"):
     if not date.tzinfo:
         date = date.replace(tzinfo=timezone(get_timezone()))
@@ -551,6 +550,10 @@ class RecurringTask(threading.Thread):
                 Call func every this many seconds
             init_sec : int
                 Wait this many seconds initially before the first call
+            *args : mixed
+                parameters sent to parent Thread class
+            **kwargs : mixed
+                parameters sent to parent Thread class
         """
 
         # threading.Thread.__init__(self, *args, **kwargs) # For some reason super() doesn't work
