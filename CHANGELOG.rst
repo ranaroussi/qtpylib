@@ -1,7 +1,7 @@
 Release Notes
 =============
 
-*December 1, 2016*
+*December 4, 2016*
 
 1.5.40a
 --------
