@@ -839,6 +839,68 @@ class Blotter():
     # -------------------------------------------
     # CLIENT / STATIC
     # -------------------------------------------
+    def _fix_history_sequence(self, df, table):
+        """ fix out-of-sequence ticks/bars """
+
+        # remove "Unnamed: x" columns
+        cols = df.columns[df.columns.str.startswith('Unnamed:')].tolist()
+        df.drop(cols, axis=1, inplace=True)
+        
+        # remove future dates
+        df['datetime'] = pd.to_datetime(df['datetime'], utc=True)
+        blacklist = df[df['datetime'] > datetime.utcnow()]
+        df = df.loc[set(df.index) - set(blacklist) ].tail()
+
+        # loop through data, symbol by symbol
+        dfs = []
+        bad_ids = [blacklist['id'].values.tolist()]
+
+        for symbol_id in list(df['symbol_id'].unique()):
+
+            data = df[df['symbol_id'] == symbol_id].copy()
+            
+            # sort by id
+            data.sort_values('id', axis=0, ascending=True, inplace=False)
+
+            # add index
+            data.loc[:, "ix"] = data.index
+
+            # reset index
+            data.reset_index(inplace=True)
+
+            # find out of sequence ticks/bars
+            malformed = data.shift(1)[ (data['id'] > data['id'].shift(1)) & (data['datetime'] < data['datetime'].shift(1)) ]
+
+            # cleanup rows
+            if len(malformed.index) == 0:
+                # if all rows are in sequence, just remove last row
+                dfs.append(data)
+            else:
+                # remove out of sequence rows + last row from data
+                index = [x for x in data.index.values if x not in malformed['ix'].values]
+                dfs.append( data.loc[index] )
+                
+                # add to bad id list (to remove from db)
+                bad_ids.append(list(malformed['id'].values))
+
+        # combine all lists
+        data = pd.concat(dfs)
+
+        # flatten bad ids
+        bad_ids = sum(bad_ids, [])
+        
+        # remove bad ids from db
+        if len(bad_ids) > 0:
+            bad_ids = list(map(str, map(int, bad_ids)))
+            self.dbcurr.execute("DELETE FROM greeks WHERE %s IN (%s)" % (table.lower()[:-1]+"_id", ",".join(bad_ids)))
+            self.dbcurr.execute("DELETE FROM "+table.lower()+" WHERE id IN (%s)" % (",".join(bad_ids)))
+            try: self.dbconn.commit()
+            except: self.dbconn.rollback()
+                
+        # return
+        return data.drop(['id', 'ix', 'index'], axis=1)
+
+
     def history(self, symbols, start, end=None, resolution="1T", tz="UTC", continuous=True):
         # load runtime/default data
         if isinstance(symbols, str):
@@ -891,6 +953,11 @@ class Blotter():
 
         # get data using pandas
         data = pd.read_sql(query, self.dbconn) #.dropna()
+
+        # clearup records that are out of sequence
+        data = self._fix_history_sequence(data, table)
+
+        # setup dataframe
         data.set_index('datetime', inplace=True)
         data.index = pd.to_datetime(data.index, utc=True)
         data['expiry'] = pd.to_datetime(data['expiry'], utc=True)
