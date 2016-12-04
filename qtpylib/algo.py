@@ -118,7 +118,7 @@ class Algo(Broker):
         if "V" in resolution:
             self.tick_window = 1000
         self.bar_window     = bar_window if bar_window > 0 else 100
-        self.resolution     = resolution.replace("MIN", "T")
+        self.resolution     = resolution.upper().replace("MIN", "T")
         self.timezone       = timezone
         self.preload        = preload
         self.continuous     = continuous
