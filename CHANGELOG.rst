@@ -3,6 +3,15 @@ Release Notes
 
 *December 1, 2016*
 
+1.5.40a
+--------
+- Fixed bug that caused ``Blotter`` to store data in MySQL before timezone was set (possibly resulting in out-of-sequence time-series for historical data) by ignoring the captured first tick.
+- ``Blotter`` now removes out-of-sequence ticks/bars from historical data (should fix ``issue #31``)
+- Misc bugfixes and code improvements/cleanup
+
+
+*December 1, 2016*
+
 1.5.39a
 --------
 - Portfolio playing nice with multi-symbol portfolios
