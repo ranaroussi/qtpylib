@@ -1089,7 +1089,7 @@ class Blotter():
 
         instruments = pd.DataFrame(instruments)
         instruments.columns = db.columns
-        instruments['expiry'] = instruments['expiry'].astype(str).str.split(".")[0]
+        instruments['expiry'] = instruments['expiry'].astype(int).astype(str)
 
         db = db.append(instruments)
         db['expiry'] = db['expiry'].astype(str)
