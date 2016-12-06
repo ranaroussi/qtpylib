@@ -792,6 +792,7 @@ class Blotter():
                         ( (df['expiry']>=1000000) & (df['expiry']>=int(datetime.now().strftime('%Y%m%d'))) ) |
                         npisnan(df['expiry'])
                     ]
+                    df['expiry'] = df['expiry'].astype(int)
                     df.fillna("", inplace=True)
                     df.to_csv(self.args['symbols'], header=True, index=False)
                     tools.chmod(self.args['symbols'])
@@ -1089,10 +1090,9 @@ class Blotter():
 
         instruments = pd.DataFrame(instruments)
         instruments.columns = db.columns
-        instruments['expiry'] = instruments['expiry'].astype(int).astype(str)
 
         db = db.append(instruments)
-        db['expiry'] = db['expiry'].astype(str)
+        db['expiry'] = db['expiry'].astype(int)
         db = db.drop_duplicates(keep="first")
 
         db.to_csv(self.args['symbols'], header=True, index=False)
