@@ -638,7 +638,7 @@ class Blotter():
 
                     sql = """INSERT IGNORE INTO `symbols`
                         (`symbol`, `symbol_group`, `asset_class`, `expiry`) VALUES (%s, %s, %s, %s)
-                        ON DUPLICATE KEY UPDATE `symbol`=`symbol`, `expiry`=`%s`
+                        ON DUPLICATE KEY UPDATE `symbol`=`symbol`, `expiry`=%s
                     """
 
                     self.dbcurr.execute(sql, (symbol, data["symbol_group"], data["asset_class"], expiry, expiry))
