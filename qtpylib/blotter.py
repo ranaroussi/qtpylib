@@ -638,7 +638,7 @@ class Blotter():
 
                     sql = """INSERT IGNORE INTO `symbols`
                         (`symbol`, `symbol_group`, `asset_class`, `expiry`) VALUES (%s, %s, %s, %s)
-                        ON DUPLICATE KEY UPDATE `symbol`=`symbol`, `expiry`=`%s`
+                        ON DUPLICATE KEY UPDATE `symbol`=`symbol`, `expiry`=%s
                     """
 
                     self.dbcurr.execute(sql, (symbol, data["symbol_group"], data["asset_class"], expiry, expiry))
@@ -1089,7 +1089,7 @@ class Blotter():
 
         instruments = pd.DataFrame(instruments)
         instruments.columns = db.columns
-        instruments['expiry'] = instruments['expiry'].astype(str).str.split(".")[0]
+        instruments['expiry'] = instruments['expiry'].astype(int).astype(str)
 
         db = db.append(instruments)
         db['expiry'] = db['expiry'].astype(str)

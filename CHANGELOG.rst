@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+*December 6, 2016*
+
+1.5.41a
+--------
+- Fixed bug in ``Blotter.log2db()`` (closing issue #36)
+- Fixed multi-instrument strategy initialization (closing issues #37 + #38)
+- Misc bugfixes and code improvements/cleanup
+
+
 *December 4, 2016*
 
 1.5.40a
