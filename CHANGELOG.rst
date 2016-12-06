@@ -3,6 +3,10 @@ Release Notes
 
 *December 6, 2016*
 
+1.5.43a
+--------
+- Fixed bug introduced in version ``1.5.42a``
+
 1.5.42a
 --------
 - Forcing expiry in ``symbols.csv`` to be stored as ``int``
