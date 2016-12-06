@@ -3,6 +3,10 @@ Release Notes
 
 *December 6, 2016*
 
+1.5.42a
+--------
+- Forcing expiry in ``symbols.csv`` to be stored as ``int``
+
 1.5.41a
 --------
 - Fixed bug in ``Blotter.log2db()`` (closing issue #36)
