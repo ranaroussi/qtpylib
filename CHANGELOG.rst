@@ -3,6 +3,10 @@ Release Notes
 
 *December 6, 2016*
 
+1.5.44a
+--------
+- Misc bugfixes and code improvements/cleanup
+
 1.5.43a
 --------
 - Fixed bug introduced in version ``1.5.42a``
