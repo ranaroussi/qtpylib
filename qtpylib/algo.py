@@ -249,6 +249,27 @@ class Algo(Broker):
                 continuous = self.continuous
             )
 
+            # history needs backfilling?
+            if not self.blotter.backfilled:
+                # "loan" Blotter our ibConn
+                self.blotter.ibConn = self.ibConn
+
+                # call the back fill
+                self.blotter.backfill(data=history, resolution=self.resolution, start=start, end=end)
+
+                # re-get history from db
+                history = self.blotter.history(
+                    symbols    = self.symbols,
+                    start      = start,
+                    end        = end,
+                    resolution = self.resolution,
+                    tz         = self.timezone,
+                    continuous = self.continuous
+                )
+
+                # take our ibConn back :)
+                self.blotter.ibConn = None
+
         if self.backtest:
             # initiate strategy
             self.on_start()
