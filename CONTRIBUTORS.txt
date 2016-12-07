@@ -3,3 +3,4 @@
 
 Ran Aroussi, Creator <https://github.com/ranaroussi>
 jkleint, Contributor <https://github.com/jkleint>
+Randy Terbush, Contributor <https://github.com/rterbush>
