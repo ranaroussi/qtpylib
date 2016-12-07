@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 TALIB_MISSING = False
 
 try:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 #
 # QTPy: Light-Weight, Pythonic Algorithmic Trading Library
 # https://github.com/ranaroussi/qtpylib

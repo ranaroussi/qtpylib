@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 #
 # QTPyLib: Quantitative Trading Python Library
 # https://github.com/ranaroussi/qtpylib
@@ -209,7 +209,7 @@ class Blotter():
             # not sure how this works on windows...
             command = 'pgrep -f '+ sys.argv[0]
             process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
-            stdout_list = process.communicate()[0].decode('UTF-8').split("\n")
+            stdout_list = process.communicate()[0].decode('utf-8').split("\n")
             stdout_list = list(filter(None, stdout_list))
             return len(stdout_list) > 0
         except:

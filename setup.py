@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 """QTPyLib: Quantitative Trading Python Library
 (https://github.com/ranaroussi/qtpylib)

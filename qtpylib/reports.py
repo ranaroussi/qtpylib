@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 from flask import Flask, jsonify, request, make_response, send_from_directory
 from flask import render_template
