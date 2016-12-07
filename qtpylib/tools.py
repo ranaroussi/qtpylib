@@ -91,8 +91,8 @@ def ib_duration_str(start_date=None):
         return None
 
     # return str(second_diff)+ " S"
-    if day_diff == 0:
-        return str(second_diff+3600)+ " S"
+    if day_diff == 0 and second_diff > 1:
+        return str(second_diff)+ " S"
     if 31 > day_diff > 0:
         return str(day_diff) + " D"
     if 365 > day_diff > 31:
@@ -121,7 +121,7 @@ def get_timezone():
 
     return 'Etc/GMT%+d' % round(offsetHour / 3600)
 
-def datetime_to_timezone(date, tz="UTC", from_tz=None):
+def datetime_to_timezone(date, tz="UTC"):
     if not date.tzinfo:
         date = date.replace(tzinfo=timezone(get_timezone()))
     return date.astimezone(timezone(tz))
