@@ -1,11 +1,26 @@
 Release Notes
 =============
 
-*December 6, 2016*
+*December 7, 2016*
+
+Development branch
+--------
+- ``Blotter`` automatically backfills missing historical data for back-testing (based on the ``start`` and ``end`` parameters) and live-trading (based on the ``preload`` parameter)
+- Better local timezone detection
+- Requires ezIBpy >= 1.12.42
+- Misc bugfixes and code improvements/cleanup
+
+
+**Note regarding backfilling:**
+Backfilling is currently supported for strategies with 1-minute or higher resolution.
+Historical data availability is subject to `Interactive Brokers Historical Data Limitation <https://www.interactivebrokers.com/en/software/api/apiguide/tables/historical_data_limitations.htm>`_.
 
 1.5.44a
 --------
-- Misc bugfixes and code improvements/cleanup
+- Changed to lowercase ``utf-8`` encoding in file's header
+
+
+*December 6, 2016*
 
 1.5.43a
 --------
