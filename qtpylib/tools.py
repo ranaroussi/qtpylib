@@ -27,6 +27,7 @@ import pandas as pd
 import time
 import os
 from stat import S_IWRITE
+from math import ceil
 
 from dateutil.relativedelta import relativedelta, FR
 from dateutil.parser import parse as parse_date
@@ -51,6 +52,60 @@ def as_dict(df, ix=':'):
     if isinstance(df.index, pd.DatetimeIndex):
         df['datetime'] = df.index
     return df.to_dict(orient='records')[ix]
+
+# =============================================
+def is_number(string):
+    """ checks if a string is a number (int/float) """
+    string = str(string)
+    if string.isnumeric():
+        return True
+    try:
+        float(string)
+        return True
+    except ValueError:
+        return False
+
+# =============================================
+def ib_duration_str(start_date=None):
+    """
+    Get a datetime object or a epoch timestamp and return
+    an IB-compatible durationStr for reqHistoricalData()
+    """
+    now = datetime.datetime.utcnow()
+
+    if is_number(start_date):
+        diff = now - datetime.datetime.fromtimestamp(float(start_date))
+    elif isinstance(start_date, str):
+        diff = now - parse_date(start_date)
+    elif isinstance(start_date, datetime.datetime):
+        diff = now - start_date
+    else:
+        return None
+
+    # get diff
+    second_diff = diff.seconds
+    day_diff = diff.days
+
+    # small diff?
+    if day_diff < 0 or second_diff < 60:
+        return None
+
+    # return str(second_diff)+ " S"
+    if day_diff == 0:
+        return str(second_diff+3600)+ " S"
+    if 31 > day_diff > 0:
+        return str(day_diff) + " D"
+    if 365 > day_diff > 31:
+        return str(ceil(day_diff / 30)) + " M"
+
+    return str(ceil(day_diff / 365)) + " Y"
+
+# =============================================
+def datetime64_to_datetime(dt):
+    """ convert numpy's datetime64 to datetime """
+    dt64 = np.datetime64(dt)
+    ts = (dt64 - np.datetime64('1970-01-01T00:00:00')) / np.timedelta64(1, 's')
+    return datetime.datetime.utcfromtimestamp(ts)
 
 # =============================================
 # utility to get the machine's timeozone
@@ -508,7 +563,7 @@ class DataStore():
 
         self.recorded = pd.concat(combined)
 
-        # cleanup: remove non-option data if not working with options 
+        # cleanup: remove non-option data if not working with options
         opt_cols = df.columns[df.columns.str.startswith('opt_')].tolist()
         if len(opt_cols) == len(df[ opt_cols ].isnull().all()):
             self.recorded.drop(opt_cols, axis=1, inplace=True)
