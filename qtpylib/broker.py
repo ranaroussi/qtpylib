@@ -235,7 +235,6 @@ class Broker():
         except:
             pass
 
-
     # ---------------------------------------
     def ibConnect(self):
         self.ibConn.connect(clientId=self.ibclient, host=self.ibserver, port=self.ibport)
@@ -246,8 +245,11 @@ class Broker():
     # @abstractmethod
     def ibCallback(self, caller, msg, **kwargs):
 
-        if caller == "handleConnectionClosed":
+        if caller == "handleHistoricalData":
+            # transmit "as-is" to blotter for handling
+            self.blotter.ibCallback("handleHistoricalData", msg, **kwargs)
 
+        if caller == "handleConnectionClosed":
             self.log_broker.info("Lost conncetion to Interactive Brokers...")
 
             while not self.ibConn.connected:
@@ -259,7 +261,6 @@ class Broker():
             self.log_broker.info("Connection established...")
 
         elif caller == "handleOrders":
-
             if not hasattr(self, "orders"):
                 return
             # print("handleOrders" , msg)
@@ -309,6 +310,7 @@ class Broker():
                 # filled
                 time.sleep(0.005)
                 self.on_fill(self.get_instrument(order['symbol']), order)
+
 
     # ---------------------------------------
     def _register_trade(self, order):
@@ -529,7 +531,7 @@ class Broker():
         del locals['self']
         return locals
 
-     # ---------------------------------------
+    # ---------------------------------------
     def _create_order(self, symbol, direction, quantity, order_type="",
         limit_price=0, expiry=0, orderId=0, target=0, initial_stop=0,
         trail_stop_at=0, trail_stop_by=0, stop_limit=False, **kwargs):
@@ -626,7 +628,6 @@ class Broker():
         # add orderId / ttl to (auto-adds to history)
         expiry = expiry*1000 if expiry > 0 else 60000 # 1min
         self._update_pending_order(symbol, orderId, expiry, order_quantity)
-
 
     # ---------------------------------------
     def _cancel_order(self, orderId):
