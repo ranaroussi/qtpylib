@@ -56,13 +56,17 @@ def as_dict(df, ix=':'):
 # utility to get the machine's timeozone
 # =============================================
 def get_timezone():
-    if time.daylight:
-        offsetHour = time.altzone / 3600
-    else:
-        offsetHour = time.timezone / 3600
-    return 'Etc/GMT%+d' % offsetHour
+    try:
+        offsetHour = -(datetime.datetime.now()-datetime.datetime.utcnow()).seconds
+    except:
+        if time.daylight:
+            offsetHour = time.altzone
+        else:
+            offsetHour = time.timezone
 
-def datetime_to_timezone(date, tz="UTC"):
+    return 'Etc/GMT%+d' % round(offsetHour / 3600)
+
+def datetime_to_timezone(date, tz="UTC", from_tz=None):
     if not date.tzinfo:
         date = date.replace(tzinfo=timezone(get_timezone()))
     return date.astimezone(timezone(tz))
