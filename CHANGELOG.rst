@@ -1,8 +1,6 @@
 Release Notes
 =============
 
-*December 7, 2016*
-
 Development branch
 --------
 - ``Blotter`` automatically backfills missing historical data for back-testing (based on the ``start`` and ``end`` parameters) and live-trading (based on the ``preload`` parameter)
@@ -14,6 +12,9 @@ Development branch
 **Note regarding backfilling:**
 Backfilling is currently supported for strategies with 1-minute or higher resolution.
 Historical data availability is subject to `Interactive Brokers Historical Data Limitation <https://www.interactivebrokers.com/en/software/api/apiguide/tables/historical_data_limitations.htm>`_.
+
+
+*December 7, 2016*
 
 1.5.44a
 --------
