@@ -957,6 +957,10 @@ class Blotter():
         # get data using pandas
         data = pd.read_sql(query, self.dbconn) #.dropna()
 
+        # no data in db
+        if len(data.index) == 0:
+            return data
+
         # clearup records that are out of sequence
         data = self._fix_history_sequence(data, table)
 
