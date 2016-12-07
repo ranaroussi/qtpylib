@@ -850,7 +850,7 @@ class Blotter():
         # remove "Unnamed: x" columns
         cols = df.columns[df.columns.str.startswith('Unnamed:')].tolist()
         df.drop(cols, axis=1, inplace=True)
-        
+
         # remove future dates
         df['datetime'] = pd.to_datetime(df['datetime'], utc=True)
         blacklist = df[df['datetime'] > datetime.utcnow()]
@@ -863,14 +863,12 @@ class Blotter():
         for symbol_id in list(df['symbol_id'].unique()):
 
             data = df[df['symbol_id'] == symbol_id].copy()
-            
+
             # sort by id
             data.sort_values('id', axis=0, ascending=True, inplace=False)
 
-            # add index
+            # convert index to column
             data.loc[:, "ix"] = data.index
-
-            # reset index
             data.reset_index(inplace=True)
 
             # find out of sequence ticks/bars
@@ -884,7 +882,7 @@ class Blotter():
                 # remove out of sequence rows + last row from data
                 index = [x for x in data.index.values if x not in malformed['ix'].values]
                 dfs.append( data.loc[index] )
-                
+
                 # add to bad id list (to remove from db)
                 bad_ids.append(list(malformed['id'].values))
 
@@ -893,7 +891,7 @@ class Blotter():
 
         # flatten bad ids
         bad_ids = sum(bad_ids, [])
-        
+
         # remove bad ids from db
         if len(bad_ids) > 0:
             bad_ids = list(map(str, map(int, bad_ids)))
@@ -901,7 +899,7 @@ class Blotter():
             self.dbcurr.execute("DELETE FROM "+table.lower()+" WHERE id IN (%s)" % (",".join(bad_ids)))
             try: self.dbconn.commit()
             except: self.dbconn.rollback()
-                
+
         # return
         return data.drop(['id', 'ix', 'index'], axis=1)
 
