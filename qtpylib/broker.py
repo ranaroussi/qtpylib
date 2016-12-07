@@ -201,7 +201,7 @@ class Broker():
 
         # -----------------------------------
         # load blotter settings
-        self.blotter_args = load_blotter_args(self.blotter_name)
+        self.blotter_args = load_blotter_args(self.blotter_name, logger=self.log_broker)
         self.blotter = Blotter(**self.blotter_args)
 
         # connect to mysql using blotter's settings
