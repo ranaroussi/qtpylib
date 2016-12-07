@@ -1056,22 +1056,7 @@ class Blotter():
             sys.exit(1)
 
     # -------------------------------------------
-    def drip(self, symbols, start, end=None, tick_handler=None, \
-        bar_handler=None, quote_handler=None, book_handler=None, \
-        resolution="1T", tz="UTC", continuous=True):
-
-        handler = None
-        if resolution[-1] in ("K", "V") and tick_handler is not None:
-            handler = tick_handler
-        elif bar_handler is not None:
-            handler = bar_handler
-        else:
-            return
-
-        data = self.history(symbols, start=start, end=end,
-            resolution=resolution, tz=tz, continuous=continuous)
-
-        # stream
+    def drip(self, data, handler):
         try:
             for i in range(len(data)):
                 handler(data.iloc[i:i + 1])
