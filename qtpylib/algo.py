@@ -157,6 +157,17 @@ class Algo(Broker):
             self.bar_timer = tools.RecurringTask(
                 self.add_stale_tick, interval_sec=1, init_sec=1, daemon=True)
 
+        # ---------------------------------------
+        # sanity checks for backtesting mode
+        if self.backtest:
+            if self.record_output is None:
+                self.log_algo.error("Must provide an output file for Backtest mode")
+                sys.exit(0)
+            if self.backtest_start is None:
+                self.log_algo.error("Must provide start date for Backtest mode")
+                sys.exit(0)
+            if self.backtest_end is None:
+                self.backtest_end = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
 
     # ---------------------------------------
     def add_stale_tick(self):
@@ -223,53 +234,32 @@ class Algo(Broker):
         ``on_bar`` methods.
         """
 
+        # get history
+        if not self.blotter_args["dbskip"] and (self.backtest or self.preload):
 
-        # -----------------------------------
-        # backtest mode?
+            start = self.backtest_start if self.backtest else tools.backdate(self.preload)
+            end = self.backtest_end if self.backtest else None
+
+            history = self.blotter.history(
+                symbols    = self.symbols,
+                start      = start,
+                end        = end,
+                resolution = self.resolution,
+                tz         = self.timezone,
+                continuous = self.continuous
+            )
+
         if self.backtest:
-            # TODO: This really should be done in the command-line parser
-            if self.record_output is None:
-                self.log_algo.error("Must provide an output file for Backtest mode")
-                sys.exit(0)
-            if self.backtest_start is None:
-                self.log_algo.error("Must provide start date for Backtest mode")
-                sys.exit(0)
-            if self.backtest_end is None:
-                self.backtest_end = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-
             # initiate strategy
             self.on_start()
 
-            # backtest history
-            self.blotter.drip(
-                symbols       = self.symbols,
-                start         = self.backtest_start,
-                end           = self.backtest_end,
-                resolution    = self.resolution,
-                tz            = self.timezone,
-                continuous    = self.continuous,
-                quote_handler = self._quote_handler,
-                tick_handler  = self._tick_handler,
-                bar_handler   = self._bar_handler,
-                book_handler  = self._book_handler
-            )
+            # drip history
+            self.blotter.drip(history,
+                self._tick_handler if self.resolution[-1] in ("K", "V") else self._bar_handler)
 
-        # -----------------------------------
-        # live data mode
         else:
-            # preload history
-            if self.preload is not None:
-                try: # dbskip may be active
-                    self.bars = self.blotter.history(
-                        symbols    = self.symbols,
-                        start      = tools.backdate(self.preload),
-                        resolution = self.resolution,
-                        tz         = self.timezone,
-                        continuous = self.continuous
-                    )
-                except:
-                    pass
-                # print(self.bars)
+            # place history self.bars
+            self.bars = history
 
             # add instruments to blotter in case they do not exist
             self.blotter.register(self.instruments)
