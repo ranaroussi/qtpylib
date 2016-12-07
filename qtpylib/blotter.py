@@ -170,6 +170,9 @@ class Blotter():
         # do stuff on exit
         atexit.register(self._on_exit)
 
+        # track historical data download status
+        self.backfilled = False
+        self.backfill_resolution = "1 min"
 
     # -------------------------------------------
     def _on_exit(self, terminate=True):
@@ -284,6 +287,7 @@ class Blotter():
 
     # -------------------------------------------
     def ibCallback(self, caller, msg, **kwargs):
+
         if self.ibConn is None:
             return
 
@@ -291,6 +295,9 @@ class Blotter():
             self.log_blotter.info("Lost conncetion to Interactive Brokers...")
             self._on_exit(terminate=False)
             self.run()
+
+        elif caller == "handleHistoricalData":
+            self.on_ohlc_received(msg, kwargs)
 
         elif caller == "handleTickString":
             self.on_tick_string_received(msg.tickerId, kwargs)
@@ -316,6 +323,47 @@ class Blotter():
             elif msg.errorCode not in (502, 504): # 502, 504 = connection error
                 self.log_blotter.error('[IB #{}] {}'.format(msg.errorCode, msg.errorMsg))
 
+
+    # -------------------------------------------
+    def on_ohlc_received(self, msg, kwargs):
+
+        if kwargs["completed"]:
+            self.backfilled = True
+        else:
+            print(msg)
+            self.ibConn.cancelHistoricalData();
+            sys.exit()
+            symbol = self.ibConn.tickerSymbol(msg.reqId)
+
+            data = {
+                "symbol":       symbol,
+                "symbol_group": self._gen_symbol_group(symbol),
+                "asset_class":  self._gen_asset_class(symbol),
+                "timestamp":    tools.datetime_to_timezone(
+                    datetime.fromtimestamp(int(msg.date)), tz="UTC").strftime("%Y-%m-%d %H:%M:%S"),
+            }
+
+            # incmoing second data
+            if "sec" in self.backfill_resolution:
+                data["last"]     = float(Decimal(msg.close))
+                data["lastsize"] = int(msg.volume) # msg.count?
+                data["bid"]      = 0
+                data["bidsize"]  = 0
+                data["ask"]      = 0
+                data["asksize"]  = 0
+                data["kind"]     = "TICK"
+            else:
+                data["open"]   = float(Decimal(msg.open))
+                data["high"]   = float(Decimal(msg.high))
+                data["low"]    = float(Decimal(msg.low))
+                data["close"]  = float(Decimal(msg.close))
+                data["volume"] = int(msg.volume)
+                data["kind"]   = "BAR"
+
+            print(data)
+
+            # store in db
+            self.log2db(data, data["kind"])
 
     # -------------------------------------------
     def on_tick_string_received(self, tickerId, kwargs):
@@ -903,7 +951,7 @@ class Blotter():
         # return
         return data.drop(['id', 'ix', 'index'], axis=1)
 
-
+    # -------------------------------------------
     def history(self, symbols, start, end=None, resolution="1T", tz="UTC", continuous=True):
         # load runtime/default data
         if isinstance(symbols, str):
@@ -926,7 +974,7 @@ class Blotter():
         self.mysql_connect()
 
         # --- build query
-        table = 'ticks' if ("K" in resolution) | ("V" in resolution) | ("S" in resolution) else 'bars'
+        table = 'ticks' if resolution[-1] in ("K", "V", "S") else 'bars'
 
         query = """SELECT tbl.*,
             CONCAT(s.`symbol`, "_", s.`asset_class`) as symbol, s.symbol_group, s.asset_class, s.expiry,
@@ -972,7 +1020,7 @@ class Blotter():
         # remove _STK from symbol to match ezIBpy's formatting
         data['symbol'] = data['symbol'].str.replace("_STK", "")
 
-        if continuous and "K" not in resolution and "S" not in resolution:
+        if continuous and resolution[-1] not in ("K", "V", "S"):
             # construct continuous contracts for futures
             all_dfs = [ data[data['asset_class']!='FUT'] ]
 
@@ -1067,6 +1115,74 @@ class Blotter():
         except (KeyboardInterrupt, SystemExit):
             print("\n\n>>> Interrupted with Ctrl-c...")
             sys.exit(1)
+
+    # ---------------------------------------
+    def backfill(self, data, resolution, start, end=None):
+        """
+        Backfills missing historical data
+
+        :Optional:
+            data : pd.DataFrame
+                Minimum required bars for backfill attempt
+            resolution : str
+                Algo resolution
+            start: datetime
+                Backfill start date (YYYY-MM-DD [HH:MM:SS[.MS]).
+            end: datetime
+                Backfill end date (YYYY-MM-DD [HH:MM:SS[.MS]). Default is None
+        :Returns:
+            status : mixed
+                False for "won't backfill" / True for "backfilling, please wait"
+        """
+
+        # currenly only supporting minute-data
+        if resolution[-1] in ("K", "V", "S"):
+            self.backfilled = True
+            return None
+
+        # missing history?
+        start_date = parse_date(start)
+        end_date   = parse_date(end) if end else datetime.utcnow()
+
+        if len(data.index) == 0:
+            first_date = datetime.utcnow()
+            last_date  = datetime.utcnow()
+        else:
+            first_date = tools.datetime64_to_datetime(data.index.values[0])
+            last_date  = tools.datetime64_to_datetime(data.index.values[-1])
+
+        ib_lookback = None
+        if start_date < first_date:
+            ib_lookback = tools.ib_duration_str(start_date)
+        elif end_date > last_date:
+            ib_lookback = tools.ib_duration_str(last_date)
+
+        if not ib_lookback:
+            self.backfilled = True
+            return None
+
+        self.backfill_resolution = "1 min" if resolution[-1] not in ("K", "V", "S") else "1 sec"
+        self.log_blotter.warning("Backfilling historical data from IB...")
+
+        # request parameters
+        params = {
+            "lookback": ib_lookback,
+            "resolution": self.backfill_resolution,
+            "data": "TRADES",
+            "rth": False,
+            "end_datetime": None,
+            "csv_path": None
+        }
+
+        # if connection is active - request data
+        self.ibConn.requestHistoricalData(**params)
+
+        # wait for backfill to complete
+        while not self.backfilled:
+            time.sleep(0.01)
+
+        # otherwise, pass the parameters to the caller
+        return True
 
     # -------------------------------------------
     def register(self, instruments):
