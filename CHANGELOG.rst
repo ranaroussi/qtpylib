@@ -1,8 +1,11 @@
 Release Notes
 =============
 
-Development branch
+*December 11, 2016*
+
+1.5.45a
 --------
+
 - ``Blotter`` automatically backfills missing historical data for back-testing (based on the ``start`` and ``end`` parameters) and live-trading (based on the ``preload`` parameter)
 - Better local timezone detection
 - Requires ezIBpy >= 1.12.42
