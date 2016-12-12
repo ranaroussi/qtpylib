@@ -39,6 +39,159 @@ from ezibpy.utils import (
 )
 
 # =============================================
+def create_ib_tuple(instrument):
+    """ create ib contract tuple """
+    from qtpylib import futures
+
+    if isinstance(instrument, str):
+        instrument = instrument.upper()
+
+        if "FUT." not in instrument:
+            # symbol stock
+            instrument = (instrument, "STK", "SMART", "USD", "", 0.0, "")
+
+        else:
+            # future contract
+            try:
+                symdata = instrument.split(".")
+
+                # is this a CME future?
+                if symdata[1] not in futures.futures_contracts.keys():
+                    raise ValueError("Un-supported symbol. Please use full contract tuple.")
+
+                # auto get contract details
+                spec = futures.get_ib_futures(symdata[1])
+                if not isinstance(spec, dict):
+                    raise ValueError("Un-parsable contract tuple")
+
+                # expiry specified?
+                if len(symdata) == 3 and symdata[2] != '':
+                    expiry = symdata[2]
+                else:
+                    # default to most active
+                    expiry = futures.get_active_contract(symdata[1])
+
+                instrument = (spec['symbol'].upper(), "FUT",
+                    spec['exchange'].upper(), spec['currency'].upper(),
+                    int(expiry), 0.0, "")
+
+            except:
+                raise ValueError("Un-parsable contract tuple")
+
+    # tuples without strike/right
+    elif len(instrument) <= 7:
+        instrument_list = list(instrument)
+        if len(instrument_list) < 3:
+            instrument_list.append("SMART")
+        if len(instrument_list) < 4:
+            instrument_list.append("USD")
+        if len(instrument_list) < 5:
+            instrument_list.append("")
+        if len(instrument_list) < 6:
+            instrument_list.append(0.0)
+        if len(instrument_list) < 7:
+            instrument_list.append("")
+
+        try: instrument_list[4] = int(instrument_list[4])
+        except: pass
+
+        instrument_list[5] = 0. if isinstance(instrument_list[5], str) \
+            else float(instrument_list[5])
+
+        instrument = tuple(instrument_list)
+
+    return instrument
+
+
+# =============================================
+def gen_symbol_group(sym):
+    sym = sym.strip()
+
+    if "_FUT" in sym:
+        sym = sym.split("_FUT")
+        return sym[0][:-5]+"_F"
+
+    elif "_CASH" in sym:
+        return "CASH"
+
+    if "_FOP" in sym or "_OPT" in sym:
+        return sym[:-12]
+
+    return sym
+
+# -------------------------------------------
+def gen_asset_class(sym):
+    sym_class = str(sym).split("_")
+    if len(sym_class) > 1:
+        return sym_class[-1].replace("CASH", "CSH")
+    return "STK"
+
+# -------------------------------------------
+def mark_options_values(data):
+    if isinstance(data, dict):
+        data['opt_price']      = data.pop('price')
+        data['opt_underlying'] = data.pop('underlying')
+        data['opt_dividend']   = data.pop('dividend')
+        data['opt_volume']     = data.pop('volume')
+        data['opt_iv']         = data.pop('iv')
+        data['opt_oi']         = data.pop('oi')
+        data['opt_delta']      = data.pop('delta')
+        data['opt_gamma']      = data.pop('gamma')
+        data['opt_vega']       = data.pop('vega')
+        data['opt_theta']      = data.pop('theta')
+        return data
+
+    elif isinstance(data, pd.DataFrame):
+        return data.rename(columns={
+            'price': 'opt_price',
+            'underlying': 'opt_underlying',
+            'dividend': 'opt_dividend',
+            'volume': 'opt_volume',
+            'iv': 'opt_iv',
+            'oi': 'opt_oi',
+            'delta': 'opt_delta',
+            'gamma': 'opt_gamma',
+            'vega': 'opt_vega',
+            'theta': 'opt_theta'
+        })
+
+    return data
+
+# -------------------------------------------
+def force_options_columns(data):
+    opt_cols = ['opt_price', 'opt_underlying', 'opt_dividend', 'opt_volume',
+        'opt_iv', 'opt_oi', 'opt_delta', 'opt_gamma', 'opt_vega', 'opt_theta']
+
+    if isinstance(data, dict):
+        if not set(opt_cols).issubset(data.keys()):
+            data['opt_price'] = None
+            data['opt_underlying'] = None
+            data['opt_dividend'] = None
+            data['opt_volume'] = None
+            data['opt_iv'] = None
+            data['opt_oi'] = None
+            data['opt_delta'] = None
+            data['opt_gamma'] = None
+            data['opt_vega'] = None
+            data['opt_theta'] = None
+
+    elif isinstance(data, pd.DataFrame):
+        if not set(opt_cols).issubset(data.columns):
+            data.loc[:, 'opt_price']      = np.nan
+            data.loc[:, 'opt_underlying'] = np.nan
+            data.loc[:, 'opt_dividend']   = np.nan
+            data.loc[:, 'opt_volume']     = np.nan
+            data.loc[:, 'opt_iv']         = np.nan
+            data.loc[:, 'opt_oi']         = np.nan
+            data.loc[:, 'opt_delta']      = np.nan
+            data.loc[:, 'opt_gamma']      = np.nan
+            data.loc[:, 'opt_vega']       = np.nan
+            data.loc[:, 'opt_theta']      = np.nan
+
+    return data
+
+
+# =============================================
 def chmod(f):
     """ change mod to writeable """
     try: os.chmod(f, S_IWRITE) # windows (cover all)
