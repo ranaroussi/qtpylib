@@ -629,73 +629,10 @@ class Blotter():
 
         # set symbol id
         symbol_id = 0
-
-        # in memory?
         if symbol in self.symbol_ids.keys():
             symbol_id = self.symbol_ids[symbol]
-
-        # load from db
         else:
-            expiry = None
-
-            if data["asset_class"] in ("FUT", "OPT", "FOP"):
-
-                # get expiry from contract details
-                contract_details = self.ibConn.contractDetails(data["symbol"])["m_summary"]
-                expiry = datetime.strptime(str(contract_details["m_expiry"]), '%Y%m%d').strftime("%Y-%m-%d")
-
-                # look for symbol w/ expiry
-                sql = """SELECT id FROM `symbols` WHERE
-                    `symbol`=%s AND `symbol_group`=%s AND `asset_class`=%s  AND `expiry`=%s LIMIT 1"""
-                self.dbcurr.execute(sql, (symbol, data["symbol_group"], data["asset_class"], expiry))
-
-            else:
-                # look for symbol w/o expiry
-                sql = """SELECT id FROM `symbols` WHERE
-                    `symbol`=%s AND `symbol_group`=%s AND `asset_class`=%s LIMIT 1"""
-                self.dbcurr.execute(sql, (symbol, data["symbol_group"], data["asset_class"]))
-
-            row = self.dbcurr.fetchone()
-
-            if row is not None:
-                # symbol already in db
-                symbol_id = row[0]
-            else:
-                # symbol/expiry not in db... insert new/update expiry
-
-                is_new_symbol = True
-
-                # need to update the expiry?
-                if data["asset_class"] in ("FUT", "OPT", "FOP"):
-                    sql = """SELECT id FROM `symbols` WHERE
-                        `symbol`=%s AND `symbol_group`=%s AND `asset_class`=%s LIMIT 1"""
-                    self.dbcurr.execute(sql, (symbol, data["symbol_group"], data["asset_class"]))
-
-                    row = self.dbcurr.fetchone()
-                    if row is not None:
-                        is_new_symbol = False
-
-                        sql = "UPDATE `symbols` SET `expiry`='"+str(expiry)+"' WHERE id="+str(row[0])
-                        self.dbcurr.execute(sql)
-                        try: self.dbconn.commit()
-                        except: return
-                        symbol_id = int(row[0])
-
-                # insert new symbol
-                if is_new_symbol:
-
-                    sql = """INSERT IGNORE INTO `symbols`
-                        (`symbol`, `symbol_group`, `asset_class`, `expiry`) VALUES (%s, %s, %s, %s)
-                        ON DUPLICATE KEY UPDATE `symbol`=`symbol`, `expiry`=%s
-                    """
-
-                    self.dbcurr.execute(sql, (symbol, data["symbol_group"], data["asset_class"], expiry, expiry))
-                    try: self.dbconn.commit()
-                    except: return
-
-                    symbol_id = self.dbcurr.lastrowid
-
-            # cache id
+            symbol_id = get_symbol_id(data, self.dbconn, self.dbcurr, self.ibConn)
             self.symbol_ids[symbol] = symbol_id
 
         # gen epoch datetime
@@ -762,6 +699,7 @@ class Blotter():
             self.dbconn.commit()
         except:
             pass
+
 
     # -------------------------------------------
     def run(self):
@@ -1301,6 +1239,95 @@ def load_blotter_args(blotter_name=None, logger=None):
     args['as_client'] = True
 
     return args
+
+# -------------------------------------------
+def get_symbol_id(data, dbconn, dbcurr, ibConn=None):
+    """
+    Retrived symbol's ID from the Database or create it if it doesn't exist
+
+    :Parameters:
+        data : dict
+            Tick/Bar data
+        dbconn : object
+            Database connection to be used
+        dbcurr : object
+            Database cursor to be used
+
+    :Optional:
+        ibConn : object
+            ezIBpy object (used for determining futures/options expiration)
+
+    :Returns:
+        symbol_id : int
+            Symbol ID
+    """
+    def _get_contract_expiry(symbol, ibConn):
+        if ibConn is None:
+            return None
+
+        contract_details = ibConn.contractDetails(symbol)["m_summary"]
+        if contract_details["m_expiry"] == "":
+            ibConn.createContract(symbol)
+            return _get_contract_expiry(symbol, ibConn)
+
+        if contract_details["m_expiry"]:
+            return datetime.strptime(str(contract_details["m_expiry"]), '%Y%m%d').strftime("%Y-%m-%d")
+
+        return contract_details["m_expiry"]
+
+
+    # start
+    symbol = data["symbol"].replace("_"+data["asset_class"], "")
+    expiry = None
+
+    if data["asset_class"] in ("FUT", "OPT", "FOP"):
+        expiry = _get_contract_expiry(data["symbol"], ibConn=None)
+
+        # look for symbol w/ expiry
+        sql = """SELECT id FROM `symbols` WHERE
+            `symbol`=%s AND `symbol_group`=%s AND `asset_class`=%s  AND `expiry`=%s LIMIT 1"""
+        dbcurr.execute(sql, (symbol, data["symbol_group"], data["asset_class"], expiry))
+
+    else:
+        # look for symbol w/o expiry
+        sql = """SELECT id FROM `symbols` WHERE
+            `symbol`=%s AND `symbol_group`=%s AND `asset_class`=%s LIMIT 1"""
+        dbcurr.execute(sql, (symbol, data["symbol_group"], data["asset_class"]))
+
+    row = dbcurr.fetchone()
+
+    # symbol already in db
+    if row is not None:
+        return row[0]
+
+    # symbol/expiry not in db... insert new/update expiry
+    else:
+        # need to update the expiry?
+        if expiry is not None:
+            sql = """SELECT id FROM `symbols` WHERE
+                `symbol`=%s AND `symbol_group`=%s AND `asset_class`=%s LIMIT 1"""
+            dbcurr.execute(sql, (symbol, data["symbol_group"], data["asset_class"]))
+
+            row = dbcurr.fetchone()
+            if row is not None:
+                sql = "UPDATE `symbols` SET `expiry`='"+str(expiry)+"' WHERE id="+str(row[0])
+                dbcurr.execute(sql)
+                try: dbconn.commit()
+                except: return 0
+                return int(row[0])
+
+        # insert new symbol
+        sql = """INSERT IGNORE INTO `symbols`
+            (`symbol`, `symbol_group`, `asset_class`, `expiry`) VALUES (%s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE `symbol`=`symbol`, `expiry`=%s
+        """
+
+        dbcurr.execute(sql, (symbol, data["symbol_group"], data["asset_class"], expiry, expiry))
+        try: dbconn.commit()
+        except: return 0
+
+        return dbcurr.lastrowid
+
 
 # -------------------------------------------
 if __name__ == "__main__":
