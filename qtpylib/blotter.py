@@ -632,73 +632,18 @@ class Blotter():
         if symbol in self.symbol_ids.keys():
             symbol_id = self.symbol_ids[symbol]
         else:
-            symbol_id = get_symbol_id(data, self.dbconn, self.dbcurr, self.ibConn)
+            symbol_id = get_symbol_id(data["symbol"], self.dbconn, self.dbcurr, self.ibConn)
             self.symbol_ids[symbol] = symbol_id
 
-        # gen epoch datetime
+        # insert to db
         if kind == "TICK":
-            sql = """INSERT IGNORE INTO `ticks` (`datetime`, `symbol_id`,
-                `bid`, `bidsize`, `ask`, `asksize`, `last`, `lastsize`)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                ON DUPLICATE KEY UPDATE `symbol_id`=`symbol_id`
-            """
-            self.dbcurr.execute(sql, (data["timestamp"], symbol_id,
-                float(data["bid"]), int(data["bidsize"]),
-                float(data["ask"]), int(data["asksize"]),
-                float(data["last"]), int(data["lastsize"])
-            ))
-
-            # add greeks
-            if self.dbcurr.lastrowid and data["asset_class"] in ("OPT", "FOP"):
-                greeks_sql = """INSERT IGNORE INTO `greeks` (
-                    `tick_id`, `price`, `underlying`, `dividend`, `volume`,
-                    `iv`, `oi`, `delta`, `gamma`, `theta`, `vega`)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """
-                try:
-                    self.dbcurr.execute(greeks_sql, (self.dbcurr.lastrowid,
-                        round(float(data["opt_price"]), 2), round(float(data["opt_underlying"]), 5),
-                        float(data["opt_dividend"]),int(data["opt_volume"]),
-                        float(data["opt_iv"]), float(data["opt_oi"]),
-                        float(data["opt_delta"]), float(data["opt_gamma"]),
-                        float(data["opt_theta"]), float(data["opt_vega"]),
-                    ))
-                except:
-                    pass
-
+            mysql_insert_tick(data, symbol_id, self.dbcurr)
         elif kind == "BAR":
-            sql = """INSERT IGNORE INTO `bars`
-                (`datetime`, `symbol_id`, `open`, `high`, `low`, `close`, `volume`)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
-                ON DUPLICATE KEY UPDATE
-                    `open`=%s, `high`=%s, `low`=%s, `close`=%s, `volume`=`volume`+%s
-            """
-            self.dbcurr.execute(sql, (data["timestamp"], symbol_id,
-                float(data["open"]),float(data["high"]),float(data["low"]),float(data["close"]),int(data["volume"]),
-                float(data["open"]),float(data["high"]),float(data["low"]),float(data["close"]),int(data["volume"])
-            ))
-
-            # add greeks
-            if self.dbcurr.lastrowid and data["asset_class"] in ("OPT", "FOP"):
-                greeks_sql = """INSERT IGNORE INTO `greeks` (
-                    `bar_id`, `price`, `underlying`, `dividend`, `volume`,
-                    `iv`, `oi`, `delta`, `gamma`, `theta`, `vega`)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """
-                greeks = self.cash_ticks[data['symbol']]
-                self.dbcurr.execute(greeks_sql, (self.dbcurr.lastrowid,
-                    round(float(greeks["opt_price"]), 2), round(float(greeks["opt_underlying"]), 5),
-                    float(greeks["opt_dividend"]),int(greeks["opt_volume"]),
-                    float(greeks["opt_iv"]), float(greeks["opt_oi"]),
-                    float(greeks["opt_delta"]), float(greeks["opt_gamma"]),
-                    float(greeks["opt_theta"]), float(greeks["opt_vega"]),
-                ))
+            mysql_insert_bar(data, symbol_id, self.dbcurr)
 
         # commit
-        try:
-            self.dbconn.commit()
-        except:
-            pass
+        try: self.dbconn.commit()
+        except: pass
 
 
     # -------------------------------------------
@@ -1215,7 +1160,18 @@ class Blotter():
 
 # -------------------------------------------
 def load_blotter_args(blotter_name=None, logger=None):
-    """ load running blotter's settings (used by clients) """
+    """ Load running blotter's settings (used by clients)
+
+    :Parameters:
+        blotter_name : str
+            Running Blotter's name (defaults to "auto-detect")
+        logger : object
+            Logger to be use (defaults to Blotter's)
+
+    :Returns:
+        args : dict
+            Running Blotter's arguments
+    """
     if logger is None:
         logger= tools.createLogger(__name__, logging.WARNING)
 
@@ -1241,13 +1197,13 @@ def load_blotter_args(blotter_name=None, logger=None):
     return args
 
 # -------------------------------------------
-def get_symbol_id(data, dbconn, dbcurr, ibConn=None):
+def get_symbol_id(symbol, dbconn, dbcurr, ibConn=None):
     """
-    Retrived symbol's ID from the Database or create it if it doesn't exist
+    Retrives symbol's ID from the Database or create it if it doesn't exist
 
     :Parameters:
-        data : dict
-            Tick/Bar data
+        symbol : str
+            Instrument symbol
         dbconn : object
             Database connection to be used
         dbcurr : object
@@ -1277,22 +1233,24 @@ def get_symbol_id(data, dbconn, dbcurr, ibConn=None):
 
 
     # start
-    symbol = data["symbol"].replace("_"+data["asset_class"], "")
+    asset_class  = tools.gen_asset_class(symbol)
+    symbol_group = tools.gen_symbol_group(symbol)
+    clean_symbol = symbol.replace("_"+asset_class, "")
     expiry = None
 
-    if data["asset_class"] in ("FUT", "OPT", "FOP"):
-        expiry = _get_contract_expiry(data["symbol"], ibConn=None)
+    if asset_class in ("FUT", "OPT", "FOP"):
+        expiry = _get_contract_expiry(symbol, ibConn)
 
         # look for symbol w/ expiry
         sql = """SELECT id FROM `symbols` WHERE
             `symbol`=%s AND `symbol_group`=%s AND `asset_class`=%s  AND `expiry`=%s LIMIT 1"""
-        dbcurr.execute(sql, (symbol, data["symbol_group"], data["asset_class"], expiry))
+        dbcurr.execute(sql, (clean_symbol, symbol_group, asset_class, expiry))
 
     else:
         # look for symbol w/o expiry
         sql = """SELECT id FROM `symbols` WHERE
             `symbol`=%s AND `symbol_group`=%s AND `asset_class`=%s LIMIT 1"""
-        dbcurr.execute(sql, (symbol, data["symbol_group"], data["asset_class"]))
+        dbcurr.execute(sql, (clean_symbol, symbol_group, asset_class))
 
     row = dbcurr.fetchone()
 
@@ -1306,14 +1264,14 @@ def get_symbol_id(data, dbconn, dbcurr, ibConn=None):
         if expiry is not None:
             sql = """SELECT id FROM `symbols` WHERE
                 `symbol`=%s AND `symbol_group`=%s AND `asset_class`=%s LIMIT 1"""
-            dbcurr.execute(sql, (symbol, data["symbol_group"], data["asset_class"]))
+            dbcurr.execute(sql, (clean_symbol, symbol_group, asset_class))
 
             row = dbcurr.fetchone()
             if row is not None:
                 sql = "UPDATE `symbols` SET `expiry`='"+str(expiry)+"' WHERE id="+str(row[0])
                 dbcurr.execute(sql)
                 try: dbconn.commit()
-                except: return 0
+                except: return
                 return int(row[0])
 
         # insert new symbol
@@ -1322,12 +1280,77 @@ def get_symbol_id(data, dbconn, dbcurr, ibConn=None):
             ON DUPLICATE KEY UPDATE `symbol`=`symbol`, `expiry`=%s
         """
 
-        dbcurr.execute(sql, (symbol, data["symbol_group"], data["asset_class"], expiry, expiry))
+        dbcurr.execute(sql, (clean_symbol, symbol_group, asset_class, expiry, expiry))
         try: dbconn.commit()
-        except: return 0
+        except: return
 
         return dbcurr.lastrowid
 
+
+# -------------------------------------------
+def mysql_insert_tick(data, symbol_id, dbcurr):
+
+    sql = """INSERT IGNORE INTO `ticks` (`datetime`, `symbol_id`,
+        `bid`, `bidsize`, `ask`, `asksize`, `last`, `lastsize`)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE `symbol_id`=`symbol_id`
+    """
+    dbcurr.execute(sql, (data["timestamp"], symbol_id,
+        float(data["bid"]), int(data["bidsize"]),
+        float(data["ask"]), int(data["asksize"]),
+        float(data["last"]), int(data["lastsize"])
+    ))
+
+    # add greeks
+    if dbcurr.lastrowid and data["asset_class"] in ("OPT", "FOP"):
+        greeks_sql = """INSERT IGNORE INTO `greeks` (
+            `tick_id`, `price`, `underlying`, `dividend`, `volume`,
+            `iv`, `oi`, `delta`, `gamma`, `theta`, `vega`)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        try:
+            dbcurr.execute(greeks_sql, (dbcurr.lastrowid,
+                round(float(data["opt_price"]), 2), round(float(data["opt_underlying"]), 5),
+                float(data["opt_dividend"]),int(data["opt_volume"]),
+                float(data["opt_iv"]), float(data["opt_oi"]),
+                float(data["opt_delta"]), float(data["opt_gamma"]),
+                float(data["opt_theta"]), float(data["opt_vega"]),
+            ))
+        except:
+            pass
+
+
+# -------------------------------------------
+def mysql_insert_bar(data, symbol_id, dbcurr):
+    sql = """INSERT IGNORE INTO `bars`
+        (`datetime`, `symbol_id`, `open`, `high`, `low`, `close`, `volume`)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            `open`=%s, `high`=%s, `low`=%s, `close`=%s, `volume`=`volume`+%s
+    """
+    dbcurr.execute(sql, (data["timestamp"], symbol_id,
+        float(data["open"]),float(data["high"]),float(data["low"]),float(data["close"]),int(data["volume"]),
+        float(data["open"]),float(data["high"]),float(data["low"]),float(data["close"]),int(data["volume"])
+    ))
+
+    # add greeks
+    if dbcurr.lastrowid and data["asset_class"] in ("OPT", "FOP"):
+        greeks_sql = """INSERT IGNORE INTO `greeks` (
+            `bar_id`, `price`, `underlying`, `dividend`, `volume`,
+            `iv`, `oi`, `delta`, `gamma`, `theta`, `vega`)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        greeks = cash_ticks[data['symbol']]
+        try:
+            dbcurr.execute(greeks_sql, (dbcurr.lastrowid,
+                round(float(greeks["opt_price"]), 2), round(float(greeks["opt_underlying"]), 5),
+                float(greeks["opt_dividend"]),int(greeks["opt_volume"]),
+                float(greeks["opt_iv"]), float(greeks["opt_oi"]),
+                float(greeks["opt_delta"]), float(greeks["opt_gamma"]),
+                float(greeks["opt_theta"]), float(greeks["opt_vega"]),
+            ))
+        except:
+            pass
 
 # -------------------------------------------
 if __name__ == "__main__":
