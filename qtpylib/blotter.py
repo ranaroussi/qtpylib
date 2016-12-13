@@ -1219,10 +1219,12 @@ def get_symbol_id(symbol, dbconn, dbcurr, ibConn=None):
         symbol_id : int
             Symbol ID
     """
-    def _get_contract_expiry(symbol, ibConn):
-        if ibConn is None:
-            return None
+    def _get_contract_expiry(symbol, ibConn=None):
+        # parse w/p ibConn
+        if ibConn is None or isinstance(symbol, str):
+            return tools.contract_expiry_from_symbol(symbol)
 
+        # parse with ibConn
         contract_details = ibConn.contractDetails(symbol)["m_summary"]
         if contract_details["m_expiry"] == "":
             ibConn.createContract(symbol)
