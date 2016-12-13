@@ -35,7 +35,7 @@ from pytz import timezone
 
 # for re-export
 from ezibpy.utils import (
-    createLogger, order_to_dict, contract_to_dict
+    createLogger, order_to_dict, contract_to_dict, contract_expiry_from_symbol
 )
 
 # =============================================
