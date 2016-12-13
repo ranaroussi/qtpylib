@@ -1180,14 +1180,16 @@ def load_blotter_args(blotter_name=None, logger=None):
         args_cache_file = tempfile.gettempdir()+"/"+blotter_name.lower()+".qtpylib"
         if not os.path.exists(args_cache_file):
             logger.critical("Cannot connect to running Blotter [%s]" % (blotter_name))
-            sys.exit(0)
+            if os.isatty(0): sys.exit(0)
+            return
 
     # no name provided - connect to last running
     else:
         blotter_files = sorted(glob.glob(tempfile.gettempdir()+"/*.qtpylib"), key=os.path.getmtime)
         if len(blotter_files) == 0:
             logger.critical("Cannot connect to running Blotter [%s]" % (blotter_name))
-            sys.exit(0)
+            if os.isatty(0): sys.exit(0)
+            return
 
         args_cache_file = blotter_files[-1]
 
