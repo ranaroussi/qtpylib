@@ -29,7 +29,7 @@ import os
 from stat import S_IWRITE
 from math import ceil
 
-from dateutil.relativedelta import relativedelta, FR
+from dateutil import relativedelta
 from dateutil.parser import parse as parse_date
 from pytz import timezone
 
@@ -37,6 +37,18 @@ from pytz import timezone
 from ezibpy.utils import (
     createLogger, order_to_dict, contract_to_dict
 )
+
+# =============================================
+def week_started_date(as_datetime=False):
+
+    today = datetime.datetime.utcnow()
+    start = today - datetime.timedelta((today.weekday() + 1) % 7)
+    dt = start + relativedelta.relativedelta(weekday=relativedelta.SU(-1))
+
+    if as_datetime:
+        return dt
+
+    return dt.strftime("%Y-%m-%d")
 
 # =============================================
 def create_ib_tuple(instrument):
@@ -654,7 +666,7 @@ def is_third_friday(day=None):
 def after_third_friday(day=None):
     if day is None: day = datetime.datetime.now()
     now = day.replace(day=1, hour=16, minute=0, second=0, microsecond=0)
-    now += relativedelta(weeks=2, weekday=FR)
+    now += relativedelta.relativedelta(weeks=2, weekday=relativedelta.FR)
     return day > now
 
 
