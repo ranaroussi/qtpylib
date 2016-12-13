@@ -102,7 +102,7 @@ class Blotter():
     __metaclass__ = ABCMeta
 
     def __init__(self, name=None, symbols="symbols.csv",
-        ibport="4001", ibclient="999", ibserver="localhost",
+        ibport=4001, ibclient=999, ibserver="localhost",
         dbhost="localhost", dbport="3306", dbname="qtpy",
         dbuser="root", dbpass="", dbskip=False, orderbook=False,
         zmqport="12345", zmqtopic=None, **kwargs):
