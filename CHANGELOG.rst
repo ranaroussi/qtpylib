@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+Development
+-----------
+
+- Introduced an **all new** ``workflow`` module for downloading, cleaning, preparing and uploading market data to the database
+- Misc bugfixes and code improvements, cleanup and abstraction
+- Requires ezIBpy >= 1.12.43
+
+
 *December 11, 2016*
 
 1.5.45a
