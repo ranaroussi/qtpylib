@@ -330,7 +330,7 @@ class Blotter():
         if kwargs["completed"]:
             self.backfilled = True
         else:
-            print(msg)
+            # print(msg)
             self.ibConn.cancelHistoricalData();
             sys.exit()
             symbol = self.ibConn.tickerSymbol(msg.reqId)
@@ -360,7 +360,7 @@ class Blotter():
                 data["volume"] = int(msg.volume)
                 data["kind"]   = "BAR"
 
-            print(data)
+            # print(data)
 
             # store in db
             self.log2db(data, data["kind"])
