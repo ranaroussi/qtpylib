@@ -450,6 +450,14 @@ whereas ``strike`` and ``opt_type`` must be a provided for Options (PUT/CALL).
 
     instruments = [ ("ES", "FUT", "GLOBEX", "USD", 201609), (...) ]
 
+.. note::
+    If you're trading **Front-Month Futures issued by CME-Group**, you can use the
+    ``FUT.SYMBOL`` shorthand to have the QTPyLib create the tuple for you (`see more Futures-specific methos here <./futures.html>`_).
+
+    .. code:: python
+
+        instruments = [ "FUT.ES", "FUT.CL", "..." ]
+
 
 **Example: Netflix Option**
 
