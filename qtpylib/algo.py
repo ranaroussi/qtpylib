@@ -234,6 +234,8 @@ class Algo(Broker):
         ``on_bar`` methods.
         """
 
+        history = pd.DataFrame()
+
         # get history
         if not self.blotter_args["dbskip"] and (self.backtest or self.preload):
 
