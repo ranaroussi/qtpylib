@@ -8,6 +8,12 @@ Development
 - Misc bugfixes and code improvements, cleanup and abstraction
 - Requires ezIBpy >= 1.12.43
 
+*December 12, 2016*
+
+1.5.46a
+--------
+
+- Bugfixes
 
 *December 11, 2016*
 
