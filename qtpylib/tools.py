@@ -35,8 +35,35 @@ from pytz import timezone
 
 # for re-export
 from ezibpy.utils import (
-    createLogger, order_to_dict, contract_to_dict, contract_expiry_from_symbol
+    createLogger, contract_expiry_from_symbol,
+    order_to_dict, contract_to_dict
 )
+
+from decimal import *
+getcontext().prec = 5
+
+# =============================================
+def is_number(string):
+    """ checks if a string is a number (int/float) """
+    string = str(string)
+    if string.isnumeric():
+        return True
+    try:
+        float(string)
+        return True
+    except ValueError:
+        return False
+
+# =============================================
+def to_decimal(number, points=None):
+    """ convert datatypes into Decimals """
+    if not (is_number(number)):
+        return number
+
+    number = float(Decimal(number * 1.)) # can't Decimal an int
+    if is_number(points):
+        return round(number, points)
+    return number
 
 # =============================================
 def week_started_date(as_datetime=False):
@@ -217,18 +244,6 @@ def as_dict(df, ix=':'):
     if isinstance(df.index, pd.DatetimeIndex):
         df['datetime'] = df.index
     return df.to_dict(orient='records')[ix]
-
-# =============================================
-def is_number(string):
-    """ checks if a string is a number (int/float) """
-    string = str(string)
-    if string.isnumeric():
-        return True
-    try:
-        float(string)
-        return True
-    except ValueError:
-        return False
 
 # =============================================
 def ib_duration_str(start_date=None):

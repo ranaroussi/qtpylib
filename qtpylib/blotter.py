@@ -50,9 +50,6 @@ from qtpylib import (
     tools, path, futures, __version__
 )
 
-from decimal import *
-getcontext().prec = 5
-
 from abc import ABCMeta
 
 # =============================================
@@ -345,7 +342,7 @@ class Blotter():
 
             # incmoing second data
             if "sec" in self.backfill_resolution:
-                data["last"]     = float(Decimal(msg.close))
+                data["last"]     = tools.to_decimal(msg.close)
                 data["lastsize"] = int(msg.volume) # msg.count?
                 data["bid"]      = 0
                 data["bidsize"]  = 0
@@ -353,10 +350,10 @@ class Blotter():
                 data["asksize"]  = 0
                 data["kind"]     = "TICK"
             else:
-                data["open"]   = float(Decimal(msg.open))
-                data["high"]   = float(Decimal(msg.high))
-                data["low"]    = float(Decimal(msg.low))
-                data["close"]  = float(Decimal(msg.close))
+                data["open"]   = tools.to_decimal(msg.open)
+                data["high"]   = tools.to_decimal(msg.high)
+                data["low"]    = tools.to_decimal(msg.low)
+                data["close"]  = tools.to_decimal(msg.close)
                 data["volume"] = int(msg.volume)
                 data["kind"]   = "BAR"
 
@@ -379,10 +376,10 @@ class Blotter():
                 "symbol_group": tools.gen_symbol_group(symbol), # ES_F, ...
                 "asset_class":  tools.gen_asset_class(symbol),
                 "timestamp":    kwargs['tick']['time'],
-                "last":         float(Decimal(kwargs['tick']['last'])),
+                "last":         tools.to_decimal(kwargs['tick']['last']),
                 "lastsize":     int(kwargs['tick']['size']),
-                "bid":          float(Decimal(kwargs['tick']['bid'])),
-                "ask":          float(Decimal(kwargs['tick']['ask'])),
+                "bid":          tools.to_decimal(kwargs['tick']['bid']),
+                "ask":          tools.to_decimal(kwargs['tick']['ask']),
                 "bidsize":      int(kwargs['tick']['bidsize']),
                 "asksize":      int(kwargs['tick']['asksize']),
                 # "wap":          kwargs['tick']['wap'],
@@ -401,10 +398,10 @@ class Blotter():
                     "symbol_group": tools.gen_symbol_group(symbol), # ES_F, ...
                     "asset_class":  tools.gen_asset_class(symbol),
                     "timestamp":    tick.index.values[-1],
-                    "last":         float(Decimal(tick['last'].values[-1])),
+                    "last":         tools.to_decimal(tick['last'].values[-1]),
                     "lastsize":     int(tick['lastsize'].values[-1]),
-                    "bid":          float(Decimal(tick['bid'].values[-1])),
-                    "ask":          float(Decimal(tick['ask'].values[-1])),
+                    "bid":          tools.to_decimal(tick['bid'].values[-1]),
+                    "ask":          tools.to_decimal(tick['ask'].values[-1]),
                     "bidsize":      int(tick['bidsize'].values[-1]),
                     "asksize":      int(tick['asksize'].values[-1]),
                     # "wap":          kwargs['tick']['wap'],
@@ -433,7 +430,7 @@ class Blotter():
             if self.ibConn.contracts[tickerId].m_secType in ("OPT", "FOP"):
                 quote = self.ibConn.optionsData[tickerId].to_dict(orient='records')[0]
                 quote['type']   = self.ibConn.contracts[tickerId].m_right
-                quote['strike'] = float(Decimal(self.ibConn.contracts[tickerId].m_strike))
+                quote['strike'] = tools.to_decimal(self.ibConn.contracts[tickerId].m_strike)
                 quote["symbol_group"] = self.ibConn.contracts[tickerId].m_symbol+'_'+self.ibConn.contracts[tickerId].m_secType
                 quote = tools.mark_options_values(quote)
             else:
@@ -442,9 +439,9 @@ class Blotter():
 
             quote["symbol"] = symbol
             quote["asset_class"] = tools.gen_asset_class(symbol)
-            quote['bid']  = float(Decimal(quote['bid']))
-            quote['ask']  = float(Decimal(quote['ask']))
-            quote['last'] = float(Decimal(quote['last']))
+            quote['bid']  = tools.to_decimal(quote['bid'])
+            quote['ask']  = tools.to_decimal(quote['ask'])
+            quote['last'] = tools.to_decimal(quote['last'])
             quote["kind"] = "QUOTE"
 
             # cash markets do not get RTVOLUME (handleTickString)
@@ -479,26 +476,26 @@ class Blotter():
                 return
 
         tick['type']          = self.ibConn.contracts[tickerId].m_right
-        tick['strike']        = float(Decimal(self.ibConn.contracts[tickerId].m_strike))
+        tick['strike']        = tools.to_decimal(self.ibConn.contracts[tickerId].m_strike)
         tick["symbol_group"]  = self.ibConn.contracts[tickerId].m_symbol+'_'+self.ibConn.contracts[tickerId].m_secType
-        tick['volume']        = int(Decimal(tick['volume']))
-        tick['bid']           = float(Decimal(tick['bid']))
-        tick['bidsize']       = int(Decimal(tick['bidsize']))
-        tick['ask']           = float(Decimal(tick['ask']))
-        tick['asksize']       = int(Decimal(tick['asksize']))
-        tick['last']          = float(Decimal(tick['last']))
-        tick['lastsize']      = int(Decimal(tick['lastsize']))
+        tick['volume']        = int(tick['volume'])
+        tick['bid']           = tools.to_decimal(tick['bid'])
+        tick['bidsize']       = int(tick['bidsize'])
+        tick['ask']           = tools.to_decimal(tick['ask'])
+        tick['asksize']       = int(tick['asksize'])
+        tick['last']          = tools.to_decimal(tick['last'])
+        tick['lastsize']      = int(tick['lastsize'])
 
-        tick['price']         = round(float(Decimal(tick['price'])), 2)
-        tick['underlying']    = round(float(Decimal(tick['underlying'])), 5)
-        tick['dividend']      = float(Decimal(tick['dividend']))
-        tick['volume']        = int(Decimal(tick['volume']))
-        tick['iv']            = float(Decimal(tick['iv']))
-        tick['oi']            = int(Decimal(tick['oi']))
-        tick['delta']         = float(Decimal(tick['delta']))
-        tick['gamma']         = float(Decimal(tick['gamma']))
-        tick['vega']          = float(Decimal(tick['vega']))
-        tick['theta']         = float(Decimal(tick['theta']))
+        tick['price']         = tools.to_decimal(tick['price'], 2)
+        tick['underlying']    = tools.to_decimal(tick['underlying'])
+        tick['dividend']      = tools.to_decimal(tick['dividend'])
+        tick['volume']        = int(tick['volume'])
+        tick['iv']            = tools.to_decimal(tick['iv'])
+        tick['oi']            = int(tick['oi'])
+        tick['delta']         = tools.to_decimal(tick['delta'])
+        tick['gamma']         = tools.to_decimal(tick['gamma'])
+        tick['vega']          = tools.to_decimal(tick['vega'])
+        tick['theta']         = tools.to_decimal(tick['theta'])
 
         tick["symbol"]        = symbol
         tick["symbol_group"]  = tools.gen_symbol_group(symbol)
