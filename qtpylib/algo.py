@@ -25,11 +25,14 @@ import pandas as pd
 from numpy import nan
 import sys
 import logging
+import os
 
 from datetime import datetime
 
 from qtpylib.broker import Broker
 from qtpylib.instrument import Instrument
+from qtpylib.workflow import validate_columns as validate_csv_columns
+from qtpylib.blotter import prepare_history
 from qtpylib import (
     tools, sms
 )
@@ -71,6 +74,8 @@ class Algo(Broker):
             Backtest start date (YYYY-MM-DD [HH:MM:SS[.MS]). Default is None
         end: str
             Backtest end date (YYYY-MM-DD [HH:MM:SS[.MS]). Default is None
+        data : str
+            Path to the directory with QTPyLib-compatible CSV files (for Backtesting using CSV files)
         output: str
             Path to save the recorded data (default: None)
         ibport: int
@@ -86,7 +91,7 @@ class Algo(Broker):
     def __init__(self, instruments, resolution,
         tick_window=1, bar_window=100, timezone="UTC", preload=None,
         continuous=True, blotter=None, sms=[], log=None, backtest=False,
-        start=None, end=None, output=None,
+        start=None, end=None, data=None, output=None,
         ibclient=998, ibport=4001, ibserver="localhost", **kwargs):
 
         # detect algo name
@@ -126,6 +131,7 @@ class Algo(Broker):
         self.backtest       = self.args["backtest"]
         self.backtest_start = self.args["start"]
         self.backtest_end   = self.args["end"]
+        self.backtest_csv   = self.args["data"]
 
         # -----------------------------------
         self.sms_numbers    = self.args["sms"]
@@ -168,6 +174,16 @@ class Algo(Broker):
                 sys.exit(0)
             if self.backtest_end is None:
                 self.backtest_end = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+            if self.backtest_csv is not None and not os.path.exists(self.backtest_csv):
+                self.log_algo.error("CSV directory cannot be found (%s)" % self.backtest_csv)
+                sys.exit(0)
+                if self.backtest_csv.endswith("/"):
+                    self.backtest_csv = self.backtest_csv[:-1]
+
+        else:
+            self.backtest_start = None
+            self.backtest_end   = None
+            self.backtest_csv   = None
 
     # ---------------------------------------
     def add_stale_tick(self):
@@ -211,11 +227,13 @@ class Algo(Broker):
             help='Backtest start date')
         parser.add_argument('--end', default=self.args["end"],
             help='Backtest end date')
+        parser.add_argument('--data', default=self.args["data"],
+            help='Path to backtester CSV files')
         parser.add_argument('--output', default=self.args["output"],
             help='Path to save the recorded data')
 
         parser.add_argument('--blotter',
-            help='Log trades to the MySQL server used by this Blotter')
+            help='Log trades to this Blotter\'s MySQL')
         parser.add_argument('--continuous', default=self.args["continuous"],
             help='Construct continuous Futures contracts (flag)', action='store_true')
 
@@ -236,8 +254,40 @@ class Algo(Broker):
 
         history = pd.DataFrame()
 
-        # get history
-        if not self.blotter_args["dbskip"] and (self.backtest or self.preload):
+        # get history from csv dir
+        if self.backtest and self.backtest_csv:
+            kind = "TICK" if self.resolution[-1] in ("K", "V") else "BAR"
+            dfs = []
+            for symbol in self.symbols:
+                file = "%s/%s.%s.csv" % (self.backtest_csv, symbol, kind)
+                if not os.path.exists(file):
+                    self.log_algo.error("Can't load data for %s (%s doesn't exist)" % (symbol, file))
+                    sys.exit(0)
+                try:
+                    df = pd.read_csv(file)
+
+                    if "expiry" not in df.columns or not validate_csv_columns(df, kind, raise_errors=False):
+                        self.log_algo.error("%s Doesn't appear to be a QTPyLib-compatible format" % file)
+                        sys.exit(0)
+                    if df['symbol'].values[-1] != symbol:
+                        self.log_algo.error("%s Doesn't content data for %s" % (file, symbol))
+                        sys.exit(0)
+                    dfs.append(df)
+
+                except:
+                    self.log_algo.error("Error reading data for %s (%s)" % (symbol, file))
+                    sys.exit(0)
+
+            history = prepare_history(
+                data       = pd.concat(dfs),
+                resolution = self.resolution,
+                tz         = self.timezone,
+                continuous = self.continuous
+            )
+            history = history[history.index >= self.backtest_start]
+
+
+        elif not self.blotter_args["dbskip"] and (self.backtest or self.preload):
 
             start = self.backtest_start if self.backtest else tools.backdate(self.preload)
             end = self.backtest_end if self.backtest else None
