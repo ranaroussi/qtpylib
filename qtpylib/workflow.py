@@ -37,9 +37,14 @@ from qtpylib.blotter import (
 )
 
 from ezibpy import ezIBpy
+from ezibpy.utils import contract_expiry_from_symbol
 
 # =============================================
 tools.createLogger(__name__)
+# =============================================
+
+# =============================================
+# data retreival methods
 # =============================================
 
 def get_data_yahoo(symbols, start, end=None, *args, **kwargs):
@@ -111,7 +116,7 @@ def get_data_yahoo(symbols, start, end=None, *args, **kwargs):
 
     return pd.concat(dfs).sort_index()
 
-
+# ---------------------------------------------
 def get_data_yahoo_intraday(symbol, *args, **kwargs):
     """
     Import intraday data (1M) from Yahoo finance (2 weeks max)
@@ -151,7 +156,7 @@ def get_data_yahoo_intraday(symbol, *args, **kwargs):
     df.loc[:, "symbol"] = symbol
     return df[["symbol", "open", "high", "low", "close", "volume"]]
 
-
+# ---------------------------------------------
 def get_data_google_intraday(symbol, *args, **kwargs):
     """
     Import intraday data (1M) from Google finance (3 weeks max)
@@ -259,6 +264,11 @@ def get_data_ib(instrument, start, resolution="1 min", blotter=None, output_path
     data['datetime'] = data.index
     return prepare_data(instrument, data, output_path=output_path)
 
+
+# =============================================
+# data preparation methods
+# =============================================
+
 _bars_colsmap = {
     'open': 'open',
     'high': 'high',
@@ -295,7 +305,8 @@ _ticks_colsmap = {
     'opt_theta': 'opt_theta'
 }
 
-def validate_columns(df, kind="BAR"):
+# ---------------------------------------------
+def validate_columns(df, kind="BAR", raise_errors=True):
     global _bars_colsmap, _ticks_colsmap
 
     # validate columns
@@ -318,15 +329,15 @@ def validate_columns(df, kind="BAR"):
                 return False
     return True
 
-
-def prepare_data(instrument, df, output_path=None, index=None, colsmap=None, kind="BAR"):
+# ---------------------------------------------
+def prepare_data(instrument, data, output_path=None, index=None, colsmap=None, kind="BAR"):
     """
     Converts given DataFrame to a QTPyLib-compatible format and timezone
 
     :Parameters:
         instrument : mixed
             IB contract tuple / string (same as that given to strategy)
-        df : pd.DataFrame
+        data : pd.DataFrame
             Pandas DataDrame with that instrument's market data
         output_path : str
             Path to the location where the resulting CSV should be saved (default: ``None``)
@@ -345,7 +356,8 @@ def prepare_data(instrument, df, output_path=None, index=None, colsmap=None, kin
     global _bars_colsmap, _ticks_colsmap
 
     # work on copy
-    df = df.copy()
+    df = data.copy()
+
     # ezibpy's csv?
     if set(df.columns) == set(['datetime','C','H','L','O','OI','V','WAP']):
         df.rename(columns={
@@ -400,7 +412,7 @@ def prepare_data(instrument, df, output_path=None, index=None, colsmap=None, kin
         df = tools.force_options_columns(df)
 
     # remove all other columns
-    known_cols = list(colsmap.values())+['symbol','symbol_group','asset_class']
+    known_cols = list(colsmap.values())+['symbol','symbol_group','asset_class','expiry']
     for col in df.columns:
         if col not in known_cols:
             df.drop(col, axis=1, inplace=True)
@@ -410,15 +422,20 @@ def prepare_data(instrument, df, output_path=None, index=None, colsmap=None, kin
     df = tools.set_timezone(df, "UTC")
     df.index.rename("datetime", inplace=True)
 
+    # add expiry
+    df.loc[:, 'expiry'] = np.nan
+    if asset_class in ("FUT", "OPT", "FOP"):
+        df.loc[:, 'expiry'] = contract_expiry_from_symbol(contract_string)
+
     # save csv
     if output_path is not None:
         output_path = output_path[:-1] if output_path.endswith('/') else output_path
-        df.to_csv(output_path +"/"+ contract_string + ".csv")
+        df.to_csv("%s/%s.%s.csv" % (output_path, contract_string, kind))
 
     # return df
     return df
 
-
+# ---------------------------------------------
 def store_data(df, blotter=None, kind="BAR"):
     """
     Store QTPyLib-compatible csv files in Blotter's MySQL.
@@ -450,7 +467,7 @@ def store_data(df, blotter=None, kind="BAR"):
 
     # cannot continue
     if blotter_args['dbskip']:
-        raise Exception("Cannot continue. Blotter running with --skipdb")
+        raise Exception("Cannot continue. Blotter running with --dbskip")
         return False
 
     # connect to mysql using blotter's settings
@@ -490,6 +507,10 @@ def store_data(df, blotter=None, kind="BAR"):
 
     return True
 
+
+# =============================================
+# data analyze methods
+# =============================================
 
 def analyze_portfolio(file):
     """ analyze portfolio (TBD) """
