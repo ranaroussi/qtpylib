@@ -33,7 +33,7 @@ import time
 from datetime import datetime, timedelta
 
 from qtpylib import (
-    tools, sms, futures
+    tools, sms
 )
 from qtpylib.blotter import (
     Blotter, load_blotter_args
@@ -143,15 +143,16 @@ class Broker():
         self.blotter = Blotter(**self.blotter_args)
 
         # connect to mysql using blotter's settings
-        self.dbconn = pymysql.connect(
-            host   = str(self.blotter_args['dbhost']),
-            port   = int(self.blotter_args['dbport']),
-            user   = str(self.blotter_args['dbuser']),
-            passwd = str(self.blotter_args['dbpass']),
-            db     = str(self.blotter_args['dbname']),
-            autocommit = True
-        )
-        self.dbcurr = self.dbconn.cursor()
+        if not self.blotter_args['dbskip']:
+            self.dbconn = pymysql.connect(
+                host   = str(self.blotter_args['dbhost']),
+                port   = int(self.blotter_args['dbport']),
+                user   = str(self.blotter_args['dbuser']),
+                passwd = str(self.blotter_args['dbpass']),
+                db     = str(self.blotter_args['dbname']),
+                autocommit = True
+            )
+            self.dbcurr = self.dbconn.cursor()
 
         # -----------------------------------
         # do stuff on exit
