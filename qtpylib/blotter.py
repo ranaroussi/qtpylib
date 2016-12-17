@@ -367,6 +367,10 @@ class Blotter():
         data = None
         symbol = self.ibConn.tickerSymbol(tickerId)
 
+        # kwargs is empty
+        if not kwargs:
+            return
+
         # for instruments that receive RTVOLUME events
         if "tick" in kwargs:
             self.rtvolume.add(symbol)
@@ -407,6 +411,7 @@ class Blotter():
                     # "wap":          kwargs['tick']['wap'],
                 }
 
+        # proceed if data exists
         if data is not None:
             # cache last tick
             if symbol in self.cash_ticks.keys():
