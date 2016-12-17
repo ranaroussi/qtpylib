@@ -24,6 +24,7 @@ import pandas as pd
 import pymysql
 import requests
 import logging
+import time
 
 from io import StringIO
 from pandas_datareader import data as web
@@ -196,6 +197,67 @@ def get_data_google_intraday(symbol, *args, **kwargs):
     df.loc[:, "symbol"] = symbol
     return df[["symbol", "open", "high", "low", "close", "volume"]]
 
+# ---------------------------------------------
+_ib_history_downloaded = False
+
+def ibCallback(caller, msg, **kwargs):
+    global _ib_history_downloaded
+    if caller == "handleHistoricalData":
+        if kwargs["completed"]:
+            _ib_history_downloaded = True
+        # print(kwargs)
+
+def get_data_ib(instrument, start, resolution="1 min", blotter=None, output_path=None):
+    """
+    Downloads historical data from Interactive Brokers
+
+    :Parameters:
+        instrument : mixed
+            IB contract tuple / string (same as that given to strategy)
+        start : str
+            Backtest start date (YYYY-MM-DD [HH:MM:SS[.MS])
+
+    :Optional:
+        resolution : str
+            1 sec, 5 secs, 15 secs, 30 secs, 1 min (default), 2 mins, 3 mins, 5 mins, 15 mins, 30 mins, 1 hour, 1 day
+        blotter : str
+            Store MySQL server used by this Blotter (default is "auto detect")
+        output_path : str
+            Path to the location where the resulting CSV should be saved (default: ``None``)
+
+    :Returns:
+        data : pd.DataFrame
+            Pandas DataFrame in a QTPyLib-compatible format and timezone
+    """
+    global _ib_history_downloaded
+
+    # load blotter settings
+    blotter_args = load_blotter_args(blotter, logger=logging.getLogger(__name__))
+
+    # create contract string (no need for connection)
+    ibConn = ezIBpy()
+    ibConn.ibCallback = ibCallback
+
+    if not ibConn.connected:
+        ibConn.connect(clientId=0,
+            port=int(blotter_args['ibport']), host=str(blotter_args['ibserver']))
+
+    # generate a valid ib tuple
+    instrument = tools.create_ib_tuple(instrument)
+    contract_string = ibConn.contractString(instrument)
+    contract = ibConn.createContract(instrument)
+
+    ibConn.requestHistoricalData(contracts=[contract],
+        data="TRADES", resolution=resolution, lookback=tools.ib_duration_str(start), rth=False)
+
+    while not _ib_history_downloaded:
+        time.sleep(.1)
+
+    ibConn.disconnect()
+
+    data = ibConn.historicalData[contract_string]
+    data['datetime'] = data.index
+    return prepare_data(instrument, data, output_path=output_path)
 
 _bars_colsmap = {
     'open': 'open',
@@ -284,6 +346,19 @@ def prepare_data(instrument, df, output_path=None, index=None, colsmap=None, kin
 
     # work on copy
     df = df.copy()
+    # ezibpy's csv?
+    if set(df.columns) == set(['datetime','C','H','L','O','OI','V','WAP']):
+        df.rename(columns={
+            'datetime': 'datetime',
+            'O': 'open',
+            'H': 'high',
+            'L': 'low',
+            'C': 'close',
+            'OI': 'volume',
+        }, inplace=True)
+        df.index = pd.to_datetime(df['datetime'])
+        df.index = df.index.tz_localize(tools.get_timezone()).tz_convert("UTC")
+        index = None
 
     # set index
     if index is None:
