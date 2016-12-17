@@ -545,7 +545,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False):
             }
 
             for sym in meta_data.index.values:
-                if ("S" in resolution):
+                if "S" in resolution and "last" in data.columns:
                     ohlc = data[data['symbol']==sym]['last'].resample(resolution).ohlc()
                     symdata = data[data['symbol']==sym].resample(resolution).apply(ticks_ohlc_dict).fillna(value=np.nan)
                     symdata.rename(columns={'lastsize': 'volume'}, inplace=True)
@@ -622,6 +622,9 @@ def round_to_fraction(val, res, decimals=None):
 
 # -------------------------------------------
 def backdate(res, date=None, as_datetime=False, fmt='%Y-%m-%d', tz="UTC"):
+    if res is None:
+        return None
+
     if date is None:
         date = datetime.datetime.now()
     else:
