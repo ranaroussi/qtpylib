@@ -326,10 +326,10 @@ class Blotter():
 
         if kwargs["completed"]:
             self.backfilled = True
+            try: self.ibConn.cancelHistoricalData(self.ibConn.contracts[msg.reqId]);
+            except: pass
         else:
             # print(msg)
-            self.ibConn.cancelHistoricalData();
-            sys.exit()
             symbol = self.ibConn.tickerSymbol(msg.reqId)
 
             data = {
