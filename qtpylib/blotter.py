@@ -60,6 +60,7 @@ tools.createLogger(__name__, logging.INFO)
 logging.getLogger('ezibpy').setLevel(logging.CRITICAL)
 # =============================================
 
+cash_ticks = {}
 
 class Blotter():
     """Broker class initilizer
@@ -135,7 +136,7 @@ class Blotter():
         self.ibConn  = None
 
         self.symbol_ids = {} # cache
-        self.cash_ticks = {} # cache
+        self.cash_ticks = cash_ticks # outside cache
         self.rtvolume   = set() # has RTVOLUME?
 
         # -------------------------------
@@ -898,29 +899,7 @@ class Blotter():
         data = self._fix_history_sequence(data, table)
 
         # setup dataframe
-        data.set_index('datetime', inplace=True)
-        data.index = pd.to_datetime(data.index, utc=True)
-        data['expiry'] = pd.to_datetime(data['expiry'], utc=True)
-
-        # remove _STK from symbol to match ezIBpy's formatting
-        data['symbol'] = data['symbol'].str.replace("_STK", "")
-
-        if continuous and resolution[-1] not in ("K", "V", "S"):
-            # construct continuous contracts for futures
-            all_dfs = [ data[data['asset_class']!='FUT'] ]
-
-            # generate dict of df per future
-            futures_symbol_groups = list( data[data['asset_class']=='FUT']['symbol_group'].unique() )
-            for key in futures_symbol_groups:
-                future_group = data[data['symbol_group']==key]
-                continuous = futures.create_continuous_contract(future_group, resolution)
-                all_dfs.append(continuous)
-
-            # make one df again
-            data = pd.concat(all_dfs)
-
-        data = tools.resample(data, resolution, tz)
-        return data
+        return prepare_history(data=data, resolution="1T", tz="UTC", continuous=True)
 
     # -------------------------------------------
     def stream(self, symbols, tick_handler=None, bar_handler=None, \
@@ -1021,7 +1000,7 @@ class Blotter():
         """
 
         # currenly only supporting minute-data
-        if resolution[-1] in ("K", "V", "S"):
+        if resolution[-1] in ("K", "V"):
             self.backfilled = True
             return None
 
@@ -1357,6 +1336,37 @@ def mysql_insert_bar(data, symbol_id, dbcurr):
             ))
         except:
             pass
+
+# -------------------------------------------
+def prepare_history(data, resolution="1T", tz="UTC", continuous=True):
+
+    # setup dataframe
+    data.set_index('datetime', inplace=True)
+    data.index = pd.to_datetime(data.index, utc=True)
+    data['expiry'] = pd.to_datetime(data['expiry'], utc=True)
+
+    # remove _STK from symbol to match ezIBpy's formatting
+    data['symbol'] = data['symbol'].str.replace("_STK", "")
+
+    # force options columns
+    data = tools.force_options_columns(data)
+
+    # construct continuous contracts for futures
+    if continuous and resolution[-1] not in ("K", "V", "S"):
+        all_dfs = [ data[data['asset_class']!='FUT'] ]
+
+        # generate dict of df per future
+        futures_symbol_groups = list( data[data['asset_class']=='FUT']['symbol_group'].unique() )
+        for key in futures_symbol_groups:
+            future_group = data[data['symbol_group']==key]
+            continuous = futures.create_continuous_contract(future_group, resolution)
+            all_dfs.append(continuous)
+
+        # make one df again
+        data = pd.concat(all_dfs)
+
+    data = tools.resample(data, resolution, tz)
+    return data
 
 # -------------------------------------------
 if __name__ == "__main__":
