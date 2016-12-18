@@ -177,8 +177,8 @@ class Algo(Broker):
             if self.backtest_csv is not None and not os.path.exists(self.backtest_csv):
                 self.log_algo.error("CSV directory cannot be found (%s)" % self.backtest_csv)
                 sys.exit(0)
-                if self.backtest_csv.endswith("/"):
-                    self.backtest_csv = self.backtest_csv[:-1]
+            elif self.backtest_csv.endswith("/"):
+                self.backtest_csv = self.backtest_csv[:-1]
 
         else:
             self.backtest_start = None
