@@ -1,7 +1,17 @@
 Release Notes
 =============
 
-*December 16, 2016*
+*December 18, 2016*
+
+1.5.47a
+-----------
+
+- Introduced an **all new** ``Workflow`` module for downloading, cleaning, preparing and uploading market data to the database
+- Backtesting can now be done using CSV files (converted into a QTPyLib-compatible format using the ``Workflow`` module)
+- Misc bugfixes and code improvements, cleanup and abstraction
+- Requires ezIBpy >= 1.12.44
+
+*December 12, 2016*
 
 1.5.46a
 --------

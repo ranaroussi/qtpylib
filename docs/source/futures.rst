@@ -4,7 +4,7 @@ Futures Trading
 Auto-Tuple Generation
 ---------------------
 
-Version 1.4.9 instoduced ``futures.make_tuple(...)``, a method
+Version 1.4.9 introduced ``futures.make_tuple(...)``, a method
 that automatically constructs a valid instrument tuple for any Futures
 contract available on Interactive Brokers, using the information available
 via the `contract specification retrival functionality <#contract-specification>`_.
@@ -125,7 +125,7 @@ if it's older than 24 hours.
 
     """
 
-To get the maximum number of contracts you can trade,
+\* To get the maximum number of contracts you can trade,
 based on your account balance and contract requirements,
 use ``instrument.get_margin_max_contracts()``
 from within your strategies.

@@ -50,9 +50,6 @@ from qtpylib import (
     tools, path, futures, __version__
 )
 
-from decimal import *
-getcontext().prec = 5
-
 from abc import ABCMeta
 
 # =============================================
@@ -63,6 +60,7 @@ tools.createLogger(__name__, logging.INFO)
 logging.getLogger('ezibpy').setLevel(logging.CRITICAL)
 # =============================================
 
+cash_ticks = {}
 
 class Blotter():
     """Broker class initilizer
@@ -102,7 +100,7 @@ class Blotter():
     __metaclass__ = ABCMeta
 
     def __init__(self, name=None, symbols="symbols.csv",
-        ibport="4001", ibclient="999", ibserver="localhost",
+        ibport=4001, ibclient=999, ibserver="localhost",
         dbhost="localhost", dbport="3306", dbname="qtpy",
         dbuser="root", dbpass="", dbskip=False, orderbook=False,
         zmqport="12345", zmqtopic=None, **kwargs):
@@ -138,7 +136,7 @@ class Blotter():
         self.ibConn  = None
 
         self.symbol_ids = {} # cache
-        self.cash_ticks = {} # cache
+        self.cash_ticks = cash_ticks # outside cache
         self.rtvolume   = set() # has RTVOLUME?
 
         # -------------------------------
@@ -329,23 +327,23 @@ class Blotter():
 
         if kwargs["completed"]:
             self.backfilled = True
+            try: self.ibConn.cancelHistoricalData(self.ibConn.contracts[msg.reqId]);
+            except: pass
         else:
-            print(msg)
-            self.ibConn.cancelHistoricalData();
-            sys.exit()
+            # print(msg)
             symbol = self.ibConn.tickerSymbol(msg.reqId)
 
             data = {
                 "symbol":       symbol,
-                "symbol_group": self._gen_symbol_group(symbol),
-                "asset_class":  self._gen_asset_class(symbol),
+                "symbol_group": tools.gen_symbol_group(symbol),
+                "asset_class":  tools.gen_asset_class(symbol),
                 "timestamp":    tools.datetime_to_timezone(
                     datetime.fromtimestamp(int(msg.date)), tz="UTC").strftime("%Y-%m-%d %H:%M:%S"),
             }
 
             # incmoing second data
             if "sec" in self.backfill_resolution:
-                data["last"]     = float(Decimal(msg.close))
+                data["last"]     = tools.to_decimal(msg.close)
                 data["lastsize"] = int(msg.volume) # msg.count?
                 data["bid"]      = 0
                 data["bidsize"]  = 0
@@ -353,14 +351,14 @@ class Blotter():
                 data["asksize"]  = 0
                 data["kind"]     = "TICK"
             else:
-                data["open"]   = float(Decimal(msg.open))
-                data["high"]   = float(Decimal(msg.high))
-                data["low"]    = float(Decimal(msg.low))
-                data["close"]  = float(Decimal(msg.close))
+                data["open"]   = tools.to_decimal(msg.open)
+                data["high"]   = tools.to_decimal(msg.high)
+                data["low"]    = tools.to_decimal(msg.low)
+                data["close"]  = tools.to_decimal(msg.close)
                 data["volume"] = int(msg.volume)
                 data["kind"]   = "BAR"
 
-            print(data)
+            # print(data)
 
             # store in db
             self.log2db(data, data["kind"])
@@ -370,19 +368,23 @@ class Blotter():
         data = None
         symbol = self.ibConn.tickerSymbol(tickerId)
 
+        # kwargs is empty
+        if not kwargs:
+            return
+
         # for instruments that receive RTVOLUME events
         if "tick" in kwargs:
             self.rtvolume.add(symbol)
             data = {
                 # available data from ib
                 "symbol":       symbol,
-                "symbol_group": self._gen_symbol_group(symbol), # ES_F, ...
-                "asset_class":  self._gen_asset_class(symbol),
+                "symbol_group": tools.gen_symbol_group(symbol), # ES_F, ...
+                "asset_class":  tools.gen_asset_class(symbol),
                 "timestamp":    kwargs['tick']['time'],
-                "last":         float(Decimal(kwargs['tick']['last'])),
+                "last":         tools.to_decimal(kwargs['tick']['last']),
                 "lastsize":     int(kwargs['tick']['size']),
-                "bid":          float(Decimal(kwargs['tick']['bid'])),
-                "ask":          float(Decimal(kwargs['tick']['ask'])),
+                "bid":          tools.to_decimal(kwargs['tick']['bid']),
+                "ask":          tools.to_decimal(kwargs['tick']['ask']),
                 "bidsize":      int(kwargs['tick']['bidsize']),
                 "asksize":      int(kwargs['tick']['asksize']),
                 # "wap":          kwargs['tick']['wap'],
@@ -398,18 +400,19 @@ class Blotter():
                 data = {
                     # available data from ib
                     "symbol":       symbol,
-                    "symbol_group": self._gen_symbol_group(symbol), # ES_F, ...
-                    "asset_class":  self._gen_asset_class(symbol),
+                    "symbol_group": tools.gen_symbol_group(symbol), # ES_F, ...
+                    "asset_class":  tools.gen_asset_class(symbol),
                     "timestamp":    tick.index.values[-1],
-                    "last":         float(Decimal(tick['last'].values[-1])),
+                    "last":         tools.to_decimal(tick['last'].values[-1]),
                     "lastsize":     int(tick['lastsize'].values[-1]),
-                    "bid":          float(Decimal(tick['bid'].values[-1])),
-                    "ask":          float(Decimal(tick['ask'].values[-1])),
+                    "bid":          tools.to_decimal(tick['bid'].values[-1]),
+                    "ask":          tools.to_decimal(tick['ask'].values[-1]),
                     "bidsize":      int(tick['bidsize'].values[-1]),
                     "asksize":      int(tick['asksize'].values[-1]),
                     # "wap":          kwargs['tick']['wap'],
                 }
 
+        # proceed if data exists
         if data is not None:
             # cache last tick
             if symbol in self.cash_ticks.keys():
@@ -419,7 +422,7 @@ class Blotter():
             self.cash_ticks[symbol] = data
 
             # add options fields
-            data = self._force_options_columns(data)
+            data = tools.force_options_columns(data)
 
             # print('.', end="", flush=True)
             self.on_tick_received(data)
@@ -433,18 +436,18 @@ class Blotter():
             if self.ibConn.contracts[tickerId].m_secType in ("OPT", "FOP"):
                 quote = self.ibConn.optionsData[tickerId].to_dict(orient='records')[0]
                 quote['type']   = self.ibConn.contracts[tickerId].m_right
-                quote['strike'] = float(Decimal(self.ibConn.contracts[tickerId].m_strike))
+                quote['strike'] = tools.to_decimal(self.ibConn.contracts[tickerId].m_strike)
                 quote["symbol_group"] = self.ibConn.contracts[tickerId].m_symbol+'_'+self.ibConn.contracts[tickerId].m_secType
-                quote = self.self._mark_options_values(quote)
+                quote = tools.mark_options_values(quote)
             else:
                 quote = self.ibConn.marketData[tickerId].to_dict(orient='records')[0]
-                quote["symbol_group"] = self._gen_symbol_group(symbol)
+                quote["symbol_group"] = tools.gen_symbol_group(symbol)
 
             quote["symbol"] = symbol
-            quote["asset_class"] = self._gen_asset_class(symbol)
-            quote['bid']  = float(Decimal(quote['bid']))
-            quote['ask']  = float(Decimal(quote['ask']))
-            quote['last'] = float(Decimal(quote['last']))
+            quote["asset_class"] = tools.gen_asset_class(symbol)
+            quote['bid']  = tools.to_decimal(quote['bid'])
+            quote['ask']  = tools.to_decimal(quote['ask'])
+            quote['last'] = tools.to_decimal(quote['last'])
             quote["kind"] = "QUOTE"
 
             # cash markets do not get RTVOLUME (handleTickString)
@@ -479,32 +482,32 @@ class Blotter():
                 return
 
         tick['type']          = self.ibConn.contracts[tickerId].m_right
-        tick['strike']        = float(Decimal(self.ibConn.contracts[tickerId].m_strike))
+        tick['strike']        = tools.to_decimal(self.ibConn.contracts[tickerId].m_strike)
         tick["symbol_group"]  = self.ibConn.contracts[tickerId].m_symbol+'_'+self.ibConn.contracts[tickerId].m_secType
-        tick['volume']        = int(Decimal(tick['volume']))
-        tick['bid']           = float(Decimal(tick['bid']))
-        tick['bidsize']       = int(Decimal(tick['bidsize']))
-        tick['ask']           = float(Decimal(tick['ask']))
-        tick['asksize']       = int(Decimal(tick['asksize']))
-        tick['last']          = float(Decimal(tick['last']))
-        tick['lastsize']      = int(Decimal(tick['lastsize']))
+        tick['volume']        = int(tick['volume'])
+        tick['bid']           = tools.to_decimal(tick['bid'])
+        tick['bidsize']       = int(tick['bidsize'])
+        tick['ask']           = tools.to_decimal(tick['ask'])
+        tick['asksize']       = int(tick['asksize'])
+        tick['last']          = tools.to_decimal(tick['last'])
+        tick['lastsize']      = int(tick['lastsize'])
 
-        tick['price']         = round(float(Decimal(tick['price'])), 2)
-        tick['underlying']    = round(float(Decimal(tick['underlying'])), 5)
-        tick['dividend']      = float(Decimal(tick['dividend']))
-        tick['volume']        = int(Decimal(tick['volume']))
-        tick['iv']            = float(Decimal(tick['iv']))
-        tick['oi']            = int(Decimal(tick['oi']))
-        tick['delta']         = float(Decimal(tick['delta']))
-        tick['gamma']         = float(Decimal(tick['gamma']))
-        tick['vega']          = float(Decimal(tick['vega']))
-        tick['theta']         = float(Decimal(tick['theta']))
+        tick['price']         = tools.to_decimal(tick['price'], 2)
+        tick['underlying']    = tools.to_decimal(tick['underlying'])
+        tick['dividend']      = tools.to_decimal(tick['dividend'])
+        tick['volume']        = int(tick['volume'])
+        tick['iv']            = tools.to_decimal(tick['iv'])
+        tick['oi']            = int(tick['oi'])
+        tick['delta']         = tools.to_decimal(tick['delta'])
+        tick['gamma']         = tools.to_decimal(tick['gamma'])
+        tick['vega']          = tools.to_decimal(tick['vega'])
+        tick['theta']         = tools.to_decimal(tick['theta'])
 
         tick["symbol"]        = symbol
-        tick["symbol_group"]  = self._gen_symbol_group(symbol)
-        tick["asset_class"]   = self._gen_asset_class(symbol)
+        tick["symbol_group"]  = tools.gen_symbol_group(symbol)
+        tick["asset_class"]   = tools.gen_asset_class(symbol)
 
-        tick = self._mark_options_values(tick)
+        tick = tools.mark_options_values(tick)
 
         # is this a really new tick?
         prev_last = 0
@@ -543,8 +546,8 @@ class Blotter():
         # add symbol data to list
         symbol = self.ibConn.tickerSymbol(tickerId)
         orderbook['symbol'] = symbol
-        orderbook["symbol_group"]  = self._gen_symbol_group(symbol)
-        orderbook["asset_class"] = self._gen_asset_class(symbol)
+        orderbook["symbol_group"]  = tools.gen_symbol_group(symbol)
+        orderbook["asset_class"] = tools.gen_asset_class(symbol)
         orderbook["kind"] = "ORDERBOOK"
 
         # broadcast
@@ -629,139 +632,22 @@ class Blotter():
 
         # set symbol id
         symbol_id = 0
-
-        # in memory?
         if symbol in self.symbol_ids.keys():
             symbol_id = self.symbol_ids[symbol]
-
-        # load from db
         else:
-            expiry = None
-
-            if data["asset_class"] in ("FUT", "OPT", "FOP"):
-
-                # get expiry from contract details
-                contract_details = self.ibConn.contractDetails(data["symbol"])["m_summary"]
-                expiry = datetime.strptime(str(contract_details["m_expiry"]), '%Y%m%d').strftime("%Y-%m-%d")
-
-                # look for symbol w/ expiry
-                sql = """SELECT id FROM `symbols` WHERE
-                    `symbol`=%s AND `symbol_group`=%s AND `asset_class`=%s  AND `expiry`=%s LIMIT 1"""
-                self.dbcurr.execute(sql, (symbol, data["symbol_group"], data["asset_class"], expiry))
-
-            else:
-                # look for symbol w/o expiry
-                sql = """SELECT id FROM `symbols` WHERE
-                    `symbol`=%s AND `symbol_group`=%s AND `asset_class`=%s LIMIT 1"""
-                self.dbcurr.execute(sql, (symbol, data["symbol_group"], data["asset_class"]))
-
-            row = self.dbcurr.fetchone()
-
-            if row is not None:
-                # symbol already in db
-                symbol_id = row[0]
-            else:
-                # symbol/expiry not in db... insert new/update expiry
-
-                is_new_symbol = True
-
-                # need to update the expiry?
-                if data["asset_class"] in ("FUT", "OPT", "FOP"):
-                    sql = """SELECT id FROM `symbols` WHERE
-                        `symbol`=%s AND `symbol_group`=%s AND `asset_class`=%s LIMIT 1"""
-                    self.dbcurr.execute(sql, (symbol, data["symbol_group"], data["asset_class"]))
-
-                    row = self.dbcurr.fetchone()
-                    if row is not None:
-                        is_new_symbol = False
-
-                        sql = "UPDATE `symbols` SET `expiry`='"+str(expiry)+"' WHERE id="+str(row[0])
-                        self.dbcurr.execute(sql)
-                        try: self.dbconn.commit()
-                        except: return
-                        symbol_id = int(row[0])
-
-                # insert new symbol
-                if is_new_symbol:
-
-                    sql = """INSERT IGNORE INTO `symbols`
-                        (`symbol`, `symbol_group`, `asset_class`, `expiry`) VALUES (%s, %s, %s, %s)
-                        ON DUPLICATE KEY UPDATE `symbol`=`symbol`, `expiry`=%s
-                    """
-
-                    self.dbcurr.execute(sql, (symbol, data["symbol_group"], data["asset_class"], expiry, expiry))
-                    try: self.dbconn.commit()
-                    except: return
-
-                    symbol_id = self.dbcurr.lastrowid
-
-            # cache id
+            symbol_id = get_symbol_id(data["symbol"], self.dbconn, self.dbcurr, self.ibConn)
             self.symbol_ids[symbol] = symbol_id
 
-        # gen epoch datetime
+        # insert to db
         if kind == "TICK":
-            sql = """INSERT IGNORE INTO `ticks` (`datetime`, `symbol_id`,
-                `bid`, `bidsize`, `ask`, `asksize`, `last`, `lastsize`)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                ON DUPLICATE KEY UPDATE `symbol_id`=`symbol_id`
-            """
-            self.dbcurr.execute(sql, (data["timestamp"], symbol_id,
-                float(data["bid"]), int(data["bidsize"]),
-                float(data["ask"]), int(data["asksize"]),
-                float(data["last"]), int(data["lastsize"])
-            ))
-
-            # add greeks
-            if self.dbcurr.lastrowid and data["asset_class"] in ("OPT", "FOP"):
-                greeks_sql = """INSERT IGNORE INTO `greeks` (
-                    `tick_id`, `price`, `underlying`, `dividend`, `volume`,
-                    `iv`, `oi`, `delta`, `gamma`, `theta`, `vega`)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """
-                try:
-                    self.dbcurr.execute(greeks_sql, (self.dbcurr.lastrowid,
-                        round(float(data["opt_price"]), 2), round(float(data["opt_underlying"]), 5),
-                        float(data["opt_dividend"]),int(data["opt_volume"]),
-                        float(data["opt_iv"]), float(data["opt_oi"]),
-                        float(data["opt_delta"]), float(data["opt_gamma"]),
-                        float(data["opt_theta"]), float(data["opt_vega"]),
-                    ))
-                except:
-                    pass
-
+            mysql_insert_tick(data, symbol_id, self.dbcurr)
         elif kind == "BAR":
-            sql = """INSERT IGNORE INTO `bars`
-                (`datetime`, `symbol_id`, `open`, `high`, `low`, `close`, `volume`)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
-                ON DUPLICATE KEY UPDATE
-                    `open`=%s, `high`=%s, `low`=%s, `close`=%s, `volume`=`volume`+%s
-            """
-            self.dbcurr.execute(sql, (data["timestamp"], symbol_id,
-                float(data["open"]),float(data["high"]),float(data["low"]),float(data["close"]),int(data["volume"]),
-                float(data["open"]),float(data["high"]),float(data["low"]),float(data["close"]),int(data["volume"])
-            ))
-
-            # add greeks
-            if self.dbcurr.lastrowid and data["asset_class"] in ("OPT", "FOP"):
-                greeks_sql = """INSERT IGNORE INTO `greeks` (
-                    `bar_id`, `price`, `underlying`, `dividend`, `volume`,
-                    `iv`, `oi`, `delta`, `gamma`, `theta`, `vega`)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """
-                greeks = self.cash_ticks[data['symbol']]
-                self.dbcurr.execute(greeks_sql, (self.dbcurr.lastrowid,
-                    round(float(greeks["opt_price"]), 2), round(float(greeks["opt_underlying"]), 5),
-                    float(greeks["opt_dividend"]),int(greeks["opt_volume"]),
-                    float(greeks["opt_iv"]), float(greeks["opt_oi"]),
-                    float(greeks["opt_delta"]), float(greeks["opt_gamma"]),
-                    float(greeks["opt_theta"]), float(greeks["opt_vega"]),
-                ))
+            mysql_insert_bar(data, symbol_id, self.dbcurr)
 
         # commit
-        try:
-            self.dbconn.commit()
-        except:
-            pass
+        try: self.dbconn.commit()
+        except: pass
+
 
     # -------------------------------------------
     def run(self):
@@ -958,8 +844,8 @@ class Blotter():
             symbols = symbols.split(',')
 
         # work with symbol groups
-        # symbols = list(map(self._gen_symbol_group, symbols))
-        symbol_groups = list(map(self._gen_symbol_group, symbols))
+        # symbols = list(map(tools.gen_symbol_group, symbols))
+        symbol_groups = list(map(tools.gen_symbol_group, symbols))
         # print(symbols)
 
         # convert datetime to string for MySQL
@@ -1013,29 +899,7 @@ class Blotter():
         data = self._fix_history_sequence(data, table)
 
         # setup dataframe
-        data.set_index('datetime', inplace=True)
-        data.index = pd.to_datetime(data.index, utc=True)
-        data['expiry'] = pd.to_datetime(data['expiry'], utc=True)
-
-        # remove _STK from symbol to match ezIBpy's formatting
-        data['symbol'] = data['symbol'].str.replace("_STK", "")
-
-        if continuous and resolution[-1] not in ("K", "V", "S"):
-            # construct continuous contracts for futures
-            all_dfs = [ data[data['asset_class']!='FUT'] ]
-
-            # generate dict of df per future
-            futures_symbol_groups = list( data[data['asset_class']=='FUT']['symbol_group'].unique() )
-            for key in futures_symbol_groups:
-                future_group = data[data['symbol_group']==key]
-                continuous = futures.create_continuous_contract(future_group, resolution)
-                all_dfs.append(continuous)
-
-            # make one df again
-            data = pd.concat(all_dfs)
-
-        data = tools.resample(data, resolution, tz)
-        return data
+        return prepare_history(data=data, resolution="1T", tz="UTC", continuous=True)
 
     # -------------------------------------------
     def stream(self, symbols, tick_handler=None, bar_handler=None, \
@@ -1090,7 +954,7 @@ class Blotter():
                         df.index = df.index.tz_localize('UTC').tz_convert(tz)
 
                     # add options columns
-                    df = self._force_options_columns(df)
+                    df = tools.force_options_columns(df)
 
                     if data['kind'] == "TICK":
                         if tick_handler is not None:
@@ -1136,7 +1000,7 @@ class Blotter():
         """
 
         # currenly only supporting minute-data
-        if resolution[-1] in ("K", "V", "S"):
+        if resolution[-1] in ("K", "V"):
             self.backfilled = True
             return None
 
@@ -1273,97 +1137,22 @@ class Blotter():
     # ===========================================
 
     # -------------------------------------------
-    def _gen_symbol_group(self, sym):
-        sym = sym.strip()
 
-        if "_FUT" in sym:
-            sym = sym.split("_FUT")
-            return sym[0][:-5]+"_F"
-
-        elif "_CASH" in sym:
-            return "CASH"
-
-        if "_FOP" in sym or "_OPT" in sym:
-            return sym[:-12]
-
-        return sym
-
-    # -------------------------------------------
-    def _gen_asset_class(self, sym):
-        sym_class = str(sym).split("_")
-        if len(sym_class) > 1:
-            return sym_class[-1].replace("CASH", "CSH")
-        return "STK"
-
-
-    # -------------------------------------------
-    def _mark_options_values(self, data):
-        if isinstance(data, dict):
-            data['opt_price']      = data.pop('price')
-            data['opt_underlying'] = data.pop('underlying')
-            data['opt_dividend']   = data.pop('dividend')
-            data['opt_volume']     = data.pop('volume')
-            data['opt_iv']         = data.pop('iv')
-            data['opt_oi']         = data.pop('oi')
-            data['opt_delta']      = data.pop('delta')
-            data['opt_gamma']      = data.pop('gamma')
-            data['opt_vega']       = data.pop('vega')
-            data['opt_theta']      = data.pop('theta')
-            return data
-
-        elif isinstance(data, pd.DataFrame):
-            return data.rename(columns={
-                'price': 'opt_price',
-                'underlying': 'opt_underlying',
-                'dividend': 'opt_dividend',
-                'volume': 'opt_volume',
-                'iv': 'opt_iv',
-                'oi': 'opt_oi',
-                'delta': 'opt_delta',
-                'gamma': 'opt_gamma',
-                'vega': 'opt_vega',
-                'theta': 'opt_theta'
-            })
-
-        return data
-
-
-    # -------------------------------------------
-    def _force_options_columns(self, data):
-        opt_cols = ['opt_price', 'opt_underlying', 'opt_dividend', 'opt_volume',
-            'opt_iv', 'opt_oi', 'opt_delta', 'opt_gamma', 'opt_vega', 'opt_theta']
-
-        if isinstance(data, dict):
-            if not set(opt_cols).issubset(data.keys()):
-                data['opt_price'] = None
-                data['opt_underlying'] = None
-                data['opt_dividend'] = None
-                data['opt_volume'] = None
-                data['opt_iv'] = None
-                data['opt_oi'] = None
-                data['opt_delta'] = None
-                data['opt_gamma'] = None
-                data['opt_vega'] = None
-                data['opt_theta'] = None
-
-        elif isinstance(data, pd.DataFrame):
-            if not set(opt_cols).issubset(data.columns):
-                data.loc[:, 'opt_price']      = npnan
-                data.loc[:, 'opt_underlying'] = npnan
-                data.loc[:, 'opt_dividend']   = npnan
-                data.loc[:, 'opt_volume']     = npnan
-                data.loc[:, 'opt_iv']         = npnan
-                data.loc[:, 'opt_oi']         = npnan
-                data.loc[:, 'opt_delta']      = npnan
-                data.loc[:, 'opt_gamma']      = npnan
-                data.loc[:, 'opt_vega']       = npnan
-                data.loc[:, 'opt_theta']      = npnan
-
-        return data
 
 # -------------------------------------------
 def load_blotter_args(blotter_name=None, logger=None):
-    """ load running blotter's settings (used by clients) """
+    """ Load running blotter's settings (used by clients)
+
+    :Parameters:
+        blotter_name : str
+            Running Blotter's name (defaults to "auto-detect")
+        logger : object
+            Logger to be use (defaults to Blotter's)
+
+    :Returns:
+        args : dict
+            Running Blotter's arguments
+    """
     if logger is None:
         logger= tools.createLogger(__name__, logging.WARNING)
 
@@ -1372,14 +1161,16 @@ def load_blotter_args(blotter_name=None, logger=None):
         args_cache_file = tempfile.gettempdir()+"/"+blotter_name.lower()+".qtpylib"
         if not os.path.exists(args_cache_file):
             logger.critical("Cannot connect to running Blotter [%s]" % (blotter_name))
-            sys.exit(0)
+            if os.isatty(0): sys.exit(0)
+            return
 
     # no name provided - connect to last running
     else:
         blotter_files = sorted(glob.glob(tempfile.gettempdir()+"/*.qtpylib"), key=os.path.getmtime)
         if len(blotter_files) == 0:
             logger.critical("Cannot connect to running Blotter [%s]" % (blotter_name))
-            sys.exit(0)
+            if os.isatty(0): sys.exit(0)
+            return
 
         args_cache_file = blotter_files[-1]
 
@@ -1387,6 +1178,195 @@ def load_blotter_args(blotter_name=None, logger=None):
     args['as_client'] = True
 
     return args
+
+# -------------------------------------------
+def get_symbol_id(symbol, dbconn, dbcurr, ibConn=None):
+    """
+    Retrives symbol's ID from the Database or create it if it doesn't exist
+
+    :Parameters:
+        symbol : str
+            Instrument symbol
+        dbconn : object
+            Database connection to be used
+        dbcurr : object
+            Database cursor to be used
+
+    :Optional:
+        ibConn : object
+            ezIBpy object (used for determining futures/options expiration)
+
+    :Returns:
+        symbol_id : int
+            Symbol ID
+    """
+    def _get_contract_expiry(symbol, ibConn=None):
+        # parse w/p ibConn
+        if ibConn is None or isinstance(symbol, str):
+            return tools.contract_expiry_from_symbol(symbol)
+
+        # parse with ibConn
+        contract_details = ibConn.contractDetails(symbol)["m_summary"]
+        if contract_details["m_expiry"] == "":
+            ibConn.createContract(symbol)
+            return _get_contract_expiry(symbol, ibConn)
+
+        if contract_details["m_expiry"]:
+            return datetime.strptime(str(contract_details["m_expiry"]), '%Y%m%d').strftime("%Y-%m-%d")
+
+        return contract_details["m_expiry"]
+
+
+    # start
+    asset_class  = tools.gen_asset_class(symbol)
+    symbol_group = tools.gen_symbol_group(symbol)
+    clean_symbol = symbol.replace("_"+asset_class, "")
+    expiry = None
+
+    if asset_class in ("FUT", "OPT", "FOP"):
+        expiry = _get_contract_expiry(symbol, ibConn)
+
+        # look for symbol w/ expiry
+        sql = """SELECT id FROM `symbols` WHERE
+            `symbol`=%s AND `symbol_group`=%s AND `asset_class`=%s  AND `expiry`=%s LIMIT 1"""
+        dbcurr.execute(sql, (clean_symbol, symbol_group, asset_class, expiry))
+
+    else:
+        # look for symbol w/o expiry
+        sql = """SELECT id FROM `symbols` WHERE
+            `symbol`=%s AND `symbol_group`=%s AND `asset_class`=%s LIMIT 1"""
+        dbcurr.execute(sql, (clean_symbol, symbol_group, asset_class))
+
+    row = dbcurr.fetchone()
+
+    # symbol already in db
+    if row is not None:
+        return row[0]
+
+    # symbol/expiry not in db... insert new/update expiry
+    else:
+        # need to update the expiry?
+        if expiry is not None:
+            sql = """SELECT id FROM `symbols` WHERE
+                `symbol`=%s AND `symbol_group`=%s AND `asset_class`=%s LIMIT 1"""
+            dbcurr.execute(sql, (clean_symbol, symbol_group, asset_class))
+
+            row = dbcurr.fetchone()
+            if row is not None:
+                sql = "UPDATE `symbols` SET `expiry`='"+str(expiry)+"' WHERE id="+str(row[0])
+                dbcurr.execute(sql)
+                try: dbconn.commit()
+                except: return
+                return int(row[0])
+
+        # insert new symbol
+        sql = """INSERT IGNORE INTO `symbols`
+            (`symbol`, `symbol_group`, `asset_class`, `expiry`) VALUES (%s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE `symbol`=`symbol`, `expiry`=%s
+        """
+
+        dbcurr.execute(sql, (clean_symbol, symbol_group, asset_class, expiry, expiry))
+        try: dbconn.commit()
+        except: return
+
+        return dbcurr.lastrowid
+
+
+# -------------------------------------------
+def mysql_insert_tick(data, symbol_id, dbcurr):
+
+    sql = """INSERT IGNORE INTO `ticks` (`datetime`, `symbol_id`,
+        `bid`, `bidsize`, `ask`, `asksize`, `last`, `lastsize`)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE `symbol_id`=`symbol_id`
+    """
+    dbcurr.execute(sql, (data["timestamp"], symbol_id,
+        float(data["bid"]), int(data["bidsize"]),
+        float(data["ask"]), int(data["asksize"]),
+        float(data["last"]), int(data["lastsize"])
+    ))
+
+    # add greeks
+    if dbcurr.lastrowid and data["asset_class"] in ("OPT", "FOP"):
+        greeks_sql = """INSERT IGNORE INTO `greeks` (
+            `tick_id`, `price`, `underlying`, `dividend`, `volume`,
+            `iv`, `oi`, `delta`, `gamma`, `theta`, `vega`)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        try:
+            dbcurr.execute(greeks_sql, (dbcurr.lastrowid,
+                round(float(data["opt_price"]), 2), round(float(data["opt_underlying"]), 5),
+                float(data["opt_dividend"]),int(data["opt_volume"]),
+                float(data["opt_iv"]), float(data["opt_oi"]),
+                float(data["opt_delta"]), float(data["opt_gamma"]),
+                float(data["opt_theta"]), float(data["opt_vega"]),
+            ))
+        except:
+            pass
+
+
+# -------------------------------------------
+def mysql_insert_bar(data, symbol_id, dbcurr):
+    sql = """INSERT IGNORE INTO `bars`
+        (`datetime`, `symbol_id`, `open`, `high`, `low`, `close`, `volume`)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            `open`=%s, `high`=%s, `low`=%s, `close`=%s, `volume`=`volume`+%s
+    """
+    dbcurr.execute(sql, (data["timestamp"], symbol_id,
+        float(data["open"]),float(data["high"]),float(data["low"]),float(data["close"]),int(data["volume"]),
+        float(data["open"]),float(data["high"]),float(data["low"]),float(data["close"]),int(data["volume"])
+    ))
+
+    # add greeks
+    if dbcurr.lastrowid and data["asset_class"] in ("OPT", "FOP"):
+        greeks_sql = """INSERT IGNORE INTO `greeks` (
+            `bar_id`, `price`, `underlying`, `dividend`, `volume`,
+            `iv`, `oi`, `delta`, `gamma`, `theta`, `vega`)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        greeks = cash_ticks[data['symbol']]
+        try:
+            dbcurr.execute(greeks_sql, (dbcurr.lastrowid,
+                round(float(greeks["opt_price"]), 2), round(float(greeks["opt_underlying"]), 5),
+                float(greeks["opt_dividend"]),int(greeks["opt_volume"]),
+                float(greeks["opt_iv"]), float(greeks["opt_oi"]),
+                float(greeks["opt_delta"]), float(greeks["opt_gamma"]),
+                float(greeks["opt_theta"]), float(greeks["opt_vega"]),
+            ))
+        except:
+            pass
+
+# -------------------------------------------
+def prepare_history(data, resolution="1T", tz="UTC", continuous=True):
+
+    # setup dataframe
+    data.set_index('datetime', inplace=True)
+    data.index = pd.to_datetime(data.index, utc=True)
+    data['expiry'] = pd.to_datetime(data['expiry'], utc=True)
+
+    # remove _STK from symbol to match ezIBpy's formatting
+    data['symbol'] = data['symbol'].str.replace("_STK", "")
+
+    # force options columns
+    data = tools.force_options_columns(data)
+
+    # construct continuous contracts for futures
+    if continuous and resolution[-1] not in ("K", "V", "S"):
+        all_dfs = [ data[data['asset_class']!='FUT'] ]
+
+        # generate dict of df per future
+        futures_symbol_groups = list( data[data['asset_class']=='FUT']['symbol_group'].unique() )
+        for key in futures_symbol_groups:
+            future_group = data[data['symbol_group']==key]
+            continuous = futures.create_continuous_contract(future_group, resolution)
+            all_dfs.append(continuous)
+
+        # make one df again
+        data = pd.concat(all_dfs)
+
+    data = tools.resample(data, resolution, tz)
+    return data
 
 # -------------------------------------------
 if __name__ == "__main__":

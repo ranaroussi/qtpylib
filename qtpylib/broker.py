@@ -33,7 +33,7 @@ import time
 from datetime import datetime, timedelta
 
 from qtpylib import (
-    tools, sms, futures
+    tools, sms
 )
 from qtpylib.blotter import (
     Blotter, load_blotter_args
@@ -88,65 +88,7 @@ class Broker():
         instrument_tuples_dict = {}
         for instrument in instruments:
             try:
-                # signgle string
-                if isinstance(instrument, str):
-                    instrument = instrument.upper()
-
-                    if "FUT." not in instrument:
-                        # symbol stock
-                        instrument = (instrument, "STK", "SMART", "USD", "", 0.0, "")
-
-                    else:
-                        # future contract
-                        try:
-                            symdata = instrument.split(".")
-
-                            # is this a CME future?
-                            if symdata[1] not in futures.futures_contracts.keys():
-                                raise ValueError("Un-supported symbol. Please use full contract tuple.")
-
-                            # auto get contract details
-                            spec = futures.get_ib_futures(symdata[1])
-                            if not isinstance(spec, dict):
-                                raise ValueError("Un-parsable contract tuple")
-
-                            # expiry specified?
-                            if len(symdata) == 3 and symdata[2] != '':
-                                expiry = symdata[2]
-                            else:
-                                # default to most active
-                                expiry = futures.get_active_contract(symdata[1])
-
-                            instrument = (spec['symbol'].upper(), "FUT",
-                                spec['exchange'].upper(), spec['currency'].upper(),
-                                int(expiry), 0.0, "")
-
-                        except:
-                            raise ValueError("Un-parsable contract tuple")
-
-
-                # tuples without strike/right
-                elif len(instrument) <= 7:
-                    instrument_list = list(instrument)
-                    if len(instrument_list) < 3:
-                        instrument_list.append("SMART")
-                    if len(instrument_list) < 4:
-                        instrument_list.append("USD")
-                    if len(instrument_list) < 5:
-                        instrument_list.append("")
-                    if len(instrument_list) < 6:
-                        instrument_list.append(0.0)
-                    if len(instrument_list) < 7:
-                        instrument_list.append("")
-
-                    try: instrument_list[4] = int(instrument_list[4])
-                    except: pass
-
-                    instrument_list[5] = 0. if isinstance(instrument_list[5], str) \
-                        else float(instrument_list[5])
-
-                    instrument = tuple(instrument_list)
-
+                instrument = tools.create_ib_tuple(instrument)
                 contractString = self.ibConn.contractString(instrument)
                 instrument_tuples_dict[contractString] = instrument
                 self.ibConn.createContract(instrument)
@@ -201,15 +143,16 @@ class Broker():
         self.blotter = Blotter(**self.blotter_args)
 
         # connect to mysql using blotter's settings
-        self.dbconn = pymysql.connect(
-            host   = str(self.blotter_args['dbhost']),
-            port   = int(self.blotter_args['dbport']),
-            user   = str(self.blotter_args['dbuser']),
-            passwd = str(self.blotter_args['dbpass']),
-            db     = str(self.blotter_args['dbname']),
-            autocommit = True
-        )
-        self.dbcurr = self.dbconn.cursor()
+        if not self.blotter_args['dbskip']:
+            self.dbconn = pymysql.connect(
+                host   = str(self.blotter_args['dbhost']),
+                port   = int(self.blotter_args['dbport']),
+                user   = str(self.blotter_args['dbuser']),
+                passwd = str(self.blotter_args['dbpass']),
+                db     = str(self.blotter_args['dbname']),
+                autocommit = True
+            )
+            self.dbcurr = self.dbconn.cursor()
 
         # -----------------------------------
         # do stuff on exit
@@ -406,7 +349,7 @@ class Broker():
                 else:
                     pnl = trade['exit_price']-trade['entry_price']
 
-                pnl = float(Decimal(pnl))
+                pnl = tools.to_decimal(pnl)
                 # print("1)", pnl)
                 self.active_trades[tradeId]['realized_pnl'] = pnl
 

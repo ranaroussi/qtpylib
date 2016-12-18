@@ -21,6 +21,7 @@ Table of Contents
    reports
    sms
    indicators
+   workflow
    futures
    api
    daemons

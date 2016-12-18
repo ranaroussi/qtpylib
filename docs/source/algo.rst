@@ -268,6 +268,7 @@ Algo Parameters
 - ``backtest`` Work in Backtest mode (default: ``False``)
 - ``start`` Backtest start date (``YYYY-MM-DD [HH:MM:SS[.MS]``)
 - ``end`` Backtest end date (``YYYY-MM-DD [HH:MM:SS[.MS]``)
+- ``data`` Path to the directory with `QTPyLib-compatible CSV files <./workflow.html>`_ (back-testing mode only)
 - ``output`` Path to save the recorded data (default: ``None``)
 - ``sms`` List of numbers to text orders (default: ``None``)
 - ``log`` Path to store trade data (default: ``None``)
@@ -294,7 +295,6 @@ Algo Parameters
     strategy.run()
 
 
-
 Runtime (CLI) Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -308,6 +308,7 @@ You can override any of the above paramaters using run-time using command line a
 - ``--backtest`` Work in Backtest mode (flag, default: ``False``)
 - ``--start`` Backtest start date (``YYYY-MM-DD [HH:MM:SS[.MS]``)
 - ``--end`` Backtest end date (``YYYY-MM-DD [HH:MM:SS[.MS]``)
+- ``--data`` Path to the directory with `QTPyLib-compatible CSV files <./workflow.html>`_ (back-testing mode only)
 - ``--output`` Path to save the recorded data (default: ``None``)
 - ``--blotter`` Log trades to MySQL server used by this Blotter (default: ``auto-detect``)
 - ``--continuous`` Construct continuous Futures contracts (flag, default: ``True``)
@@ -328,9 +329,11 @@ In addition to live/paper trading, QTPyLib can also be used for back-testing
 following arguments when running your algo.
 
 .. note::
-    You **MUST** have the relevant historical data stored in your
-    Blotter's database in order to run back-tests - which is also
-    a good reason to keep your Blotter running for all eternity :)
+
+    In order to run back-tests, you **MUST** have the relevant
+    historical data either stored in your ``Blotter``'s database, or
+    as `QTPyLib-compatible CSV files <./workflow.html>`_
+    (if using CSV files, you must specify the path using the ``--data`` parameter).
 
     When backtesting Futures, the Blotter will will default to streaming
     adjusted, continuous contracts for the contracts requested, based
@@ -339,15 +342,17 @@ following arguments when running your algo.
 - ``--backtest`` [flag] Work in Backtest mode (default: ``False``)
 - ``--start`` Backtest start date (``YYYY-MM-DD [HH:MM:SS[.MS]``)
 - ``--end`` Backtest end date (``YYYY-MM-DD [HH:MM:SS[.MS]``)
+- ``--data`` Path to the directory with `QTPyLib-compatible CSV files <./workflow.html>`_
 
 With your Blotter running in the background, run your algo from the command line:
 
 .. code:: bash
 
-    $ python strategy.py --backtest --start 2015-01-01 --end 2015-12-31 -output portfolio.pkl
+    $ python strategy.py --backtest --start 2015-01-01 --end 2015-12-31 --data ~/mycsvdata/ -output ~/portfolio.pkl
 
-The resulting back-tested portfolio will be saved in ``./portfolio.pkl`` for later analysis.
+The resulting back-tested portfolio will be saved in ``~/portfolio.pkl`` for later analysis.
 
+----
 
 Recording Data
 --------------
@@ -449,6 +454,14 @@ whereas ``strike`` and ``opt_type`` must be a provided for Options (PUT/CALL).
 .. code:: python
 
     instruments = [ ("ES", "FUT", "GLOBEX", "USD", 201609), (...) ]
+
+.. note::
+    If you're trading **Front-Month Futures issued by CME-Group**, you can use the
+    ``FUT.SYMBOL`` shorthand to have the QTPyLib create the tuple for you (`see more Futures-specific methos here <./futures.html>`_).
+
+    .. code:: python
+
+        instruments = [ "FUT.ES", "FUT.CL", "..." ]
 
 
 **Example: Netflix Option**

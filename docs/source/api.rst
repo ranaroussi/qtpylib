@@ -18,3 +18,8 @@ API Reference
 -----
 
 .. include:: ./api_reports.rst
+
+-----
+
+.. include:: ./api_workflow.rst
+
