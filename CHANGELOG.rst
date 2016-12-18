@@ -3,6 +3,11 @@ Release Notes
 
 *December 18, 2016*
 
+1.5.48a
+-----------
+
+- Bugfixes
+
 1.5.47a
 -----------
 
