@@ -1,6 +1,8 @@
 Workflow API
 ------------
 
+.. autofunction:: qtpylib.workflow.get_data_ib(...)
+
 .. autofunction:: qtpylib.workflow.get_data_google_intraday(...)
 
 .. autofunction:: qtpylib.workflow.get_data_yahoo_intraday(...)

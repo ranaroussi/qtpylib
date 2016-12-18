@@ -57,7 +57,7 @@ Requirements
 * `Requests <https://github.com/kennethreitz/requests>`_ (tested to with with >=2.10.0)
 * `Beautiful Soup <https://pypi.python.org/pypi/beautifulsoup4>`_ (tested to work with >=4.3.2)
 * `IbPy2 <https://github.com/blampe/IbPy>`_ (tested to work with >=0.8.0)
-* `ezIBpy <https://github.com/ranaroussi/ezibpy>`_ (IbPy wrapper, tested to with with >=1.12.43)
+* `ezIBpy <https://github.com/ranaroussi/ezibpy>`_ (IbPy wrapper, tested to with with >=1.12.44)
 * Latest Interactive Brokers’ `TWS <https://www.interactivebrokers.com/en/index.php?f=15875>`_ or `IB Gateway <https://www.interactivebrokers.com/en/index.php?f=16457>`_ installed and running on the machine
 * `MySQL Server <https://www.mysql.com/>`_  installed and running with a database for QTPyLib
 
