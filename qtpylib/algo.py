@@ -117,7 +117,7 @@ class Algo(Broker):
         self.tick_count     = 0
         self.tick_bar_count = 0
         self.bar_count      = 0
-        self.bar_hash       = 0
+        self.bar_hashes     = {}
 
         self.tick_window    = tick_window if tick_window > 0 else 1
         if "V" in resolution:
@@ -639,9 +639,23 @@ class Algo(Broker):
         self.quotes[quote['symbol']] = quote
         self.on_quote(self.get_instrument(quote))
 
+
+    # ---------------------------------------
+    @staticmethod
+    def _get_window_per_symbol(df, window):
+        # truncate tick window per symbol
+        dfs = []
+        for sym in list(df["symbol"].unique()):
+            symdf = df[df['symbol']==sym]
+            dfs.append(symdf[-window:] if len(symdf.index) > window else symdf)
+        return pd.concat(dfs).sort_index()
+
     # ---------------------------------------
     def _tick_handler(self, tick, stale_tick=False):
         self._cancel_expired_pending_orders()
+
+        # tick symbol
+        symbol = tick['symbol'].values[0]
 
         # initial value
         if self.record_ts is None:
@@ -655,10 +669,12 @@ class Algo(Broker):
 
             if len(bars.index) > self.tick_bar_count > 0 or stale_tick:
                 self.record_ts = tick.index[0]
-                self._bar_handler(bars)
+                # self._bar_handler(bars, symbol)
+                self._bar_handler(bars[bars['symbol']==symbol][-1:])
 
-                periods = int("".join([s for s in self.resolution if s.isdigit()]))
-                self.ticks = self.ticks[-periods:]
+                window = int("".join([s for s in self.resolution if s.isdigit()]))
+                # self.ticks = self.ticks[-window:]
+                self.ticks = self._get_window_per_symbol(self.ticks, window)
 
             self.tick_bar_count = len(bars.index)
 
@@ -668,13 +684,15 @@ class Algo(Broker):
         if not stale_tick:
             self.on_tick(self.get_instrument(tick))
 
-
     # ---------------------------------------
     def _bar_handler(self, bar):
-        is_tick_or_volume_bar = False
-        handle_bar  = True
+        # bar symbol
+        symbol = bar['symbol'].values[0]
 
-        if self.resolution[-1] in ("S", "K", "V"):
+        is_tick_or_volume_bar = False
+        handle_bar = True
+
+        if self.resolution[-1] in ("K", "V"):
             is_tick_or_volume_bar = True
             handle_bar = self._caller("_tick_handler")
 
@@ -689,16 +707,20 @@ class Algo(Broker):
             self.bars = self._update_window(self.bars, bar, window=self.bar_window, resolution=self.resolution)
 
         # new bar?
-        this_bar_hash = abs(hash(str(self.bars.index.values[-1]))) % (10 ** 8)
-        newbar = (self.bar_hash != this_bar_hash)
-        self.bar_hash = this_bar_hash
+        hash_string = bar[:1]['symbol'].to_string().translate(str.maketrans({key: None for key in "\n -:+"}))
+        this_bar_hash = abs(hash(hash_string)) % (10 ** 8)
+
+        newbar = True
+        if symbol in self.bar_hashes:
+            newbar = self.bar_hashes[symbol] != this_bar_hash
+        self.bar_hashes[symbol] = this_bar_hash
 
         if newbar and handle_bar:
             self.record_ts = bar.index[0]
-            self.on_bar(self.get_instrument(bar))
+            self.on_bar(self.get_instrument(symbol))
 
-            if self.resolution[-1] not in ("S", "K", "V"):
-                self.record(bar)
+            # if self.resolution[-1] not in ("S", "K", "V"):
+            self.record(bar)
 
 
     # ---------------------------------------
@@ -708,6 +730,7 @@ class Algo(Broker):
         else:
             df = df.append(data)
 
+        # resample
         if resolution is not None:
             try:
                 tz = str(df.index.tz)
@@ -715,10 +738,17 @@ class Algo(Broker):
                 tz = None
             df = tools.resample(df, resolution=resolution, tz=tz)
 
+        # remove duplicates rows
+        df.loc[:, '_idx_'] = df.index
+        df = df.drop_duplicates(keep='last')
+        df.drop('_idx_', axis=1, inplace=True)
+
+        # return
         if window is None:
             return df
 
-        return df[-window:]
+        # return df[-window:]
+        return self._get_window_per_symbol(df, window)
 
     # ---------------------------------------
     # signal logging methods
@@ -731,7 +761,8 @@ class Algo(Broker):
             self.signals[symbol].append(nan)
 
         self.signals[symbol] = self.signals[symbol][-len(df.index):]
-        df.loc[-len(self.signals[symbol]):, 'signal'] = self.signals[symbol]
+        signal_count = len(self.signals[symbol])
+        df.loc[-signal_count:, 'signal'] = self.signals[symbol][-signal_count:]
 
         return df
 
