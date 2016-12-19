@@ -21,6 +21,7 @@
 
 from qtpylib import futures
 import math
+from pandas import concat as pd_concat
 
 class Instrument(str):
     """A string subclass that provides easy access to misc
@@ -32,6 +33,12 @@ class Instrument(str):
         """ sets the parent object to communicate with """
         self.parent = parent
 
+
+    # ---------------------------------------
+    @staticmethod
+    def _get_symbol_dataframe(df, symbol):
+        dfs = [ df[df['symbol']==symbol], df[df['symbol_group']==symbol] ]
+        return pd_concat(dfs).drop_duplicates(keep="last")
 
     # ---------------------------------------
     def get_bars(self, lookback=None, as_dict=False):
@@ -47,12 +54,10 @@ class Instrument(str):
             bars : pd.DataFrame / dict
                 The bars for this instruments
         """
-        bars = self.parent.bars[
-            (self.parent.bars['symbol']==self) | (self.parent.bars['symbol_group']==self)
-        ]
+        bars = self._get_symbol_dataframe(self.parent.bars, self)
 
         # add signal history to bars
-        bars = self.parent._add_signal_history(df=bars.copy(), symbol=self)
+        bars = self.parent._add_signal_history(df=bars, symbol=self)
 
         if lookback is not None:
             bars = bars[-lookback:]
@@ -87,9 +92,8 @@ class Instrument(str):
             ticks : pd.DataFrame / dict
                 The ticks for this instruments
         """
-        ticks = self.parent.ticks[
-            (self.parent.ticks['symbol']==self) | (self.parent.ticks['symbol_group']==self)
-        ][-lookback:]
+        ticks = self._get_symbol_dataframe(self.parent.ticks, self)
+
 
         if lookback is not None:
             ticks = ticks[-lookback:]
