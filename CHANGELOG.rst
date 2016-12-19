@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+*December 19, 2016*
+
+1.5.49a
+-----------
+
+- Fixed bugs that may occur on multi-instrument strategies
+- Misc code improvements, cleanup and abstraction
+
 *December 18, 2016*
 
 1.5.48a
