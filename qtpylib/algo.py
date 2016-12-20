@@ -740,7 +740,7 @@ class Algo(Broker):
 
         # remove duplicates rows
         df.loc[:, '_idx_'] = df.index
-        df = df.drop_duplicates(keep='last')
+        df.drop_duplicates(subset=['_idx_','symbol','symbol_group','asset_class'], keep='last', inplace=True)
         df.drop('_idx_', axis=1, inplace=True)
 
         # return
