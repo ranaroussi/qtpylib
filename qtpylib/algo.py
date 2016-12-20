@@ -646,8 +646,7 @@ class Algo(Broker):
         # truncate tick window per symbol
         dfs = []
         for sym in list(df["symbol"].unique()):
-            symdf = df[df['symbol']==sym]
-            dfs.append(symdf[-window:] if len(symdf.index) > window else symdf)
+            dfs.append(df[df['symbol']==sym][-window:])
         return pd.concat(dfs).sort_index()
 
     # ---------------------------------------
@@ -740,7 +739,7 @@ class Algo(Broker):
 
         # remove duplicates rows
         df.loc[:, '_idx_'] = df.index
-        df = df.drop_duplicates(keep='last')
+        df.drop_duplicates(subset=['_idx_','symbol','symbol_group','asset_class'], keep='last', inplace=True)
         df.drop('_idx_', axis=1, inplace=True)
 
         # return
