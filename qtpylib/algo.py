@@ -646,8 +646,7 @@ class Algo(Broker):
         # truncate tick window per symbol
         dfs = []
         for sym in list(df["symbol"].unique()):
-            symdf = df[df['symbol']==sym]
-            dfs.append(symdf[-window:] if len(symdf.index) > window else symdf)
+            dfs.append(df[df['symbol']==sym][-window:])
         return pd.concat(dfs).sort_index()
 
     # ---------------------------------------
