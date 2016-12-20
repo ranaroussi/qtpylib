@@ -37,8 +37,13 @@ class Instrument(str):
     # ---------------------------------------
     @staticmethod
     def _get_symbol_dataframe(df, symbol):
-        dfs = [ df[df['symbol']==symbol], df[df['symbol_group']==symbol] ]
-        return pd_concat(dfs).drop_duplicates(keep="last")
+        try:
+            # this produce a "IndexingError using Boolean Indexing" (on rare occasions)
+            return df[ (df['symbol']==symbol) | (df['symbol_group']==symbol) ]
+        except:
+            df = pd_concat([ df[df['symbol']==symbol], df[df['symbol_group']==symbol] ])
+            df.loc[:, '_idx_'] = df.index
+            return df.drop_duplicates(subset=['_idx_'], keep='last').drop('_idx_', axis=1)
 
     # ---------------------------------------
     def get_bars(self, lookback=None, as_dict=False):
