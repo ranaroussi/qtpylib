@@ -3,7 +3,12 @@ Release Notes
 
 *December 20, 2016*
 
-1.5.5a
+1.5.51a
+-----------
+
+- Minor bugfixes, code improvements, cleanup and abstraction
+
+1.5.50a
 -----------
 
 - Minor bugfixes, code improvements, cleanup and abstraction

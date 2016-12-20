@@ -39,7 +39,7 @@ class Instrument(str):
     def _get_symbol_dataframe(df, symbol):
         try:
             # this produce a "IndexingError using Boolean Indexing" (on rare occasions)
-            return df[ (df['symbol']==symbol) | (df['symbol_group']==symbol) ]
+            return df[ (df['symbol']==symbol) | (df['symbol_group']==symbol) ].copy()
         except:
             df = pd_concat([ df[df['symbol']==symbol], df[df['symbol_group']==symbol] ])
             df.loc[:, '_idx_'] = df.index
