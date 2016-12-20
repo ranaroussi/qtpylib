@@ -710,7 +710,7 @@ class Algo(Broker):
         this_bar_hash = abs(hash(hash_string)) % (10 ** 8)
 
         newbar = True
-        if symbol in self.bar_hashes:
+        if symbol in self.bar_hashes.keys():
             newbar = self.bar_hashes[symbol] != this_bar_hash
         self.bar_hashes[symbol] = this_bar_hash
 
