@@ -628,6 +628,7 @@ class Algo(Broker):
         return caller in stack
 
     # ---------------------------------------
+    @asynctools.multitask.add
     def _book_handler(self, book):
         symbol = book['symbol']
         del book['symbol']
@@ -638,6 +639,7 @@ class Algo(Broker):
 
 
     # ---------------------------------------
+    @asynctools.multitask.add
     def _quote_handler(self, quote):
         del quote['kind']
         self.quotes[quote['symbol']] = quote
@@ -654,6 +656,7 @@ class Algo(Broker):
         return pd.concat(dfs).sort_index()
 
     # ---------------------------------------
+    @asynctools.multitask.add
     def _tick_handler(self, tick, stale_tick=False):
         self._cancel_expired_pending_orders()
 
@@ -688,6 +691,7 @@ class Algo(Broker):
             self.on_tick(self.get_instrument(tick))
 
     # ---------------------------------------
+    @asynctools.multitask.add
     def _bar_handler(self, bar):
         # bar symbol
         symbol = bar['symbol'].values[0]
