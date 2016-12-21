@@ -170,6 +170,7 @@ class Blotter():
 
         # track historical data download status
         self.backfilled = False
+        self.backfilled_symbols = []
         self.backfill_resolution = "1 min"
 
     # -------------------------------------------
@@ -324,15 +325,19 @@ class Blotter():
 
     # -------------------------------------------
     def on_ohlc_received(self, msg, kwargs):
+        symbol = self.ibConn.tickerSymbol(msg.reqId)
 
-        if kwargs["completed"]:
-            self.backfilled = True
+        if kwargs["completed"] == True:
+            self.backfilled_symbols.append(symbol)
+            tickers = set({v: k for k, v in self.ibConn.tickerIds.items() if v.upper() != "SYMBOL"}.keys())
+            if tickers == set(self.backfilled_symbols):
+                self.backfilled = True
+                print(".")
+
             try: self.ibConn.cancelHistoricalData(self.ibConn.contracts[msg.reqId]);
             except: pass
-        else:
-            # print(msg)
-            symbol = self.ibConn.tickerSymbol(msg.reqId)
 
+        else:
             data = {
                 "symbol":       symbol,
                 "symbol_group": tools.gen_symbol_group(symbol),
@@ -965,6 +970,7 @@ class Blotter():
 
         except (KeyboardInterrupt, SystemExit):
             print("\n\n>>> Interrupted with Ctrl-c...\n(waiting for running threads to be completed)\n")
+            print(".\n.\n.\n")
             # asynctools.multitask.killall() # stop now
             asynctools.multitask.wait_for_tasks() # wait for threads to complete
             sys.exit(1)
@@ -981,6 +987,7 @@ class Blotter():
 
         except (KeyboardInterrupt, SystemExit):
             print("\n\n>>> Interrupted with Ctrl-c...\n(waiting for running threads to be completed)\n")
+            print(".\n.\n.\n")
             # asynctools.multitask.killall() # stop now
             asynctools.multitask.wait_for_tasks() # wait for threads to complete
             sys.exit(1)
@@ -1003,6 +1010,8 @@ class Blotter():
             status : mixed
                 False for "won't backfill" / True for "backfilling, please wait"
         """
+
+        data.sort_index(inplace=True)
 
         # currenly only supporting minute-data
         if resolution[-1] in ("K", "V"):
