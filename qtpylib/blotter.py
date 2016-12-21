@@ -899,7 +899,7 @@ class Blotter():
         data = self._fix_history_sequence(data, table)
 
         # setup dataframe
-        return prepare_history(data=data, resolution="1T", tz="UTC", continuous=True)
+        return prepare_history(data=data, resolution=resolution, tz=tz, continuous=True)
 
     # -------------------------------------------
     def stream(self, symbols, tick_handler=None, bar_handler=None, \
