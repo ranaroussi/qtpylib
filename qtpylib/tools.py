@@ -603,6 +603,9 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False):
         except:
             data.index = data.index.tz_localize('UTC').tz_convert(tz)
 
+    # sort by index (datetime)
+    data.sort_index(inplace=True)
+
     return data
 
 # -------------------------------------------

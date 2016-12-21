@@ -323,6 +323,9 @@ class Algo(Broker):
                 # take our ibConn back :)
                 self.blotter.ibConn = None
 
+        # sort by index (datetime)
+        history.sort_index(inplace=True)
+
         if self.backtest:
             # initiate strategy
             self.on_start()
