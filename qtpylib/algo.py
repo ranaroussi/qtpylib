@@ -34,7 +34,7 @@ from qtpylib.instrument import Instrument
 from qtpylib.workflow import validate_columns as validate_csv_columns
 from qtpylib.blotter import prepare_history
 from qtpylib import (
-    tools, sms
+    tools, sms, asynctools
 )
 
 from abc import ABCMeta, abstractmethod
@@ -160,7 +160,7 @@ class Algo(Broker):
         # ---------------------------------------
         # add stale ticks for more accurate time--based bars
         if not self.backtest and self.resolution[-1] not in ("K", "V"):
-            self.bar_timer = tools.RecurringTask(
+            self.bar_timer = asynctools.RecurringTask(
                 self.add_stale_tick, interval_sec=1, init_sec=1, daemon=True)
 
         # ---------------------------------------
@@ -174,11 +174,12 @@ class Algo(Broker):
                 sys.exit(0)
             if self.backtest_end is None:
                 self.backtest_end = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-            if self.backtest_csv is not None and not os.path.exists(self.backtest_csv):
-                self.log_algo.error("CSV directory cannot be found (%s)" % self.backtest_csv)
-                sys.exit(0)
-            elif self.backtest_csv.endswith("/"):
-                self.backtest_csv = self.backtest_csv[:-1]
+            if self.backtest_csv is not None:
+                if not os.path.exists(self.backtest_csv):
+                    self.log_algo.error("CSV directory cannot be found (%s)" % self.backtest_csv)
+                    sys.exit(0)
+                elif self.backtest_csv.endswith("/"):
+                    self.backtest_csv = self.backtest_csv[:-1]
 
         else:
             self.backtest_start = None
@@ -302,6 +303,7 @@ class Algo(Broker):
             )
 
             # history needs backfilling?
+            # self.blotter.backfilled = True
             if not self.blotter.backfilled:
                 # "loan" Blotter our ibConn
                 self.blotter.ibConn = self.ibConn
@@ -321,6 +323,7 @@ class Algo(Broker):
 
                 # take our ibConn back :)
                 self.blotter.ibConn = None
+
 
         if self.backtest:
             # initiate strategy
@@ -624,6 +627,7 @@ class Algo(Broker):
         return caller in stack
 
     # ---------------------------------------
+    @asynctools.multitask.add
     def _book_handler(self, book):
         symbol = book['symbol']
         del book['symbol']
@@ -634,6 +638,7 @@ class Algo(Broker):
 
 
     # ---------------------------------------
+    @asynctools.multitask.add
     def _quote_handler(self, quote):
         del quote['kind']
         self.quotes[quote['symbol']] = quote
@@ -650,6 +655,7 @@ class Algo(Broker):
         return pd.concat(dfs).sort_index()
 
     # ---------------------------------------
+    @asynctools.multitask.add
     def _tick_handler(self, tick, stale_tick=False):
         self._cancel_expired_pending_orders()
 
@@ -684,6 +690,7 @@ class Algo(Broker):
             self.on_tick(self.get_instrument(tick))
 
     # ---------------------------------------
+    @asynctools.multitask.add
     def _bar_handler(self, bar):
         # bar symbol
         symbol = bar['symbol'].values[0]

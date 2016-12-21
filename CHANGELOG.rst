@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+*December 21, 2016*
+
+1.5.52a
+-----------
+- All market data events are now asynchronous / non-blocking
+- Misc bugfixes, code improvements, cleanup and abstraction
+
+
 *December 20, 2016*
 
 1.5.51a

@@ -20,8 +20,6 @@
 #
 
 import datetime
-import threading
-
 import numpy as np
 import pandas as pd
 import time
@@ -605,6 +603,9 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False):
         except:
             data.index = data.index.tz_localize('UTC').tz_convert(tz)
 
+    # sort by index (datetime)
+    data.sort_index(inplace=True)
+
     return data
 
 # -------------------------------------------
@@ -773,56 +774,3 @@ class DataStore():
             data.to_pickle(self.output_file)
 
         chmod(self.output_file)
-
-# =============================================
-class RecurringTask(threading.Thread):
-    """Calls a function at a sepecified interval."""
-    def __init__(self, func, interval_sec, init_sec=0, *args, **kwargs):
-        """Call `func` every `interval_sec` seconds.
-
-        Starts the timer.
-
-        Accounts for the runtime of `func` to make intervals as close to `interval_sec` as possible.
-        args and kwargs are passed to Thread().
-
-        :Parameters:
-            func : object
-                Function to invoke every N seconds
-            interval_sec : int
-                Call func every this many seconds
-            init_sec : int
-                Wait this many seconds initially before the first call
-            *args : mixed
-                parameters sent to parent Thread class
-            **kwargs : mixed
-                parameters sent to parent Thread class
-        """
-
-        # threading.Thread.__init__(self, *args, **kwargs) # For some reason super() doesn't work
-        super().__init__(*args, **kwargs) # Works!
-        self._func        = func
-        self.interval_sec = interval_sec
-        self.init_sec     = init_sec
-        self._running     = True
-        self._functime    = None # Time the next call should be made
-
-        self.start()
-
-    def __repr__(self):
-        return 'RecurringTask({}, {}, {})'.format(self._func, self.interval_sec, self.init_sec)
-
-    def run(self):
-        """Start the recurring task."""
-        if self.init_sec:
-            time.sleep(self.init_sec)
-        self._functime = time.time()
-        while self._running:
-            start = time.time()
-            self._func()
-            self._functime += self.interval_sec
-            if self._functime - start > 0:
-                time.sleep(self._functime - start)
-
-    def stop(self):
-        """Stop the recurring task."""
-        self._running = False
