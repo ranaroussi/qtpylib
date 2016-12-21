@@ -34,7 +34,7 @@ from qtpylib.instrument import Instrument
 from qtpylib.workflow import validate_columns as validate_csv_columns
 from qtpylib.blotter import prepare_history
 from qtpylib import (
-    tools, sms
+    tools, sms, asynctools
 )
 
 from abc import ABCMeta, abstractmethod
@@ -160,7 +160,7 @@ class Algo(Broker):
         # ---------------------------------------
         # add stale ticks for more accurate time--based bars
         if not self.backtest and self.resolution[-1] not in ("K", "V"):
-            self.bar_timer = tools.RecurringTask(
+            self.bar_timer = asynctools.RecurringTask(
                 self.add_stale_tick, interval_sec=1, init_sec=1, daemon=True)
 
         # ---------------------------------------
