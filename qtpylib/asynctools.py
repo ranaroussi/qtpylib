@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# AsyncPy: Simple Async
+# QTPyLib: Quantitative Trading Python Library
 # https://github.com/ranaroussi/qtpylib
 #
 # Copyright 2016 Ran Aroussi
