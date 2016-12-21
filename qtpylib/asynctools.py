@@ -20,7 +20,60 @@
 #
 
 from threading import Thread
+from sys import exit as sysexit
+from os import _exit as osexit
 from time import sleep, time
+
+# =============================================
+class multitask():
+    """
+    multi task decorator
+
+    import signal
+    signal.signal(signal.SIGINT, multitask.killall) # or multitask.wait_for_tasks
+
+    usage:
+    @multitask.add
+    def func(...):
+        ...
+    """
+
+    from sys import exit as sysexit
+    from os import _exit as osexit
+
+    _kill_received = False
+    _threads = []
+
+    @classmethod
+    def add(cls, callee):
+        def async_method(*args, **kwargs):
+            if not cls._kill_received:
+                thread = Thread(target=callee, args=args, kwargs=kwargs, daemon=False)
+                cls._threads.append(thread)
+                thread.start()
+                return thread
+
+        return async_method
+
+    @classmethod
+    def wait_for_tasks(cls):
+        cls._kill_received = True
+
+        try:
+            running = len([t.join(1) for t in cls._threads if t is not None and t.isAlive()])
+            while running > 0:
+                running = len([t.join(1) for t in cls._threads if t is not None and t.isAlive()])
+        except:
+            pass
+        return True
+
+    @classmethod
+    def killall(cls):
+        cls._kill_received = True
+        try:
+            sysexit(0)
+        except SystemExit:
+            osexit(0)
 
 # =============================================
 class RecurringTask(Thread):
