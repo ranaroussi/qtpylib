@@ -303,6 +303,7 @@ class Algo(Broker):
             )
 
             # history needs backfilling?
+            # self.blotter.backfilled = True
             if not self.blotter.backfilled:
                 # "loan" Blotter our ibConn
                 self.blotter.ibConn = self.ibConn
@@ -323,8 +324,6 @@ class Algo(Broker):
                 # take our ibConn back :)
                 self.blotter.ibConn = None
 
-        # sort by index (datetime)
-        history.sort_index(inplace=True)
 
         if self.backtest:
             # initiate strategy
