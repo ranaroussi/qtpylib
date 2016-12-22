@@ -188,9 +188,10 @@ class Algo(Broker):
 
     # ---------------------------------------
     def add_stale_tick(self):
+        ticks = self.ticks.copy()
         if len(self.ticks.index) > 0:
             for sym in list(self.ticks["symbol"].unique()):
-                tick = self.ticks[self.ticks['symbol']==sym][-1:].to_dict(orient='records')[0]
+                tick = ticks[ticks['symbol']==sym][-1:].to_dict(orient='records')[0]
                 tick['timestamp'] = datetime.utcnow()
 
                 tick = pd.DataFrame(index=[0], data=tick)
