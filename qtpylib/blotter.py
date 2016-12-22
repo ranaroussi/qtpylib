@@ -592,11 +592,12 @@ class Blotter():
         tick_data = pd.DataFrame(index=['timestamp'],
             data={'timestamp':timestamp, 'last':tick['last'], 'volume':tick['lastsize']})
         tick_data.set_index(['timestamp'], inplace=True)
-        self._raw_bars[symbol] = self._raw_bars[symbol].append(tick_data)
+        _raw_bars = self._raw_bars[symbol].copy()
+        _raw_bars = _raw_bars.append(tick_data)
 
         # add tools.resampled raw to self._bars
-        ohlc = self._raw_bars[symbol]['last'].resample('1T').ohlc()
-        vol  = self._raw_bars[symbol]['volume'].resample('1T').sum()
+        ohlc = _raw_bars['last'].resample('1T').ohlc()
+        vol  = _raw_bars['volume'].resample('1T').sum()
 
         opened_bar = ohlc
         opened_bar['volume'] = vol
@@ -620,7 +621,8 @@ class Blotter():
             self.log2db(bar, "BAR")
 
             self._bars[symbol] = self._bars[symbol][-1:]
-            self._raw_bars[symbol].drop(self._raw_bars[symbol].index[:], inplace=True)
+            _raw_bars.drop(_raw_bars.index[:], inplace=True)
+            self._raw_bars[symbol] = _raw_bars
 
     # -------------------------------------------
     def broadcast(self, data, kind):
