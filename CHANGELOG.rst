@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+*December 22, 2016*
+
+1.5.53a
+-----------
+- ``Blotter`` market data handlers now using threaded, non-blocking architecture.
+- Misc bugfixes, code improvements, cleanup and abstraction
+
+
 *December 21, 2016*
 
 1.5.52a
