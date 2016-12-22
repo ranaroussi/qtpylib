@@ -3,6 +3,10 @@ Release Notes
 
 *December 22, 2016*
 
+1.5.54a
+-----------
+- ``add_stale_tick()`` made thread-safer
+
 1.5.53a
 -----------
 - ``Blotter`` market data handlers now using threaded, non-blocking architecture.
