@@ -25,31 +25,23 @@ from os import _exit as osexit
 from time import sleep, time
 
 # =============================================
-class multitask():
+class multitasking():
     """
-    multi task decorator
-
-    import signal
-    signal.signal(signal.SIGINT, multitask.killall) # or multitask.wait_for_tasks
-
-    usage:
-    @multitask.add
-    def func(...):
-        ...
+    Non-blocking Python methods using decorators
+    (a class-based implementation of the multitasking library)
+    https://github.com/ranaroussi/multitasking
     """
 
-    from sys import exit as sysexit
-    from os import _exit as osexit
-
-    _kill_received = False
-    _threads = []
+    __KILL_RECEIVED__ = False
+    __TASKS__ = []
 
     @classmethod
-    def add(cls, callee):
+    def task(cls, callee):
+        # global __KILL_RECEIVED__, __TASKS__
         def async_method(*args, **kwargs):
-            if not cls._kill_received:
+            if not cls.__KILL_RECEIVED__:
                 thread = Thread(target=callee, args=args, kwargs=kwargs, daemon=False)
-                cls._threads.append(thread)
+                cls.__TASKS__.append(thread)
                 thread.start()
                 return thread
 
@@ -57,19 +49,21 @@ class multitask():
 
     @classmethod
     def wait_for_tasks(cls):
-        cls._kill_received = True
+        # global __KILL_RECEIVED__
+        cls.__KILL_RECEIVED__ = True
 
         try:
-            running = len([t.join(1) for t in cls._threads if t is not None and t.isAlive()])
+            running = len([t.join(1) for t in cls.__TASKS__ if t is not None and t.isAlive()])
             while running > 0:
-                running = len([t.join(1) for t in cls._threads if t is not None and t.isAlive()])
+                running = len([t.join(1) for t in cls.__TASKS__ if t is not None and t.isAlive()])
         except:
             pass
         return True
 
     @classmethod
     def killall(cls):
-        cls._kill_received = True
+        # global __KILL_RECEIVED__
+        cls.__KILL_RECEIVED__ = True
         try:
             sysexit(0)
         except SystemExit:

@@ -189,15 +189,16 @@ class Algo(Broker):
     # ---------------------------------------
     def add_stale_tick(self):
         if len(self.ticks.index) > 0:
-            tick = self.ticks[-1:].to_dict(orient='records')[0]
-            tick['timestamp'] = datetime.utcnow()
+            for sym in list(self.ticks["symbol"].unique()):
+                tick = self.ticks[self.ticks['symbol']==sym][-1:].to_dict(orient='records')[0]
+                tick['timestamp'] = datetime.utcnow()
 
-            tick = pd.DataFrame(index=[0], data=tick)
-            tick.set_index('timestamp', inplace=True)
-            tick = tools.set_timezone(tick, tz=self.timezone)
-            tick.loc[:, 'ticksize'] = 0 # no real size
+                tick = pd.DataFrame(index=[0], data=tick)
+                tick.set_index('timestamp', inplace=True)
+                tick = tools.set_timezone(tick, tz=self.timezone)
+                tick.loc[:, 'ticksize'] = 0 # no real size
 
-            self._tick_handler(tick, stale_tick=True)
+                self._tick_handler(tick, stale_tick=True)
 
 
     # ---------------------------------------
@@ -627,7 +628,7 @@ class Algo(Broker):
         return caller in stack
 
     # ---------------------------------------
-    @asynctools.multitask.add
+    @asynctools.multitasking.task
     def _book_handler(self, book):
         symbol = book['symbol']
         del book['symbol']
@@ -638,7 +639,7 @@ class Algo(Broker):
 
 
     # ---------------------------------------
-    @asynctools.multitask.add
+    @asynctools.multitasking.task
     def _quote_handler(self, quote):
         del quote['kind']
         self.quotes[quote['symbol']] = quote
@@ -655,7 +656,7 @@ class Algo(Broker):
         return pd.concat(dfs).sort_index()
 
     # ---------------------------------------
-    @asynctools.multitask.add
+    @asynctools.multitasking.task
     def _tick_handler(self, tick, stale_tick=False):
         self._cancel_expired_pending_orders()
 
@@ -690,7 +691,7 @@ class Algo(Broker):
             self.on_tick(self.get_instrument(tick))
 
     # ---------------------------------------
-    @asynctools.multitask.add
+    @asynctools.multitasking.task
     def _bar_handler(self, bar):
         # bar symbol
         symbol = bar['symbol'].values[0]

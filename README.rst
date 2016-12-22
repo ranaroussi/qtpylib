@@ -53,10 +53,11 @@ Features
 - A continuously-running Blotter that lets you capture market data even when your algos aren't running.
 - Tick, Bar and Trade data is stored in MySQL for later analisys and backtesting.
 - Using pub/sub architecture using `ØMQ <http://zeromq.org>`_ (ZeroMQ) for communicating between the Algo and the Blotter allows for a single Blotter/multiple Algos running on the same machine.
+- **Support for Order Book, Quote, Time, Tick or Volume based strategy resolutions**.
 - Includes many common indicators that you can seamlessly use in your algorithm.
-- **Support for Order Book, Quote, Time, Tick or Volume based strategy resolutions**
-- Have orders delivered to your mobile via SMS (requires a `Nexmo <https://www.nexmo.com/>`_ or `Twilio <https://www.twilio.com/>`_ account)
-- Full integration with `TA-Lib <http://ta-lib.org>`_ via dedicated module (`see documentation <http://qtpylib.io/docs/latest/indicators.html#ta-lib-integration>`_)
+- **Market data events uses asynchronous, non-blocking architecture**.
+- Have orders delivered to your mobile via SMS (requires a `Nexmo <https://www.nexmo.com/>`_ or `Twilio <https://www.twilio.com/>`_ account).
+- Full integration with `TA-Lib <http://ta-lib.org>`_ via dedicated module (`see documentation <http://qtpylib.io/docs/latest/indicators.html#ta-lib-integration>`_).
 - Ability to import any Python library (such as `scikit-learn <http://scikit-learn.org>`_ or `TensorFlow <https://www.tensorflow.org>`_) to use them in your algorithms.
 
 -----

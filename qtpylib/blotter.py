@@ -287,9 +287,6 @@ class Blotter():
     # -------------------------------------------
     def ibCallback(self, caller, msg, **kwargs):
 
-        if self.ibConn is None:
-            return
-
         if caller == "handleConnectionClosed":
             self.log_blotter.info("Lost conncetion to Interactive Brokers...")
             self._on_exit(terminate=False)
@@ -369,13 +366,15 @@ class Blotter():
             self.log2db(data, data["kind"])
 
     # -------------------------------------------
+    @asynctools.multitasking.task
     def on_tick_string_received(self, tickerId, kwargs):
-        data = None
-        symbol = self.ibConn.tickerSymbol(tickerId)
 
         # kwargs is empty
         if not kwargs:
             return
+
+        data = None
+        symbol = self.ibConn.tickerSymbol(tickerId)
 
         # for instruments that receive RTVOLUME events
         if "tick" in kwargs:
@@ -433,6 +432,7 @@ class Blotter():
             self.on_tick_received(data)
 
     # -------------------------------------------
+    @asynctools.multitasking.task
     def on_quote_received(self, tickerId):
         try:
 
@@ -474,6 +474,7 @@ class Blotter():
             pass
 
     # -------------------------------------------
+    @asynctools.multitasking.task
     def on_option_computation_received(self, tickerId):
         # try:
         symbol = self.ibConn.tickerSymbol(tickerId)
@@ -544,6 +545,7 @@ class Blotter():
             # pass
 
     # -------------------------------------------
+    @asynctools.multitasking.task
     def on_orderbook_received(self, tickerId):
         orderbook = self.ibConn.marketDepthData[tickerId].dropna(
             subset=['bid', 'ask']).fillna(0).to_dict(orient='list')
@@ -559,6 +561,7 @@ class Blotter():
         self.broadcast(orderbook, "ORDERBOOK")
 
     # -------------------------------------------
+    @asynctools.multitasking.task
     def on_tick_received(self, tick):
         # data
         symbol    = tick['symbol']
@@ -589,11 +592,12 @@ class Blotter():
         tick_data = pd.DataFrame(index=['timestamp'],
             data={'timestamp':timestamp, 'last':tick['last'], 'volume':tick['lastsize']})
         tick_data.set_index(['timestamp'], inplace=True)
-        self._raw_bars[symbol] = self._raw_bars[symbol].append(tick_data)
+        _raw_bars = self._raw_bars[symbol].copy()
+        _raw_bars = _raw_bars.append(tick_data)
 
         # add tools.resampled raw to self._bars
-        ohlc = self._raw_bars[symbol]['last'].resample('1T').ohlc()
-        vol  = self._raw_bars[symbol]['volume'].resample('1T').sum()
+        ohlc = _raw_bars['last'].resample('1T').ohlc()
+        vol  = _raw_bars['volume'].resample('1T').sum()
 
         opened_bar = ohlc
         opened_bar['volume'] = vol
@@ -617,7 +621,8 @@ class Blotter():
             self.log2db(bar, "BAR")
 
             self._bars[symbol] = self._bars[symbol][-1:]
-            self._raw_bars[symbol].drop(self._raw_bars[symbol].index[:], inplace=True)
+            _raw_bars.drop(_raw_bars.index[:], inplace=True)
+            self._raw_bars[symbol] = _raw_bars
 
     # -------------------------------------------
     def broadcast(self, data, kind):
@@ -633,26 +638,35 @@ class Blotter():
         if self.args['dbskip']:
             return
 
+        # connect to mysql per call (thread safe)
+        dbconn = self.get_mysql_connection()
+        dbcurr = dbconn.cursor()
+
+        # set symbol details
+        symbol_id = 0
         symbol = data["symbol"].replace("_"+data["asset_class"], "")
 
-        # set symbol id
-        symbol_id = 0
         if symbol in self.symbol_ids.keys():
             symbol_id = self.symbol_ids[symbol]
         else:
-            symbol_id = get_symbol_id(data["symbol"], self.dbconn, self.dbcurr, self.ibConn)
+            symbol_id = get_symbol_id(data["symbol"], dbconn, dbcurr, self.ibConn)
             self.symbol_ids[symbol] = symbol_id
 
         # insert to db
         if kind == "TICK":
-            mysql_insert_tick(data, symbol_id, self.dbcurr)
+            try: mysql_insert_tick(data, symbol_id, dbcurr)
+            except: pass
         elif kind == "BAR":
-            mysql_insert_bar(data, symbol_id, self.dbcurr)
+            try: mysql_insert_bar(data, symbol_id, dbcurr)
+            except: pass
 
         # commit
-        try: self.dbconn.commit()
+        try: dbconn.commit()
         except: pass
 
+        # disconect from mysql
+        dbcurr.close()
+        dbconn.close()
 
     # -------------------------------------------
     def run(self):
@@ -775,8 +789,11 @@ class Blotter():
 
 
         except (KeyboardInterrupt, SystemExit):
-            print("\n\n>>> Interrupted with Ctrl-c...")
             self.quitting = True # don't display connection errors on ctrl+c
+            # print("\n\n>>> Interrupted with Ctrl-c...")
+            print("\n\n>>> Interrupted with Ctrl-c...\n(waiting for running threads to be completed)\n")
+            # asynctools.multitasking.killall() # stop now
+            asynctools.multitasking.wait_for_tasks() # wait for threads to complete
             sys.exit(1)
 
 
@@ -971,8 +988,8 @@ class Blotter():
         except (KeyboardInterrupt, SystemExit):
             print("\n\n>>> Interrupted with Ctrl-c...\n(waiting for running threads to be completed)\n")
             print(".\n.\n.\n")
-            # asynctools.multitask.killall() # stop now
-            asynctools.multitask.wait_for_tasks() # wait for threads to complete
+            # asynctools.multitasking.killall() # stop now
+            asynctools.multitasking.wait_for_tasks() # wait for threads to complete
             sys.exit(1)
 
     # -------------------------------------------
@@ -982,14 +999,14 @@ class Blotter():
                 handler(data.iloc[i:i + 1])
                 time.sleep(.1)
 
-            asynctools.multitask.wait_for_tasks()
+            asynctools.multitasking.wait_for_tasks()
             print("\n\n>>> Backtesting Completed.")
 
         except (KeyboardInterrupt, SystemExit):
             print("\n\n>>> Interrupted with Ctrl-c...\n(waiting for running threads to be completed)\n")
             print(".\n.\n.\n")
-            # asynctools.multitask.killall() # stop now
-            asynctools.multitask.wait_for_tasks() # wait for threads to complete
+            # asynctools.multitasking.killall() # stop now
+            asynctools.multitasking.wait_for_tasks() # wait for threads to complete
             sys.exit(1)
 
     # ---------------------------------------
@@ -1086,63 +1103,63 @@ class Blotter():
 
 
     # -------------------------------------------
-    def mysql_connect(self):
+    def get_mysql_connection(self):
         if self.args['dbskip']:
             return
 
-        if (self.dbcurr is None) & (self.dbconn is None):
-            self.dbconn = pymysql.connect(
-                host   = str(self.args['dbhost']),
-                port   = int(self.args['dbport']),
-                user   = str(self.args['dbuser']),
-                passwd = str(self.args['dbpass']),
-                db     = str(self.args['dbname'])
-            )
+        return pymysql.connect(
+            host   = str(self.args['dbhost']),
+            port   = int(self.args['dbport']),
+            user   = str(self.args['dbuser']),
+            passwd = str(self.args['dbpass']),
+            db     = str(self.args['dbname'])
+        )
+
+    def mysql_connect(self):
+
+        # already connected?
+        if self.dbcurr is not None or self.dbconn is not None:
+            return
+
+        # connect to mysql
+        self.dbconn = self.get_mysql_connection()
+        self.dbcurr = self.dbconn.cursor()
+
+        # check for db schema
+        self.dbcurr.execute("SHOW TABLES")
+        tables = [ table[0] for table in self.dbcurr.fetchall() ]
+
+        if "bars" in tables and "ticks" in tables and \
+            "symbols" in tables and "trades" in tables and \
+            "greeks" in tables and "_version_" in tables:
+                self.dbcurr.execute("SELECT version FROM `_version_`")
+                db_version = self.dbcurr.fetchone()
+                if db_version is not None and __version__ == db_version[0]:
+                    return
+
+        # create database schema
+        self.dbcurr.execute(open(path['library']+'/schema.sql', "rb" ).read())
+        try:
+            self.dbconn.commit()
+
+            # update version #
+            sql = "TRUNCATE TABLE _version_; INSERT INTO _version_ (`version`) VALUES (%s)"
+            self.dbcurr.execute(sql, (__version__))
+            self.dbconn.commit()
+
+            # unless we do this, there's a problem with curr.fetchX()
+            self.dbcurr.close()
+            self.dbconn.close()
+
+            # re-connect to mysql
+            self.dbconn = self.get_mysql_connection()
             self.dbcurr = self.dbconn.cursor()
 
-            # check for db schema
-            self.dbcurr.execute("SHOW TABLES")
-            tables = [ table[0] for table in self.dbcurr.fetchall() ]
-
-            if "bars" in tables and \
-                "ticks" in tables and \
-                "symbols" in tables and \
-                "trades" in tables and \
-                "greeks" in tables and \
-                "_version_" in tables:
-                    self.dbcurr.execute("SELECT version FROM `_version_`")
-                    db_version = self.dbcurr.fetchone()
-                    if db_version is not None and __version__ == db_version[0]:
-                        return
-
-            # create database schema
-            self.dbcurr.execute(open(path['library']+'/schema.sql', "rb" ).read())
-            try:
-                self.dbconn.commit()
-
-                # update version #
-                sql = "TRUNCATE TABLE _version_; INSERT INTO _version_ (`version`) VALUES (%s)"
-                self.dbcurr.execute(sql, (__version__))
-                self.dbconn.commit()
-
-                # unless we do this, there's a problem with curr.fetchX()
-                self.dbcurr.close()
-                self.dbconn.close()
-
-                self.dbconn = pymysql.connect(
-                    host   = str(self.args['dbhost']),
-                    port   = int(self.args['dbport']),
-                    user   = str(self.args['dbuser']),
-                    passwd = str(self.args['dbpass']),
-                    db     = str(self.args['dbname'])
-                )
-                self.dbcurr = self.dbconn.cursor()
-
-            except:
-                self.dbconn.rollback()
-                self.log_blotter.error("Cannot create database schema")
-                self._remove_cached_args()
-                sys.exit(1)
+        except:
+            self.dbconn.rollback()
+            self.log_blotter.error("Cannot create database schema")
+            self._remove_cached_args()
+            sys.exit(1)
 
 
 
