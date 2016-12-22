@@ -775,8 +775,11 @@ class Blotter():
 
 
         except (KeyboardInterrupt, SystemExit):
-            print("\n\n>>> Interrupted with Ctrl-c...")
             self.quitting = True # don't display connection errors on ctrl+c
+            # print("\n\n>>> Interrupted with Ctrl-c...")
+            print("\n\n>>> Interrupted with Ctrl-c...\n(waiting for running threads to be completed)\n")
+            # asynctools.multitasking.killall() # stop now
+            asynctools.multitasking.wait_for_tasks() # wait for threads to complete
             sys.exit(1)
 
 
@@ -971,8 +974,8 @@ class Blotter():
         except (KeyboardInterrupt, SystemExit):
             print("\n\n>>> Interrupted with Ctrl-c...\n(waiting for running threads to be completed)\n")
             print(".\n.\n.\n")
-            # asynctools.multitask.killall() # stop now
-            asynctools.multitask.wait_for_tasks() # wait for threads to complete
+            # asynctools.multitasking.killall() # stop now
+            asynctools.multitasking.wait_for_tasks() # wait for threads to complete
             sys.exit(1)
 
     # -------------------------------------------
@@ -982,14 +985,14 @@ class Blotter():
                 handler(data.iloc[i:i + 1])
                 time.sleep(.1)
 
-            asynctools.multitask.wait_for_tasks()
+            asynctools.multitasking.wait_for_tasks()
             print("\n\n>>> Backtesting Completed.")
 
         except (KeyboardInterrupt, SystemExit):
             print("\n\n>>> Interrupted with Ctrl-c...\n(waiting for running threads to be completed)\n")
             print(".\n.\n.\n")
-            # asynctools.multitask.killall() # stop now
-            asynctools.multitask.wait_for_tasks() # wait for threads to complete
+            # asynctools.multitasking.killall() # stop now
+            asynctools.multitasking.wait_for_tasks() # wait for threads to complete
             sys.exit(1)
 
     # ---------------------------------------
