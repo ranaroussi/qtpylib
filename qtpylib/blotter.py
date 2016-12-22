@@ -633,26 +633,33 @@ class Blotter():
         if self.args['dbskip']:
             return
 
+        # connect to mysql per call (thread safe)
+        dbconn = self.get_mysql_connection()
+        dbcurr = dbconn.cursor()
+
+        # set symbol details
+        symbol_id = 0
         symbol = data["symbol"].replace("_"+data["asset_class"], "")
 
-        # set symbol id
-        symbol_id = 0
         if symbol in self.symbol_ids.keys():
             symbol_id = self.symbol_ids[symbol]
         else:
-            symbol_id = get_symbol_id(data["symbol"], self.dbconn, self.dbcurr, self.ibConn)
+            symbol_id = get_symbol_id(data["symbol"], dbconn, dbcurr, self.ibConn)
             self.symbol_ids[symbol] = symbol_id
 
         # insert to db
         if kind == "TICK":
-            mysql_insert_tick(data, symbol_id, self.dbcurr)
+            mysql_insert_tick(data, symbol_id, dbcurr)
         elif kind == "BAR":
-            mysql_insert_bar(data, symbol_id, self.dbcurr)
+            mysql_insert_bar(data, symbol_id, dbcurr)
 
         # commit
-        try: self.dbconn.commit()
+        try: dbconn.commit()
         except: pass
 
+        # disconect from mysql
+        dbcurr.close()
+        dbconn.close()
 
     # -------------------------------------------
     def run(self):
