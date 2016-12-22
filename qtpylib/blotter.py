@@ -368,12 +368,13 @@ class Blotter():
     # -------------------------------------------
     @asynctools.multitasking.task
     def on_tick_string_received(self, tickerId, kwargs):
-        data = None
-        symbol = self.ibConn.tickerSymbol(tickerId)
 
         # kwargs is empty
         if not kwargs:
             return
+
+        data = None
+        symbol = self.ibConn.tickerSymbol(tickerId)
 
         # for instruments that receive RTVOLUME events
         if "tick" in kwargs:
