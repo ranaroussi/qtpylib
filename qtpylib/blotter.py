@@ -651,9 +651,11 @@ class Blotter():
 
         # insert to db
         if kind == "TICK":
-            mysql_insert_tick(data, symbol_id, dbcurr)
+            try: mysql_insert_tick(data, symbol_id, dbcurr)
+            except: pass
         elif kind == "BAR":
-            mysql_insert_bar(data, symbol_id, dbcurr)
+            try: mysql_insert_bar(data, symbol_id, dbcurr)
+            except: pass
 
         # commit
         try: dbconn.commit()
