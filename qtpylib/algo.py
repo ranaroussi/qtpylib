@@ -189,15 +189,16 @@ class Algo(Broker):
     # ---------------------------------------
     def add_stale_tick(self):
         if len(self.ticks.index) > 0:
-            tick = self.ticks[-1:].to_dict(orient='records')[0]
-            tick['timestamp'] = datetime.utcnow()
+            for sym in list(self.ticks["symbol"].unique()):
+                tick = self.ticks[self.ticks['symbol']==sym][-1:].to_dict(orient='records')[0]
+                tick['timestamp'] = datetime.utcnow()
 
-            tick = pd.DataFrame(index=[0], data=tick)
-            tick.set_index('timestamp', inplace=True)
-            tick = tools.set_timezone(tick, tz=self.timezone)
-            tick.loc[:, 'ticksize'] = 0 # no real size
+                tick = pd.DataFrame(index=[0], data=tick)
+                tick.set_index('timestamp', inplace=True)
+                tick = tools.set_timezone(tick, tz=self.timezone)
+                tick.loc[:, 'ticksize'] = 0 # no real size
 
-            self._tick_handler(tick, stale_tick=True)
+                self._tick_handler(tick, stale_tick=True)
 
 
     # ---------------------------------------
