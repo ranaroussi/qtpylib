@@ -287,9 +287,6 @@ class Blotter():
     # -------------------------------------------
     def ibCallback(self, caller, msg, **kwargs):
 
-        if self.ibConn is None:
-            return
-
         if caller == "handleConnectionClosed":
             self.log_blotter.info("Lost conncetion to Interactive Brokers...")
             self._on_exit(terminate=False)
@@ -369,6 +366,7 @@ class Blotter():
             self.log2db(data, data["kind"])
 
     # -------------------------------------------
+    @asynctools.multitasking.task
     def on_tick_string_received(self, tickerId, kwargs):
         data = None
         symbol = self.ibConn.tickerSymbol(tickerId)
@@ -433,6 +431,7 @@ class Blotter():
             self.on_tick_received(data)
 
     # -------------------------------------------
+    @asynctools.multitasking.task
     def on_quote_received(self, tickerId):
         try:
 
@@ -474,6 +473,7 @@ class Blotter():
             pass
 
     # -------------------------------------------
+    @asynctools.multitasking.task
     def on_option_computation_received(self, tickerId):
         # try:
         symbol = self.ibConn.tickerSymbol(tickerId)
@@ -544,6 +544,7 @@ class Blotter():
             # pass
 
     # -------------------------------------------
+    @asynctools.multitasking.task
     def on_orderbook_received(self, tickerId):
         orderbook = self.ibConn.marketDepthData[tickerId].dropna(
             subset=['bid', 'ask']).fillna(0).to_dict(orient='list')
@@ -559,6 +560,7 @@ class Blotter():
         self.broadcast(orderbook, "ORDERBOOK")
 
     # -------------------------------------------
+    @asynctools.multitasking.task
     def on_tick_received(self, tick):
         # data
         symbol    = tick['symbol']
