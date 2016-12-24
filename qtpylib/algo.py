@@ -467,6 +467,8 @@ class Algo(Broker):
         """
         instrument = Instrument(self._getsymbol_(symbol))
         instrument._set_parent(self)
+        instrument._set_windows(ticks=self.tick_window, bars=self.bar_window)
+
         return instrument
 
     # ---------------------------------------
