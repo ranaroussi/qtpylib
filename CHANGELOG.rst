@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+*December 25, 2016*
+
+1.5.55a
+-----------
+
+- Threading-related code improvements: ``tools.resample()`` syncs last timestamp of all symbols; ``add_stale_tick()`` checks for real tick with same index before triggering ``_tick_handler()``
+- ``Instrument`` object not defaults to strategy's ``bar_window`` and ``tick_window`` if no window specified (to get full bar window, use ``instrument.get_bars()`` or simply ``instrument.bars``)
+
 *December 22, 2016*
 
 1.5.54a

@@ -33,6 +33,11 @@ class Instrument(str):
         """ sets the parent object to communicate with """
         self.parent = parent
 
+    # ---------------------------------------
+    def _set_windows(self, ticks, bars):
+        """ be aware of default windows """
+        self.tick_window = ticks
+        self.bar_window = bars
 
     # ---------------------------------------
     @staticmethod
@@ -64,8 +69,10 @@ class Instrument(str):
         # add signal history to bars
         bars = self.parent._add_signal_history(df=bars, symbol=self)
 
-        if lookback is not None:
-            bars = bars[-lookback:]
+        lookback = self.bar_window if lookback is None else lookback
+        bars = bars[-lookback:]
+        # if lookback is not None:
+        #     bars = bars[-lookback:]
 
         if len(bars.index) > 0 and bars['asset_class'].values[-1] not in ("OPT", "FOP"):
             bars.drop(bars.columns[bars.columns.str.startswith('opt_')].tolist(), inplace=True, axis=1)
@@ -99,9 +106,10 @@ class Instrument(str):
         """
         ticks = self._get_symbol_dataframe(self.parent.ticks, self)
 
-
-        if lookback is not None:
-            ticks = ticks[-lookback:]
+        lookback = self.tick_window if lookback is None else lookback
+        ticks = ticks[-lookback:]
+        # if lookback is not None:
+        #     ticks = ticks[-lookback:]
 
         if len(ticks.index) > 0 and ticks['asset_class'].values[-1] not in ("OPT", "FOP"):
             ticks.drop(ticks.columns[ticks.columns.str.startswith('opt_')].tolist(), inplace=True, axis=1)
