@@ -387,7 +387,7 @@ def fix_timezone(df, freq, tz=None):
 # ===========================================
 # resample baed on time / tick count
 # ===========================================
-def resample(data, resolution="1T", tz=None, ffill=True, dropna=False):
+def resample(data, resolution="1T", tz=None, ffill=True, dropna=False, sync_last_timestamp=True):
 
     def resample_ticks(data, freq=1000, by='last'):
         """
@@ -543,6 +543,26 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False):
             }
 
             for sym in meta_data.index.values:
+
+                # ----------------------------
+                # force same last timestamp to all symbols before resampling
+                if sync_last_timestamp:
+                    last_row = data[data['symbol']==sym][-1:]
+                    last_row.index = pd.to_datetime(data.index[-1:], utc=True)
+                    if "last" not in data.columns:
+                        last_row["open"]   = last_row["close"]
+                        last_row["high"]   = last_row["close"]
+                        last_row["low"]    = last_row["close"]
+                        last_row["close"]  = last_row["close"]
+                        last_row["volume"] = 0
+
+                    data = pd.concat([data, last_row]).sort_index()
+                    data.loc[:, '_idx_'] = data.index
+                    data = data.drop_duplicates(subset=['_idx_','symbol','symbol_group','asset_class'], keep='first')
+                    data = data.drop('_idx_', axis=1)
+                    data = data.sort_index()
+                # ----------------------------
+
                 if "S" in resolution and "last" in data.columns:
                     ohlc = data[data['symbol']==sym]['last'].resample(resolution).ohlc()
                     symdata = data[data['symbol']==sym].resample(resolution).apply(ticks_ohlc_dict).fillna(value=np.nan)
