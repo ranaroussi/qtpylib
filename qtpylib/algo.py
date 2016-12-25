@@ -682,7 +682,7 @@ class Algo(Broker):
             if len(bars.index) > self.tick_bar_count > 0 or stale_tick:
                 self.record_ts = tick.index[0]
                 # self._bar_handler(bars, symbol)
-                self._bar_handler(bars[bars['symbol']==symbol][-1:])
+                self._base_bar_handler(bars[bars['symbol']==symbol][-1:])
 
                 window = int("".join([s for s in self.resolution if s.isdigit()]))
                 # self.ticks = self.ticks[-window:]
@@ -697,8 +697,8 @@ class Algo(Broker):
             self.on_tick(self.get_instrument(tick))
 
     # ---------------------------------------
-    @asynctools.multitasking.task
-    def _bar_handler(self, bar):
+    def _base_bar_handler(self, bar):
+        """ non threaded bar handler (called by threaded _tick_handler) """
         # bar symbol
         symbol = bar['symbol'].values[0]
 
@@ -734,6 +734,12 @@ class Algo(Broker):
 
             # if self.resolution[-1] not in ("S", "K", "V"):
             self.record(bar)
+
+    # ---------------------------------------
+    @asynctools.multitasking.task
+    def _bar_handler(self, bar):
+        """ threaded version of _base_bar_handler (called by blotter's) """
+        self._base_bar_handler(bar)
 
 
     # ---------------------------------------
