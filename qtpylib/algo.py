@@ -662,19 +662,38 @@ class Algo(Broker):
         return pd.concat(dfs).sort_index()
 
     # ---------------------------------------
+    @staticmethod
+    def _thread_safe_merge(symbol, basedata, newdata):
+        data = newdata
+        if "symbol" in basedata.columns:
+            data = pd.concat([basedata[basedata['symbol']!=symbol], data])
+
+        data.loc[:, '_idx_'] = data.index
+        data = data.drop_duplicates(subset=['_idx_','symbol','symbol_group','asset_class'], keep='last')
+        data = data.drop('_idx_', axis=1)
+        data = data.sort_index()
+
+        try:
+            return data.dropna(subset=['open', 'high', 'low', 'close', 'volume'])
+        except:
+            return data
+
+    # ---------------------------------------
     @asynctools.multitasking.task
     def _tick_handler(self, tick, stale_tick=False):
         self._cancel_expired_pending_orders()
 
         # tick symbol
         symbol = tick['symbol'].values[0]
+        self_ticks = self.ticks.copy() # work on copy
 
         # initial value
         if self.record_ts is None:
             self.record_ts = tick.index[0]
 
         if self.resolution[-1] not in ("S", "K", "V"):
-            self.ticks = self._update_window(self.ticks, tick, window=self.tick_window)
+            self_ticks = self._update_window(self_ticks, tick, window=self.tick_window)
+            self.ticks = self._thread_safe_merge(symbol, self.ticks, self_ticks) # assign back
         else:
             self.ticks = self._update_window(self.ticks, tick)
             bars = tools.resample(self.ticks, self.resolution)
@@ -686,7 +705,8 @@ class Algo(Broker):
 
                 window = int("".join([s for s in self.resolution if s.isdigit()]))
                 # self.ticks = self.ticks[-window:]
-                self.ticks = self._get_window_per_symbol(self.ticks, window)
+                self_ticks = self._get_window_per_symbol(self_ticks, window)
+                self.ticks = self._thread_safe_merge(symbol, self.ticks, self_ticks) # assign back
 
             self.tick_bar_count = len(bars.index)
 
@@ -701,6 +721,7 @@ class Algo(Broker):
         """ non threaded bar handler (called by threaded _tick_handler) """
         # bar symbol
         symbol = bar['symbol'].values[0]
+        self_bars = self.bars.copy() # work on copy
 
         is_tick_or_volume_bar = False
         handle_bar = True
@@ -714,10 +735,13 @@ class Algo(Broker):
 
         if is_tick_or_volume_bar:
             # just add a bar (used by tick bar bandler)
-            self.bars = self._update_window(self.bars, bar, window=self.bar_window)
+            self_bars = self._update_window(self_bars, bar, window=self.bar_window)
         else:
             # add the bar and resample to resolution
-            self.bars = self._update_window(self.bars, bar, window=self.bar_window, resolution=self.resolution)
+            self_bars = self._update_window(self_bars, bar, window=self.bar_window, resolution=self.resolution)
+
+        # assign new data to self.bars
+        self.bars = self._thread_safe_merge(symbol, self.bars, self_bars)
 
         # new bar?
         hash_string = bar[:1]['symbol'].to_string().translate(str.maketrans({key: None for key in "\n -:+"}))
