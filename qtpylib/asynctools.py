@@ -37,41 +37,42 @@ class multitasking():
     __TASKS__ = []
 
     # processing
-    __ENGINE__      = Thread
-    __MAX_THREADS__ = cpu_count()
     __CPU_CORES__   = cpu_count()
-    __POOL__        = None
+    __POOLS__       = {}
+    __POOL_NAME__   = "Main"
 
     @classmethod
-    def set_max_threads(cls, threads=None):
-        if threads is not None:
-            cls.__MAX_THREADS__ = threads
-        else:
-            cls.__MAX_THREADS__ = cpu_count()
+    def createPool(cls, name="main", threads=None, engine="thread"):
 
-    @classmethod
-    def set_engine(cls, kind=""):
-        if "process" in kind.lower():
-            cls.__ENGINE__ = Process
-        else:
-            cls.__ENGINE__ = Thread
+        cls.__POOL_NAME__ = name
 
-    @classmethod
-    def _init_pool(cls):
-        if cls.__POOL__ is None:
-            cls.__POOL__ = Semaphore(cls.__MAX_THREADS__)
+        try: threads = int(threads)
+        except: threads = 1
+
+        cls.__POOLS__[cls.__POOL_NAME__] = {
+            "pool": Semaphore(threads),
+            "engine": Process if "process" in engine.lower() else Thread,
+            "name": name,
+            "threads": threads
+        }
 
     @classmethod
     def task(cls, callee):
-        cls._init_pool()
+
+        # create default pool if nont exists
+        if not cls.__POOLS__:
+            cls.createPool()
+
+        print("+++", cls.__POOLS__)
 
         def _run_via_pool(*args, **kwargs):
-            with cls.__POOL__:
+            with cls.__POOLS__[cls.__POOL_NAME__]['pool']:
                 return callee(*args, **kwargs)
 
         def async_method(*args, **kwargs):
             if not cls.__KILL_RECEIVED__:
-                task = cls.__ENGINE__(target=_run_via_pool, args=args, kwargs=kwargs, daemon=False)
+                task = cls.__POOLS__[cls.__POOL_NAME__]['engine'](
+                    target=_run_via_pool, args=args, kwargs=kwargs, daemon=False)
                 cls.__TASKS__.append(task)
                 task.start()
                 return task
