@@ -124,6 +124,13 @@ or via CLI:
 - ``--dbpass`` MySQL server password (default: ``None``)
 - ``--dbskip`` [flag] Skip MySQL logging of market data (default: ``False``)
 - ``--orderbook`` [flag] Tells the blotter to fetch and stream order book data (default: ``False``)
+- ``--dbpass`` MySQL server password (default: ``None``)
+- ``--max_threads`` Maximum number of threads to use (default is 1)
+
+.. note::
+
+    **It's recommended that you set the** ``max_threads`` **parameter based on your strategy's needs and your machine's capabilities!**
+    As a general rule of thumb, unless you're subscribing to 100+ instruments, you probably don't need to tweak this parameter.
 
 -----
 
