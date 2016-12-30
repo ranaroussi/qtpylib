@@ -63,8 +63,6 @@ class multitasking():
         if not cls.__POOLS__:
             cls.createPool()
 
-        print("+++", cls.__POOLS__)
-
         def _run_via_pool(*args, **kwargs):
             with cls.__POOLS__[cls.__POOL_NAME__]['pool']:
                 return callee(*args, **kwargs)

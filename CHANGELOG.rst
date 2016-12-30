@@ -3,6 +3,10 @@ Release Notes
 
 *December 30, 2016*
 
+1.5.57
+-----------
+- Bugfixes and code cleanup
+
 1.5.56
 -----------
 
