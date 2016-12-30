@@ -24,6 +24,7 @@ import numpy as np
 import pandas as pd
 import time
 import os
+import sys
 from stat import S_IWRITE
 from math import ceil
 
@@ -39,6 +40,14 @@ from ezibpy.utils import (
 
 from decimal import *
 getcontext().prec = 5
+
+# =============================================
+def read_single_argv(param, default=None):
+    args = " ".join(sys.argv).strip().split(param)
+    if len(args) > 1:
+        args = args[1].strip().split(" ")[0]
+        return args if "-" not in args else None
+    return None
 
 # =============================================
 def is_number(string):
