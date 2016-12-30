@@ -40,7 +40,14 @@ from qtpylib import (
 from abc import ABCMeta, abstractmethod
 
 # =============================================
+# Configure logging
 tools.createLogger(__name__)
+
+# =============================================
+# set up threading pool
+__threads__ = tools.read_single_argv("--max_threads")
+__threads__ = int(__threads__) if tools.is_number(__threads__) else 1
+asynctools.multitasking.createPool(__name__, __threads__)
 # =============================================
 
 class Algo(Broker):
@@ -84,8 +91,6 @@ class Algo(Broker):
             IB TWS/GW Client ID (default: 998)
         ibserver: str
             IB TWS/GW Server hostname (default: localhost)
-        max_threads : int
-            Maximum number of threads to use (default is 1)
     """
 
     __metaclass__ = ABCMeta
@@ -94,7 +99,7 @@ class Algo(Broker):
         tick_window=1, bar_window=100, timezone="UTC", preload=None,
         continuous=True, blotter=None, sms=[], log=None, backtest=False,
         start=None, end=None, data=None, output=None,
-        ibclient=998, ibport=4001, ibserver="localhost", max_threads=1, **kwargs):
+        ibclient=998, ibport=4001, ibserver="localhost", **kwargs):
 
         # detect algo name
         self.name = str(self.__class__).split('.')[-1].split("'")[0]
@@ -188,10 +193,6 @@ class Algo(Broker):
             self.backtest_end   = None
             self.backtest_csv   = None
 
-        # ---------------------------------------
-        # set maximum number of threads to use
-        if self.args['max_threads'] is not None:
-            asynctools.multitasking.set_max_threads(self.args['max_threads'])
 
     # ---------------------------------------
     def add_stale_tick(self):
@@ -249,9 +250,6 @@ class Algo(Broker):
             help='Log trades to this Blotter\'s MySQL')
         parser.add_argument('--continuous', default=self.args["continuous"],
             help='Construct continuous Futures contracts (flag)', action='store_true')
-
-        parser.add_argument('--max_threads', default=self.args['max_threads'],
-            help='Maximum number of threads to use', required=False)
 
         # only return non-default cmd line args
         # (meaning only those actually given)
