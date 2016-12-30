@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+*December 30, 2016*
+
+1.5.56
+-----------
+
+- Max # of threads is set to 1 (single-threaded) by default and can be changed using the ``max_threads`` run-time parameter  in ``Blotter()`` and ``Algo()``. **It's recommended that you set this parameter based on your strategy's needs and your machine's capabilities** (strategies trading a handful of symbols probably won't need to tweak this parameter).
+
+
 *December 25, 2016*
 
 1.5.55a

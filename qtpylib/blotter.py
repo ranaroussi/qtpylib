@@ -58,6 +58,13 @@ tools.createLogger(__name__, logging.INFO)
 
 # Disable ezIBpy logging (Blotter handles errors itself)
 logging.getLogger('ezibpy').setLevel(logging.CRITICAL)
+
+# =============================================
+# set up threading pool
+__threads__ = tools.read_single_argv("--max_threads")
+__threads__ = __threads__ if tools.is_number(__threads__) else 1
+asynctools.multitasking.createPool(__name__, __threads__)
+
 # =============================================
 
 cash_ticks = {}

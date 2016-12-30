@@ -19,7 +19,8 @@
 # limitations under the License.
 #
 
-from threading import Thread
+from threading import Thread, Semaphore
+from multiprocessing import Process, cpu_count
 from sys import exit as sysexit
 from os import _exit as osexit
 from time import sleep, time
@@ -35,23 +36,52 @@ class multitasking():
     __KILL_RECEIVED__ = False
     __TASKS__ = []
 
+    # processing
+    __CPU_CORES__   = cpu_count()
+    __POOLS__       = {}
+    __POOL_NAME__   = "Main"
+
+    @classmethod
+    def createPool(cls, name="main", threads=None, engine="thread"):
+
+        cls.__POOL_NAME__ = name
+
+        try: threads = int(threads)
+        except: threads = 1
+
+        cls.__POOLS__[cls.__POOL_NAME__] = {
+            "pool": Semaphore(threads),
+            "engine": Process if "process" in engine.lower() else Thread,
+            "name": name,
+            "threads": threads
+        }
+
     @classmethod
     def task(cls, callee):
-        # global __KILL_RECEIVED__, __TASKS__
+
+        # create default pool if nont exists
+        if not cls.__POOLS__:
+            cls.createPool()
+
+        print("+++", cls.__POOLS__)
+
+        def _run_via_pool(*args, **kwargs):
+            with cls.__POOLS__[cls.__POOL_NAME__]['pool']:
+                return callee(*args, **kwargs)
+
         def async_method(*args, **kwargs):
             if not cls.__KILL_RECEIVED__:
-                thread = Thread(target=callee, args=args, kwargs=kwargs, daemon=False)
-                cls.__TASKS__.append(thread)
-                thread.start()
-                return thread
+                task = cls.__POOLS__[cls.__POOL_NAME__]['engine'](
+                    target=_run_via_pool, args=args, kwargs=kwargs, daemon=False)
+                cls.__TASKS__.append(task)
+                task.start()
+                return task
 
         return async_method
 
     @classmethod
     def wait_for_tasks(cls):
-        # global __KILL_RECEIVED__
         cls.__KILL_RECEIVED__ = True
-
         try:
             running = len([t.join(1) for t in cls.__TASKS__ if t is not None and t.isAlive()])
             while running > 0:
@@ -62,7 +92,6 @@ class multitasking():
 
     @classmethod
     def killall(cls):
-        # global __KILL_RECEIVED__
         cls.__KILL_RECEIVED__ = True
         try:
             sysexit(0)

@@ -40,7 +40,14 @@ from qtpylib import (
 from abc import ABCMeta, abstractmethod
 
 # =============================================
+# Configure logging
 tools.createLogger(__name__)
+
+# =============================================
+# set up threading pool
+__threads__ = tools.read_single_argv("--max_threads")
+__threads__ = int(__threads__) if tools.is_number(__threads__) else 1
+asynctools.multitasking.createPool(__name__, __threads__)
 # =============================================
 
 class Algo(Broker):
@@ -185,6 +192,7 @@ class Algo(Broker):
             self.backtest_start = None
             self.backtest_end   = None
             self.backtest_csv   = None
+
 
     # ---------------------------------------
     def add_stale_tick(self):
