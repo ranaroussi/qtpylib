@@ -95,6 +95,8 @@ class Blotter():
             MySQL server password (default: none)
         dbskip : str
             Skip MySQL logging (default: False)
+        max_threads : int
+            Maximum number of threads to use (default is 1)
     """
 
     __metaclass__ = ABCMeta
@@ -103,7 +105,7 @@ class Blotter():
         ibport=4001, ibclient=999, ibserver="localhost",
         dbhost="localhost", dbport="3306", dbname="qtpy",
         dbuser="root", dbpass="", dbskip=False, orderbook=False,
-        zmqport="12345", zmqtopic=None, **kwargs):
+        zmqport="12345", zmqtopic=None, max_threads=1, **kwargs):
 
         # whats my name?
         self.name = str(self.__class__).split('.')[-1].split("'")[0].lower()
@@ -172,6 +174,10 @@ class Blotter():
         self.backfilled = False
         self.backfilled_symbols = []
         self.backfill_resolution = "1 min"
+
+        # set maximum number of threads to use
+        if self.args['max_threads'] is not None:
+            asynctools.multitasking.set_max_threads(self.args['max_threads'])
 
     # -------------------------------------------
     def _on_exit(self, terminate=True):
@@ -277,6 +283,9 @@ class Blotter():
             help='MySQL server password', required=False)
         parser.add_argument('--dbskip', default=self.args['dbskip'], action='store_true',
             help='Skip MySQL logging (flag)', required=False)
+
+        parser.add_argument('--max_threads', default=self.args['max_threads'],
+            help='Maximum number of threads to use', required=False)
 
         # only return non-default cmd line args
         # (meaning only those actually given)
