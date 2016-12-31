@@ -702,21 +702,25 @@ class Algo(Broker):
             self.record_ts = tick.index[0]
 
         if self.resolution[-1] not in ("S", "K", "V"):
-            self_ticks = self._update_window(self_ticks, tick, window=self.tick_window)
-            self.ticks = self._thread_safe_merge(symbol, self.ticks, self_ticks) # assign back
+            if self.threads == 0:
+                self.ticks = self._update_window(self.ticks, tick, window=self.tick_window)
+            else:
+                self_ticks = self._update_window(self_ticks, tick, window=self.tick_window)
+                self.ticks = self._thread_safe_merge(symbol, self.ticks, self_ticks) # assign back
         else:
             self.ticks = self._update_window(self.ticks, tick)
             bars = tools.resample(self.ticks, self.resolution)
 
             if len(bars.index) > self.tick_bar_count > 0 or stale_tick:
                 self.record_ts = tick.index[0]
-                # self._bar_handler(bars, symbol)
                 self._base_bar_handler(bars[bars['symbol']==symbol][-1:])
 
                 window = int("".join([s for s in self.resolution if s.isdigit()]))
-                # self.ticks = self.ticks[-window:]
-                self_ticks = self._get_window_per_symbol(self_ticks, window)
-                self.ticks = self._thread_safe_merge(symbol, self.ticks, self_ticks) # assign back
+                if self.threads == 0:
+                    self.ticks = self._get_window_per_symbol(self.ticks, window)
+                else:
+                    self_ticks = self._get_window_per_symbol(self_ticks, window)
+                    self.ticks = self._thread_safe_merge(symbol, self.ticks, self_ticks) # assign back
 
             self.tick_bar_count = len(bars.index)
 
@@ -745,13 +749,20 @@ class Algo(Broker):
 
         if is_tick_or_volume_bar:
             # just add a bar (used by tick bar bandler)
-            self_bars = self._update_window(self_bars, bar, window=self.bar_window)
+            if self.threads == 0:
+                self.bars = self._update_window(self.bars, bar, window=self.bar_window)
+            else:
+                self_bars = self._update_window(self_bars, bar, window=self.bar_window)
         else:
             # add the bar and resample to resolution
-            self_bars = self._update_window(self_bars, bar, window=self.bar_window, resolution=self.resolution)
+            if self.threads == 0:
+                self.bars = self._update_window(self.bars, bar, window=self.bar_window, resolution=self.resolution)
+            else:
+                self_bars = self._update_window(self_bars, bar, window=self.bar_window, resolution=self.resolution)
 
-        # assign new data to self.bars
-        self.bars = self._thread_safe_merge(symbol, self.bars, self_bars)
+        # assign new data to self.bars if threaded
+        if self.threads > 0:
+            self.bars = self._thread_safe_merge(symbol, self.bars, self_bars)
 
         # new bar?
         hash_string = bar[:1]['symbol'].to_string().translate(str.maketrans({key: None for key in "\n -:+"}))
