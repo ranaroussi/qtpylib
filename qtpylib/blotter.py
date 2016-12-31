@@ -180,6 +180,9 @@ class Blotter():
         self.backfilled_symbols = []
         self.backfill_resolution = "1 min"
 
+        # be aware of thread count
+        self.threads = asynctools.multitasking.getPool(__name__)['threads']
+
     # -------------------------------------------
     def _on_exit(self, terminate=True):
         if "as_client" in self.args:

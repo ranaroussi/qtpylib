@@ -193,6 +193,8 @@ class Algo(Broker):
             self.backtest_end   = None
             self.backtest_csv   = None
 
+        # be aware of thread count
+        self.threads = asynctools.multitasking.getPool(__name__)['threads']
 
     # ---------------------------------------
     def add_stale_tick(self):
