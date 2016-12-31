@@ -208,7 +208,7 @@ class Algo(Broker):
                     tick = pd.DataFrame(index=[0], data=tick)
                     tick.set_index('timestamp', inplace=True)
                     tick = tools.set_timezone(tick, tz=self.timezone)
-                    tick.loc[:, 'ticksize'] = 0 # no real size
+                    tick.loc[:, 'lastsize'] = 0 # no real size
 
                     self._tick_handler(tick, stale_tick=True)
 
