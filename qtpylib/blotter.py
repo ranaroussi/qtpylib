@@ -797,8 +797,7 @@ class Blotter():
 
         except (KeyboardInterrupt, SystemExit):
             self.quitting = True # don't display connection errors on ctrl+c
-            # print("\n\n>>> Interrupted with Ctrl-c...")
-            print("\n\n>>> Interrupted with Ctrl-c...\n(waiting for running threads to be completed)\n")
+            print("\n\n>>> Interrupted with Ctrl-c...\n(waiting for running tasks to be completed)\n")
             # asynctools.multitasking.killall() # stop now
             asynctools.multitasking.wait_for_tasks() # wait for threads to complete
             sys.exit(1)
@@ -993,7 +992,7 @@ class Blotter():
                             bar_handler(df)
 
         except (KeyboardInterrupt, SystemExit):
-            print("\n\n>>> Interrupted with Ctrl-c...\n(waiting for running threads to be completed)\n")
+            print("\n\n>>> Interrupted with Ctrl-c...\n(waiting for running tasks to be completed)\n")
             print(".\n.\n.\n")
             # asynctools.multitasking.killall() # stop now
             asynctools.multitasking.wait_for_tasks() # wait for threads to complete
@@ -1010,7 +1009,7 @@ class Blotter():
             print("\n\n>>> Backtesting Completed.")
 
         except (KeyboardInterrupt, SystemExit):
-            print("\n\n>>> Interrupted with Ctrl-c...\n(waiting for running threads to be completed)\n")
+            print("\n\n>>> Interrupted with Ctrl-c...\n(waiting for running tasks to be completed)\n")
             print(".\n.\n.\n")
             # asynctools.multitasking.killall() # stop now
             asynctools.multitasking.wait_for_tasks() # wait for threads to complete
