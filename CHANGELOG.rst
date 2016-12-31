@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+
+*December 31, 2016*
+
+1.5.58
+-----------
+- Misc bugfixes, code improvements, cleanup and abstraction
+
 *December 30, 2016*
 
 1.5.57
