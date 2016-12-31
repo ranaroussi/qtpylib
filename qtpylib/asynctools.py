@@ -42,6 +42,17 @@ class multitasking():
     __POOL_NAME__   = "Main"
 
     @classmethod
+    def getPool(cls, name=None):
+        if name is None:
+            name = cls.__POOL_NAME__
+
+        return {
+            "engine": "thread" if cls.__POOLS__[cls.__POOL_NAME__]["engine"] == Thread else "process",
+            "name": name,
+            "threads": cls.__POOLS__[cls.__POOL_NAME__]["threads"]
+        }
+
+    @classmethod
     def createPool(cls, name="main", threads=None, engine="thread"):
 
         cls.__POOL_NAME__ = name
@@ -49,8 +60,12 @@ class multitasking():
         try: threads = int(threads)
         except: threads = 1
 
+        # 1 thread is no threads
+        if threads < 2:
+            threads = 0
+
         cls.__POOLS__[cls.__POOL_NAME__] = {
-            "pool": Semaphore(threads),
+            "pool": Semaphore(threads) if threads > 0 else None,
             "engine": Process if "process" in engine.lower() else Thread,
             "name": name,
             "threads": threads
@@ -68,6 +83,11 @@ class multitasking():
                 return callee(*args, **kwargs)
 
         def async_method(*args, **kwargs):
+            # no threads
+            if cls.__POOLS__[cls.__POOL_NAME__]['threads'] == 0:
+                return callee(*args, **kwargs)
+
+            # has threads
             if not cls.__KILL_RECEIVED__:
                 task = cls.__POOLS__[cls.__POOL_NAME__]['engine'](
                     target=_run_via_pool, args=args, kwargs=kwargs, daemon=False)
@@ -80,6 +100,10 @@ class multitasking():
     @classmethod
     def wait_for_tasks(cls):
         cls.__KILL_RECEIVED__ = True
+
+        if cls.__POOLS__[cls.__POOL_NAME__]['threads'] == 0:
+            return True
+
         try:
             running = len([t.join(1) for t in cls.__TASKS__ if t is not None and t.isAlive()])
             while running > 0:

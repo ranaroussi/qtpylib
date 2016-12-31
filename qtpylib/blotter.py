@@ -180,6 +180,9 @@ class Blotter():
         self.backfilled_symbols = []
         self.backfill_resolution = "1 min"
 
+        # be aware of thread count
+        self.threads = asynctools.multitasking.getPool(__name__)['threads']
+
     # -------------------------------------------
     def _on_exit(self, terminate=True):
         if "as_client" in self.args:
@@ -646,8 +649,12 @@ class Blotter():
             return
 
         # connect to mysql per call (thread safe)
-        dbconn = self.get_mysql_connection()
-        dbcurr = dbconn.cursor()
+        if self.threads > 0:
+            dbconn = self.get_mysql_connection()
+            dbcurr = dbconn.cursor()
+        else:
+            dbconn = self.dbconn
+            dbcurr = self.dbcurr
 
         # set symbol details
         symbol_id = 0
@@ -672,8 +679,9 @@ class Blotter():
         except: pass
 
         # disconect from mysql
-        dbcurr.close()
-        dbconn.close()
+        if self.threads > 0:
+            dbcurr.close()
+            dbconn.close()
 
     # -------------------------------------------
     def run(self):
@@ -797,8 +805,7 @@ class Blotter():
 
         except (KeyboardInterrupt, SystemExit):
             self.quitting = True # don't display connection errors on ctrl+c
-            # print("\n\n>>> Interrupted with Ctrl-c...")
-            print("\n\n>>> Interrupted with Ctrl-c...\n(waiting for running threads to be completed)\n")
+            print("\n\n>>> Interrupted with Ctrl-c...\n(waiting for running tasks to be completed)\n")
             # asynctools.multitasking.killall() # stop now
             asynctools.multitasking.wait_for_tasks() # wait for threads to complete
             sys.exit(1)
@@ -993,7 +1000,7 @@ class Blotter():
                             bar_handler(df)
 
         except (KeyboardInterrupt, SystemExit):
-            print("\n\n>>> Interrupted with Ctrl-c...\n(waiting for running threads to be completed)\n")
+            print("\n\n>>> Interrupted with Ctrl-c...\n(waiting for running tasks to be completed)\n")
             print(".\n.\n.\n")
             # asynctools.multitasking.killall() # stop now
             asynctools.multitasking.wait_for_tasks() # wait for threads to complete
@@ -1010,7 +1017,7 @@ class Blotter():
             print("\n\n>>> Backtesting Completed.")
 
         except (KeyboardInterrupt, SystemExit):
-            print("\n\n>>> Interrupted with Ctrl-c...\n(waiting for running threads to be completed)\n")
+            print("\n\n>>> Interrupted with Ctrl-c...\n(waiting for running tasks to be completed)\n")
             print(".\n.\n.\n")
             # asynctools.multitasking.killall() # stop now
             asynctools.multitasking.wait_for_tasks() # wait for threads to complete
