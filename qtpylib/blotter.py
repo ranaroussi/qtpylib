@@ -649,8 +649,12 @@ class Blotter():
             return
 
         # connect to mysql per call (thread safe)
-        dbconn = self.get_mysql_connection()
-        dbcurr = dbconn.cursor()
+        if self.threads > 0:
+            dbconn = self.get_mysql_connection()
+            dbcurr = dbconn.cursor()
+        else:
+            dbconn = self.dbconn
+            dbcurr = self.dbcurr
 
         # set symbol details
         symbol_id = 0
@@ -675,8 +679,9 @@ class Blotter():
         except: pass
 
         # disconect from mysql
-        dbcurr.close()
-        dbconn.close()
+        if self.threads > 0:
+            dbcurr.close()
+            dbconn.close()
 
     # -------------------------------------------
     def run(self):
