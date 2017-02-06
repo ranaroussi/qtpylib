@@ -1,6 +1,11 @@
 Release Notes
 =============
 
+*February 6, 2017*
+
+1.5.59
+-----------
+- Requires ezIBpy >= 1.12.45 (fixes a few open issues)
 
 *December 31, 2016*
 
