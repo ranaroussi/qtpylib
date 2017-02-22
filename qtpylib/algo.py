@@ -709,7 +709,7 @@ class Algo(Broker):
                 self.ticks = self._thread_safe_merge(symbol, self.ticks, self_ticks) # assign back
         else:
             self.ticks = self._update_window(self.ticks, tick)
-            bars = tools.resample(self.ticks, self.resolution)
+            bars = tools.resample(self.ticks, self.resolution, tz=self.timezone)
 
             if len(bars.index) > self.tick_bar_count > 0 or stale_tick:
                 self.record_ts = tick.index[0]
