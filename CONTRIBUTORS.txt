@@ -4,3 +4,4 @@
 Ran Aroussi, Creator <https://github.com/ranaroussi>
 jkleint, Contributor <https://github.com/jkleint>
 Randy Terbush, Contributor <https://github.com/rterbush>
+Miguel Ángel Vilariño, Contributor <https://github.com/miguelvm>

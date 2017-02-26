@@ -381,6 +381,19 @@ def stoch(bars, window=14, slow=False, slow_ma=3):
     return pd.DataFrame(index=bars.index, data={ 'k': k, 'r': r })
 
 # ---------------------------------------------------------
+def zscore(bars, window=20, stds=1, col='close'):
+    """ get zscore of price """
+    std  = bars[col].rolling(window).std() * stds
+    mean = bars[col].rolling(window).mean()
+    return (bars[col]-mean) / std
+
+# ---------------------------------------------------------
+def pvt(bars):
+    """ Price Volume Trend """
+    pvt = ((bars['close'] - bars['close'].shift(1)) / bars['close'].shift(1)) * bars['volume']
+    return pvt.cumsum()
+
+# ---------------------------------------------------------
 PandasObject.session                  = session
 PandasObject.atr                      = atr
 PandasObject.bollinger_bands          = bollinger_bands
@@ -402,6 +415,8 @@ PandasObject.rolling_mean             = rolling_mean
 PandasObject.rolling_std              = rolling_std
 PandasObject.rsi                      = rsi
 PandasObject.stoch                    = stoch
+PandasObject.zscore                   = zscore
+PandasObject.pvt                      = pvt
 PandasObject.true_range               = true_range
 PandasObject.mid_price                = mid_price
 PandasObject.typical_price            = typical_price

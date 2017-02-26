@@ -184,6 +184,14 @@ Typical Price
     ...
 
 
+Price Volume Trend
+------------------
+
+.. code:: python
+
+    bars['pvt'] = bars.pvt()
+    ...
+
 
 Rolling Minimum
 ---------------
@@ -328,6 +336,15 @@ VWAP
 .. code:: python
 
     bars['vwap'] = bars.vwap(bars)
+    ...
+
+
+Z-Score
+-------
+
+.. code:: python
+
+    bars['zscore'] = bars.zscore(window=20, stds=1, col='close')
     ...
 
 
