@@ -184,8 +184,8 @@ Typical Price
     ...
 
 
-PVT (Price Volume Trend)
-------------------------
+Price Volume Trend
+------------------
 
 .. code:: python
 

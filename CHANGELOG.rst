@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+*February 26, 2017*
+
+1.5.6
+-----------
+- Added 2 Indicators: PVT (Price Volume Trend) and Z-Score
+- Fixed resample bug when using local timezones (merge pull request #55)
+
 *February 6, 2017*
 
 1.5.59
