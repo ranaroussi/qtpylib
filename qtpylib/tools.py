@@ -299,14 +299,15 @@ def datetime64_to_datetime(dt):
 # =============================================
 def get_timezone():
     try:
-        offsetHour = -(datetime.datetime.now()-datetime.datetime.utcnow()).seconds
+        offset_hour = -(datetime.datetime.now()-datetime.datetime.utcnow()).seconds
     except:
         if time.daylight:
-            offsetHour = time.altzone
+            offset_hour = time.altzone
         else:
-            offsetHour = time.timezone
+            offset_hour = time.timezone
 
-    return 'Etc/GMT%+d' % round(offsetHour / 3600)
+    offset_hour = round(offset_hour / 3600)
+    return 'Etc/GMT%+d' % offset_hour if offset_hour < 10 else int(offset_hour/10)
 
 def datetime_to_timezone(date, tz="UTC"):
     if not date.tzinfo:
