@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+*March 35, 2017*
+
+1.5.7
+-----------
+- Fixed minor bug in machine timeozone detection
+
 *February 26, 2017*
 
 1.5.6
