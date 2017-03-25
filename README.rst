@@ -1,11 +1,11 @@
 QTPyLib, Pythonic Algorithmic Trading
 =====================================
 
-.. image:: https://img.shields.io/pypi/pyversions/qtpylib.svg?maxAge=2592000
+.. image:: https://img.shields.io/pypi/pyversions/qtpylib.svg?maxAge=60
     :target: https://pypi.python.org/pypi/qtpylib
     :alt: Python version
 
-.. image:: https://img.shields.io/travis/ranaroussi/qtpylib/master.svg?
+.. image:: https://img.shields.io/travis/ranaroussi/qtpylib/master.svg?maxAge=1
     :target: https://travis-ci.org/ranaroussi/qtpylib
     :alt: Travis-CI build status
 
@@ -13,7 +13,7 @@ QTPyLib, Pythonic Algorithmic Trading
     :target: https://pypi.python.org/pypi/qtpylib
     :alt: PyPi version
 
-.. image:: https://img.shields.io/pypi/status/qtpylib.svg?maxAge=2592000
+.. image:: https://img.shields.io/pypi/status/qtpylib.svg?maxAge=60
     :target: https://pypi.python.org/pypi/qtpylib
     :alt: PyPi status
 
