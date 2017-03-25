@@ -3,6 +3,10 @@ Release Notes
 
 *March 35, 2017*
 
+1.5.71
+-----------
+- Fixed ``pip`` installer
+
 1.5.7
 -----------
 - Fixed minor bug in machine timeozone detection
