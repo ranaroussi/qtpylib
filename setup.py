@@ -29,7 +29,7 @@ setup(
     license='LGPL',
     classifiers=[
         'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
 
         'Operating System :: OS Independent',
         'Intended Audience :: Developers',
@@ -40,6 +40,7 @@ setup(
 
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
     platforms = ['any'],
     keywords='qtpylib qtpy algotrading algo trading interactive brokers tws ibgw ibpy ezibpy',
