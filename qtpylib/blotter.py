@@ -645,7 +645,7 @@ class Blotter():
 
     # -------------------------------------------
     def log2db(self, data, kind):
-        if self.args['dbskip']:
+        if self.args['dbskip'] or len(data["symbol"].split("_")) > 2:
             return
 
         # connect to mysql per call (thread safe)
