@@ -370,26 +370,35 @@ def cci(series, window=14):
     return pd.Series(index=series.index, data=res)
 
 # ---------------------------------------------------------
-def stoch(bars, window=14, slow=False, slow_ma=3):
+def stoch(df, window=14, d=3, k=3, fast=False):
     """
     compute the n period relative strength indicator
     http://excelta.blogspot.co.il/2013/09/stochastic-oscillator-technical.html
     """
-    highs_ma = pd.concat([bars['highs'].shift(i) for i in np.arange(window)], 1).apply(list, 1)
+    highs_ma = pd.concat([df['high'].shift(i) for i in np.arange(window)], 1).apply(list, 1)
     highs_ma = highs_ma.T.max().T
 
-    lows_ma = pd.concat([bars['lows'].shift(i) for i in np.arange(window)], 1).apply(list, 1)
+    lows_ma = pd.concat([df['low'].shift(i) for i in np.arange(window)], 1).apply(list, 1)
     lows_ma = lows_ma.T.min().T
 
-    k = ((bars['close']-lows_ma) / (highs_ma-lows_ma)) * 100
+    fast_k = ((df['close']-lows_ma) / (highs_ma-lows_ma)) * 100
+    fast_d = fast_k.rolling(window=d).mean()
 
-    # for fast we just take the stochastic value, slow we need 3 day MA
-    if slow:
-        k = rolling_mean(k, window=slow_ma)
+    if fast:
+        data = {
+            'k': fast_k,
+            'd': fast_d
+        }
 
-    r = rolling_mean(k, window=window)
+    else:
+        slow_k = fast_k.rolling(window=k).mean()
+        slow_d = slow_k.rolling(window=d).mean()
+        data = {
+            'k': slow_k,
+            'd': slow_d
+        }
 
-    return pd.DataFrame(index=bars.index, data={ 'k': k, 'r': r })
+    return pd.DataFrame(index=df.index, data=data)
 
 # ---------------------------------------------------------
 def zscore(bars, window=20, stds=1, col='close'):

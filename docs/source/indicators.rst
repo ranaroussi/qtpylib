@@ -324,7 +324,7 @@ Stochastics
 
 .. code:: python
 
-    bars['stoch'] = bars.stoch(window=14, slow=False, slow_ma=3)
+    bars['stoch'] = bars.stoch([window=14, d=3, k=3, fast=True])
     ...
 
 
