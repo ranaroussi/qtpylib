@@ -16,6 +16,14 @@ ATR
     bars['atr'] = bars.atr(window=14 [, exp=False])
     ...
 
+Awesome Oscillator
+------------------
+
+.. code:: python
+
+    bars['ao'] = bars.awesome_oscillator(weighted=False, fast=5, slow=34])
+    ...
+
 
 Bollinger Bands
 ---------------

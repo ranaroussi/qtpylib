@@ -72,6 +72,17 @@ def heikinashi(df, columns=('open', 'high', 'low', 'close')):
     return pd.DataFrame(index=df.index, data={'open': ha_open, 'high':ha_high, 'low':ha_low, 'close':ha_close})
 
 # ---------------------------------------------------------
+def awesome_oscillator(df, weighted=False, fast=5, slow=34):
+    midprice = (df['high']+df['low'])/2
+
+    if weighted:
+        ao = midprice.ewm(fast).mean() - midprice.ewm(slow).mean()
+    else:
+        ao = midprice.rolling(fast).mean() - midprice.rolling(slow).mean()
+
+    return pd.DataFrame(ao)
+
+# ---------------------------------------------------------
 def nans(len=1):
     mtx = np.empty(len)
     mtx[:] = np.nan
@@ -394,6 +405,7 @@ def pvt(bars):
     return pvt.cumsum()
 
 # ---------------------------------------------------------
+PandasObject.awesome_oscillator       = awesome_oscillator
 PandasObject.session                  = session
 PandasObject.atr                      = atr
 PandasObject.bollinger_bands          = bollinger_bands
