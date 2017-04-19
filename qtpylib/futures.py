@@ -27,12 +27,18 @@ import requests
 import re
 import time
 import tempfile
+import sys
 
 from bs4 import BeautifulSoup as bs
 from dateutil.parser import parse as parse_date
 from io import StringIO
 
 from qtpylib import tools
+
+# =============================================
+# check min, python version
+if sys.version_info < (3, 4):
+    raise SystemError("QTPyLib requires Python version >= 3.4")
 
 import logging
 logging.getLogger('requests').setLevel(logging.WARNING)

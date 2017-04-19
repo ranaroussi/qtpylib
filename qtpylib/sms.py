@@ -21,13 +21,18 @@
 
 import nexmo
 from twilio.rest import TwilioRestClient as twilioClient
+import sys
 
 import configparser
 from qtpylib import (
     path, tools
 )
 
-# -------------------------------------------
+# =============================================
+# check min, python version
+if sys.version_info < (3, 4):
+    raise SystemError("QTPyLib requires Python version >= 3.4")
+# =============================================
 # sms service / credentials
 # -------------------------------------------
 SMS_SERVICE     = None

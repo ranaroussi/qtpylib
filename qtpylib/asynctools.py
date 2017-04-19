@@ -21,11 +21,16 @@
 
 from threading import Thread, Semaphore
 from multiprocessing import Process, cpu_count
-from sys import exit as sysexit
+from sys import exit as sysexit, version_info as sys_version_info
 from os import _exit as osexit
 from time import sleep, time
 
 # =============================================
+# check min, python version
+if sys_version_info < (3, 4):
+    raise SystemError("QTPyLib requires Python version >= 3.4")
+# =============================================
+
 class multitasking():
     """
     Non-blocking Python methods using decorators

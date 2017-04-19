@@ -42,6 +42,10 @@ from decimal import *
 getcontext().prec = 5
 
 # =============================================
+# check min, python version
+if sys.version_info < (3, 4):
+    raise SystemError("QTPyLib requires Python version >= 3.4")
+# =============================================
 def read_single_argv(param, default=None):
     args = " ".join(sys.argv).strip().split(param)
     if len(args) > 1:

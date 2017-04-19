@@ -29,6 +29,7 @@ import os
 import pandas as pd
 import pymysql
 import time
+import sys
 
 from datetime import datetime, timedelta
 
@@ -45,6 +46,9 @@ getcontext().prec = 5
 from abc import ABCMeta
 
 # =============================================
+# check min, python version
+if sys.version_info < (3, 4):
+    raise SystemError("QTPyLib requires Python version >= 3.4")
 tools.createLogger(__name__)
 # =============================================
 

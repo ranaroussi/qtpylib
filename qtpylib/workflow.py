@@ -25,6 +25,7 @@ import pymysql
 import requests
 import logging
 import time
+import sys
 
 from io import StringIO
 from pandas_datareader import data as web
@@ -38,6 +39,11 @@ from qtpylib.blotter import (
 
 from ezibpy import ezIBpy
 from ezibpy.utils import contract_expiry_from_symbol
+
+# =============================================
+# check min, python version
+if sys.version_info < (3, 4):
+    raise SystemError("QTPyLib requires Python version >= 3.4")
 
 # =============================================
 tools.createLogger(__name__)

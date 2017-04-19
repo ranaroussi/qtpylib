@@ -29,7 +29,13 @@ except ImportError:
     pass
 
 from pandas import Series, DataFrame
+import sys
 
+# =============================================
+# check min, python version
+if sys.version_info < (3, 4):
+    raise SystemError("QTPyLib requires Python version >= 3.4")
+# =============================================
 
 # ---------------------------
 def _check_talib_presence():

@@ -22,11 +22,16 @@
 import numpy as np
 import pandas as pd
 import warnings
+import sys
 
 from datetime import datetime, timedelta
 from pandas.core.base import PandasObject
 
 warnings.simplefilter(action = "ignore", category = RuntimeWarning)
+# =============================================
+# check min, python version
+if sys.version_info < (3, 4):
+    raise SystemError("QTPyLib requires Python version >= 3.4")
 
 # =============================================
 # remove previous globex day from df

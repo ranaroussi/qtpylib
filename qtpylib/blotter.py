@@ -53,6 +53,11 @@ from qtpylib import (
 from abc import ABCMeta
 
 # =============================================
+# check min, python version
+if sys.version_info < (3, 4):
+    raise SystemError("QTPyLib requires Python version >= 3.4")
+
+# =============================================
 # Configure logging
 tools.createLogger(__name__, logging.INFO)
 

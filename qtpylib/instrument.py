@@ -22,6 +22,13 @@
 from qtpylib import futures
 import math
 from pandas import concat as pd_concat
+import sys
+
+# =============================================
+# check min, python version
+if sys.version_info < (3, 4):
+    raise SystemError("QTPyLib requires Python version >= 3.4")
+# =============================================
 
 class Instrument(str):
     """A string subclass that provides easy access to misc

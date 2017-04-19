@@ -14,12 +14,17 @@ import logging
 import numpy as np
 import pandas as pd
 import pymysql
+import sys
 
 from qtpylib import path, tools
 from qtpylib.blotter import (
     Blotter, load_blotter_args
 )
 
+# =============================================
+# check min, python version
+if sys.version_info < (3, 4):
+    raise SystemError("QTPyLib requires Python version >= 3.4")
 # =============================================
 class datetimeJSONEncoder(JSONEncoder):
     def default(self, obj):
