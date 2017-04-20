@@ -100,7 +100,7 @@ def get_data_yahoo(symbols, start, end=None, *args, **kwargs):
         ohlc["adj_high"] = ohlc["high"]/ratio
         ohlc["adj_low"]  = ohlc["low"]/ratio
 
-        ohlc.drop(["open","high","low","close"], axis=1, inplace=True)
+        ohlc.drop(["open", "high", "low", "close"], axis=1, inplace=True)
         ohlc.rename(columns={
             "adj_open": "open",
             "adj_high": "high",
@@ -122,7 +122,9 @@ def get_data_yahoo(symbols, start, end=None, *args, **kwargs):
 
     return pd.concat(dfs).sort_index()
 
+
 # ---------------------------------------------
+
 def get_data_yahoo_intraday(symbol, *args, **kwargs):
     """
     Import intraday data (1M) from Yahoo finance (2 weeks max)
@@ -134,14 +136,16 @@ def get_data_yahoo_intraday(symbol, *args, **kwargs):
         data : pd.DataFrame
             Pandas DataFrame with 1-minute bar data
     """
-    raw = requests.get("http://chartapi.finance.yahoo.com/instrument/1.0/"+symbol+"/chartdata;type=quote;range=10d/csv")
+    raw = requests.get("http://chartapi.finance.yahoo.com/instrument/1.0/" +
+                       symbol + "/chartdata;type=quote;range=10d/csv")
 
     cols = raw.text.split("values:")[1].split("\n")[0].lower()
     data = raw.text.split("volume:")[1].split("\n")
     data = "\n".join(data[1:])
 
     if "timestamp" in cols:
-        df = pd.read_csv(StringIO(cols+"\n"+data), index_col=["timestamp"], parse_dates=["timestamp"])
+        df = pd.read_csv(StringIO(cols + "\n" + data),
+                         index_col=["timestamp"], parse_dates=["timestamp"])
         df.index = pd.to_datetime(df.index, unit='s')
 
         timezone = raw.text.split("timezone:")[1].split("\n")[0]
@@ -152,7 +156,8 @@ def get_data_yahoo_intraday(symbol, *args, **kwargs):
         return np.round(df, 2)
 
     # parse csv
-    df = pd.read_csv(StringIO(cols+"\n"+data), index_col=["date"], parse_dates=["date"])
+    df = pd.read_csv(StringIO(cols + "\n" + data),
+                     index_col=["date"], parse_dates=["date"])
     df.index = pd.to_datetime(df.index, utc=True)
 
     # round
@@ -163,6 +168,7 @@ def get_data_yahoo_intraday(symbol, *args, **kwargs):
     return df[["symbol", "open", "high", "low", "close", "volume"]]
 
 # ---------------------------------------------
+
 def get_data_google_intraday(symbol, *args, **kwargs):
     """
     Import intraday data (1M) from Google finance (3 weeks max)
@@ -176,9 +182,10 @@ def get_data_google_intraday(symbol, *args, **kwargs):
     """
 
     # build request url
-    url = "https://www.google.com/finance/getprices?q="+symbol+"&i=60&p=30d&f=d,o,h,l,c,v"
+    url = "https://www.google.com/finance/getprices?q=" + \
+        symbol + "&i=60&p=30d&f=d,o,h,l,c,v"
     for arg in kwargs:
-        url += "&"+ arg +"="+ kwargs[arg]
+        url += "&" + arg + "=" + kwargs[arg]
 
     # get data
     raw = requests.get(url)
@@ -187,11 +194,13 @@ def get_data_google_intraday(symbol, *args, **kwargs):
     data = raw.text.split("\n")
 
     # read to dataframe
-    df = pd.read_csv(StringIO("\n".join(data[7:])), names=["offset","open","high","low","close","volume"])
+    df = pd.read_csv(StringIO("\n".join(data[7:])), names=[
+                     "offset", "open", "high", "low", "close", "volume"])
 
     # adjust offset
-    df['timestamp'] = df[df['offset'].str[0] == "a"]['offset'].str[1:].astype(int)
-    df.loc[df[df['timestamp'].isnull()==False].index, 'offset'] = 0
+    df['timestamp'] = df[df['offset'].str[0] == "a"][
+        'offset'].str[1:].astype(int)
+    df.loc[df[df['timestamp'].isnull() == False].index, 'offset'] = 0
     df['timestamp'] = df['timestamp'].ffill() + df['offset'].astype(int) * 60
 
     # convert to datetime
@@ -243,7 +252,8 @@ def get_data_ib(instrument, start, resolution="1 min", blotter=None, output_path
     global _ib_history_downloaded
 
     # load blotter settings
-    blotter_args = load_blotter_args(blotter, logger=logging.getLogger(__name__))
+    blotter_args = load_blotter_args(
+        blotter, logger=logging.getLogger(__name__))
 
     # create contract string (no need for connection)
     ibConn = ezIBpy()
@@ -251,7 +261,7 @@ def get_data_ib(instrument, start, resolution="1 min", blotter=None, output_path
 
     if not ibConn.connected:
         ibConn.connect(clientId=0,
-            port=int(blotter_args['ibport']), host=str(blotter_args['ibserver']))
+                       port=int(blotter_args['ibport']), host=str(blotter_args['ibserver']))
 
     # generate a valid ib tuple
     instrument = tools.create_ib_tuple(instrument)
@@ -259,7 +269,7 @@ def get_data_ib(instrument, start, resolution="1 min", blotter=None, output_path
     contract = ibConn.createContract(instrument)
 
     ibConn.requestHistoricalData(contracts=[contract],
-        data="TRADES", resolution=resolution, lookback=tools.ib_duration_str(start), rth=False)
+                                 data="TRADES", resolution=resolution, lookback=tools.ib_duration_str(start), rth=False)
 
     while not _ib_history_downloaded:
         time.sleep(.1)
@@ -312,6 +322,7 @@ _ticks_colsmap = {
 }
 
 # ---------------------------------------------
+
 def validate_columns(df, kind="BAR", raise_errors=True):
     global _bars_colsmap, _ticks_colsmap
 
@@ -322,7 +333,7 @@ def validate_columns(df, kind="BAR", raise_errors=True):
 
     is_option = "OPT" in list(df['asset_class'].unique())
 
-    colsmap = _ticks_colsmap if kind=="TICK" else _bars_colsmap
+    colsmap = _ticks_colsmap if kind == "TICK" else _bars_colsmap
 
     for el in colsmap:
         col = colsmap[el]
@@ -336,6 +347,7 @@ def validate_columns(df, kind="BAR", raise_errors=True):
     return True
 
 # ---------------------------------------------
+
 def prepare_data(instrument, data, output_path=None, index=None, colsmap=None, kind="BAR"):
     """
     Converts given DataFrame to a QTPyLib-compatible format and timezone
@@ -365,7 +377,7 @@ def prepare_data(instrument, data, output_path=None, index=None, colsmap=None, k
     df = data.copy()
 
     # ezibpy's csv?
-    if set(df.columns) == set(['datetime','C','H','L','O','OI','V','WAP']):
+    if set(df.columns) == set(['datetime', 'C', 'H', 'L', 'O', 'OI', 'V', 'WAP']):
         df.rename(columns={
             'datetime': 'datetime',
             'O': 'open',
@@ -386,7 +398,7 @@ def prepare_data(instrument, data, output_path=None, index=None, colsmap=None, k
     if not isinstance(colsmap, dict):
         colsmap = {}
 
-    _colsmap = _ticks_colsmap if kind=="TICK" else _bars_colsmap
+    _colsmap = _ticks_colsmap if kind == "TICK" else _bars_colsmap
     for el in _colsmap:
         if el not in colsmap:
             colsmap[el] = _colsmap[el]
@@ -418,7 +430,7 @@ def prepare_data(instrument, data, output_path=None, index=None, colsmap=None, k
         df = tools.force_options_columns(df)
 
     # remove all other columns
-    known_cols = list(colsmap.values())+['symbol','symbol_group','asset_class','expiry']
+    known_cols = list(colsmap.values()) + ['symbol','symbol_group','asset_class','expiry']
     for col in df.columns:
         if col not in known_cols:
             df.drop(col, axis=1, inplace=True)
@@ -435,13 +447,15 @@ def prepare_data(instrument, data, output_path=None, index=None, colsmap=None, k
 
     # save csv
     if output_path is not None:
-        output_path = output_path[:-1] if output_path.endswith('/') else output_path
+        output_path = output_path[
+            :-1] if output_path.endswith('/') else output_path
         df.to_csv("%s/%s.%s.csv" % (output_path, contract_string, kind))
 
     # return df
     return df
 
 # ---------------------------------------------
+
 def store_data(df, blotter=None, kind="BAR"):
     """
     Store QTPyLib-compatible csv files in Blotter's MySQL.
@@ -521,4 +535,3 @@ def store_data(df, blotter=None, kind="BAR"):
 def analyze_portfolio(file):
     """ analyze portfolio (TBD) """
     pass
-

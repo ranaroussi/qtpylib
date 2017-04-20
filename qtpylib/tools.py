@@ -41,11 +41,21 @@ from ezibpy.utils import (
 from decimal import *
 getcontext().prec = 5
 
+
 # =============================================
 # check min, python version
 if sys.version_info < (3, 4):
     raise SystemError("QTPyLib requires Python version >= 3.4")
 # =============================================
+
+
+class make_object:
+    """ create object from dict """
+    def __init__(self, **entries):
+        self.__dict__.update(entries)
+
+# ---------------------------------------------
+
 def read_single_argv(param, default=None):
     args = " ".join(sys.argv).strip().split(param)
     if len(args) > 1:
@@ -53,7 +63,9 @@ def read_single_argv(param, default=None):
         return args if "-" not in args else None
     return None
 
-# =============================================
+
+# ---------------------------------------------
+
 def is_number(string):
     """ checks if a string is a number (int/float) """
     string = str(string)
@@ -65,18 +77,22 @@ def is_number(string):
     except ValueError:
         return False
 
-# =============================================
+
+# ---------------------------------------------
+
 def to_decimal(number, points=None):
     """ convert datatypes into Decimals """
     if not (is_number(number)):
         return number
 
-    number = float(Decimal(number * 1.)) # can't Decimal an int
+    number = float(Decimal(number * 1.))  # can't Decimal an int
     if is_number(points):
         return round(number, points)
     return number
 
-# =============================================
+
+# ---------------------------------------------
+
 def week_started_date(as_datetime=False):
 
     today = datetime.datetime.utcnow()
@@ -88,7 +104,9 @@ def week_started_date(as_datetime=False):
 
     return dt.strftime("%Y-%m-%d")
 
-# =============================================
+
+# ---------------------------------------------
+
 def create_ib_tuple(instrument):
     """ create ib contract tuple """
     from qtpylib import futures
@@ -153,13 +171,14 @@ def create_ib_tuple(instrument):
     return instrument
 
 
-# =============================================
+# ---------------------------------------------
+
 def gen_symbol_group(sym):
     sym = sym.strip()
 
     if "_FUT" in sym:
         sym = sym.split("_FUT")
-        return sym[0][:-5]+"_F"
+        return sym[0][:-5] + "_F"
 
     elif "_CASH" in sym:
         return "CASH"
@@ -169,14 +188,18 @@ def gen_symbol_group(sym):
 
     return sym
 
-# -------------------------------------------
+
+# ---------------------------------------------
+
 def gen_asset_class(sym):
     sym_class = str(sym).split("_")
     if len(sym_class) > 1:
         return sym_class[-1].replace("CASH", "CSH")
     return "STK"
 
-# -------------------------------------------
+
+# ---------------------------------------------
+
 def mark_options_values(data):
     if isinstance(data, dict):
         data['opt_price']      = data.pop('price')
@@ -207,7 +230,9 @@ def mark_options_values(data):
 
     return data
 
-# -------------------------------------------
+
+# ---------------------------------------------
+
 def force_options_columns(data):
     opt_cols = ['opt_price', 'opt_underlying', 'opt_dividend', 'opt_volume',
         'opt_iv', 'opt_oi', 'opt_delta', 'opt_gamma', 'opt_vega', 'opt_theta']
@@ -241,7 +266,8 @@ def force_options_columns(data):
     return data
 
 
-# =============================================
+# ---------------------------------------------
+
 def chmod(f):
     """ change mod to writeable """
     try: os.chmod(f, S_IWRITE) # windows (cover all)
@@ -249,14 +275,18 @@ def chmod(f):
     try: os.chmod(f, 0o777) # *nix
     except: pass
 
-# =============================================
+
+# ---------------------------------------------
+
 def as_dict(df, ix=':'):
     """ converts df to dict and adds a datetime field if df is datetime """
     if isinstance(df.index, pd.DatetimeIndex):
         df['datetime'] = df.index
     return df.to_dict(orient='records')[ix]
 
-# =============================================
+
+# ---------------------------------------------
+
 def ib_duration_str(start_date=None):
     """
     Get a datetime object or a epoch timestamp and return
@@ -283,7 +313,7 @@ def ib_duration_str(start_date=None):
 
     # return str(second_diff)+ " S"
     if day_diff == 0 and second_diff > 1:
-        return str(second_diff)+ " S"
+        return str(second_diff) + " S"
     if 31 > day_diff > 0:
         return str(day_diff) + " D"
     if 365 > day_diff > 31:
@@ -291,19 +321,113 @@ def ib_duration_str(start_date=None):
 
     return str(ceil(day_diff / 365)) + " Y"
 
-# =============================================
+
+# ---------------------------------------------
+
 def datetime64_to_datetime(dt):
     """ convert numpy's datetime64 to datetime """
     dt64 = np.datetime64(dt)
     ts = (dt64 - np.datetime64('1970-01-01T00:00:00')) / np.timedelta64(1, 's')
     return datetime.datetime.utcfromtimestamp(ts)
 
+
+# ---------------------------------------------
+
+def round_to_fraction(val, res, decimals=None):
+    """ round to closest resolution """
+    if decimals is None and "." in str(res):
+        decimals = len(str(res).split('.')[1])
+
+    return round(round(val / res) * res, decimals)
+
+
+# ---------------------------------------------
+
+def backdate(res, date=None, as_datetime=False, fmt='%Y-%m-%d', tz="UTC"):
+    """ get past date based on currect date """
+    if res is None:
+        return None
+
+    if date is None:
+        date = datetime.datetime.now()
+    else:
+        try: date = parse_date(date)
+        except: pass
+
+    new_date = date
+
+    periods = int("".join([s for s in res if s.isdigit()]))
+
+    if periods > 0:
+
+        if "K" in res:
+            new_date = date - datetime.timedelta(microseconds=periods)
+        elif "S" in res:
+            new_date = date - datetime.timedelta(seconds=periods)
+        elif "T" in res:
+            new_date = date - datetime.timedelta(minutes=periods)
+        elif "H" in res or "V" in res:
+            new_date = date - datetime.timedelta(hours=periods)
+        elif "W" in res:
+            new_date = date - datetime.timedelta(weeks=periods)
+        else: # days
+            new_date = date - datetime.timedelta(days=periods)
+
+        # not a week day:
+        while new_date.weekday() > 4: # Mon-Fri are 0-4
+            new_date = backdate(res="1D", date=new_date, as_datetime=True)
+
+    if as_datetime:
+        return new_date
+    else:
+        return new_date.strftime(fmt)
+
+
+# ---------------------------------------------
+
+def previous_weekday(day=None, as_datetime=False):
+    """ get the most recent business day """
+    if day is None:
+        day = datetime.datetime.now()
+    else:
+        day = datetime.datetime.strptime(day, '%Y-%m-%d')
+
+    day -= datetime.timedelta(days=1)
+    while day.weekday() > 4: # Mon-Fri are 0-4
+        day -= datetime.timedelta(days=1)
+
+    if as_datetime:
+        return day
+    return day.strftime("%Y-%m-%d")
+
+
+# ---------------------------------------------
+
+def is_third_friday(day=None):
+    """ check if day is month's 3rd friday """
+    day = day if day is not None else datetime.datetime.now()
+    defacto_friday = (day.weekday() == 4) or (day.weekday() == 3 and day.hour() >= 17)
+    return defacto_friday and 14 < day.day < 22
+
+
+# ---------------------------------------------
+
+def after_third_friday(day=None):
+    """ check if day is after month's 3rd friday """
+    day = day if day is not None else datetime.datetime.now()
+    now = day.replace(day=1, hour=16, minute=0, second=0, microsecond=0)
+    now += relativedelta.relativedelta(weeks=2, weekday=relativedelta.FR)
+    return day > now
+
+
 # =============================================
-# utility to get the machine's timeozone
+# timezone utilities
 # =============================================
+
 def get_timezone():
+    """ utility to get the machine's timeozone """
     try:
-        offset_hour = -(datetime.datetime.now()-datetime.datetime.utcnow()).seconds
+        offset_hour = -(datetime.datetime.now() - datetime.datetime.utcnow()).seconds
     except:
         if time.daylight:
             offset_hour = time.altzone
@@ -311,20 +435,24 @@ def get_timezone():
             offset_hour = time.timezone
 
     offset_hour = round(offset_hour / 3600)
-    return 'Etc/GMT%+d' % offset_hour if offset_hour < 10 else int(offset_hour/10)
+    return 'Etc/GMT%+d' % offset_hour if offset_hour < 10 else int(offset_hour / 10)
+
+# ---------------------------------------------
 
 def datetime_to_timezone(date, tz="UTC"):
+    """ convert naive datetime to timezone-aware datetime """
     if not date.tzinfo:
         date = date.replace(tzinfo=timezone(get_timezone()))
     return date.astimezone(timezone(tz))
 
+# ---------------------------------------------
 
 def convert_timezone(date_str, tz_from, tz_to="UTC", fmt=None):
-    # get timezone as tz_offset
+    """ get timezone as tz_offset """
     tz_offset = datetime_to_timezone(datetime.datetime.now(), tz=tz_from).strftime('%z')
-    tz_offset = tz_offset[:3]+':'+tz_offset[3:]
+    tz_offset = tz_offset[:3] + ':' + tz_offset[3:]
 
-    date = parse_date(str(date_str)+tz_offset)
+    date = parse_date(str(date_str) + tz_offset)
     if tz_from != tz_to:
         date = datetime_to_timezone(date, tz_to)
 
@@ -332,10 +460,11 @@ def convert_timezone(date_str, tz_from, tz_to="UTC", fmt=None):
         return date.strftime(fmt)
     return date
 
-# =============================================
-# utility to change the timeozone to specified one
-# =============================================
+
+# ---------------------------------------------
+
 def set_timezone(data, tz=None, from_local=False):
+    """ change the timeozone to specified one without converting """
     # pandas object?
     if isinstance(data, pd.DataFrame) | isinstance(data, pd.Series):
         try:
@@ -346,7 +475,8 @@ def set_timezone(data, tz=None, from_local=False):
                     data.index = data.index.tz_localize(get_timezone()).tz_convert(tz)
                 else:
                     data.index = data.index.tz_localize('UTC').tz_convert(tz)
-        except: pass
+        except:
+            pass
 
     # not pandas...
     else:
@@ -357,14 +487,16 @@ def set_timezone(data, tz=None, from_local=False):
                 data = data.astimezone(tz)
             except:
                 data = timezone('UTC').localize(data).astimezone(timezone(tz))
-        except: pass
+        except:
+            pass
 
     return data
 
-# =============================================
-# set timezone for pandas
-# =============================================
+
+# ---------------------------------------------
+
 def fix_timezone(df, freq, tz=None):
+    """ set timezone for pandas """
     index_name = df.index.name
 
     # fix timezone
@@ -398,9 +530,11 @@ def fix_timezone(df, freq, tz=None):
     df.index.name = index_name
     return df
 
-# ===========================================
+
+# =============================================
 # resample baed on time / tick count
-# ===========================================
+# =============================================
+
 def resample(data, resolution="1T", tz=None, ffill=True, dropna=False, sync_last_timestamp=True):
 
     def resample_ticks(data, freq=1000, by='last'):
@@ -431,11 +565,11 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False, sync_last
         # add group indicator evey N df
         if by == 'size' or by == 'lastsize' or by == 'volume':
             df['cumvol'] = df[size_col].cumsum()
-            df['mark'] = round(round(round(df['cumvol'] / .1)*.1, 2)/freq) * freq
+            df['mark'] = round(round(round(df['cumvol'] / .1) * .1, 2) / freq) * freq
             df['diff'] = df['mark'].diff().fillna(0).astype(int)
-            df['grp'] = np.where(df['diff']>=freq-1, (df['mark']/freq), np.nan)
+            df['grp'] = np.where(df['diff'] >= freq - 1, (df['mark'] / freq), np.nan)
         else:
-            df['grp'] = [np.nan if i%freq else i for i in range(len(df[price_col]))]
+            df['grp'] = [np.nan if i % freq else i for i in range(len(df[price_col]))]
 
         df.loc[:1, 'grp'] = 0
 
@@ -479,7 +613,6 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False, sync_last
 
         return newdf
 
-
     if len(data) > 0:
 
         # resample
@@ -490,11 +623,13 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False, sync_last
         if ("K" in resolution):
             if (periods > 1):
                 for sym in meta_data.index.values:
-                    # symdata = resample_ticks(data[data['symbol']==sym], periods, price_col='last', volume_col='lastsize')
-                    symdata = resample_ticks(data[data['symbol']==sym].copy(), freq=periods, by='last')
+                    symdata = resample_ticks(data[data['symbol'] == sym].copy(),
+                        freq=periods, by='last')
                     symdata['symbol'] = sym
-                    symdata['symbol_group'] = meta_data[meta_data.index==sym]['symbol_group'].values[0]
-                    symdata['asset_class'] = meta_data[meta_data.index==sym]['asset_class'].values[0]
+                    symdata['symbol_group'] = meta_data[
+                        meta_data.index == sym]['symbol_group'].values[0]
+                    symdata['asset_class'] = meta_data[
+                        meta_data.index == sym]['asset_class'].values[0]
 
                     # cleanup
                     symdata.dropna(inplace=True, subset=['open', 'high', 'low', 'close', 'volume'])
@@ -508,11 +643,13 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False, sync_last
         elif ("V" in resolution):
             if (periods > 1):
                 for sym in meta_data.index.values:
-                    symdata = resample_ticks(data[data['symbol']==sym].copy(), freq=periods, by='lastsize')
-                    # print(symdata)
+                    symdata = resample_ticks(data[data['symbol'] == sym].copy(),
+                        freq=periods, by='lastsize')
                     symdata['symbol'] = sym
-                    symdata['symbol_group'] = meta_data[meta_data.index==sym]['symbol_group'].values[0]
-                    symdata['asset_class'] = meta_data[meta_data.index==sym]['asset_class'].values[0]
+                    symdata['symbol_group'] = meta_data[
+                        meta_data.index == sym]['symbol_group'].values[0]
+                    symdata['asset_class'] = meta_data[
+                        meta_data.index == sym]['asset_class'].values[0]
 
                     # cleanup
                     symdata.dropna(inplace=True, subset=['open', 'high', 'low', 'close', 'volume'])
@@ -561,7 +698,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False, sync_last
                 # ----------------------------
                 # force same last timestamp to all symbols before resampling
                 if sync_last_timestamp:
-                    last_row = data[data['symbol']==sym][-1:]
+                    last_row = data[data['symbol'] == sym][-1:]
                     # last_row.index = pd.to_datetime(data.index[-1:], utc=True)
                     last_row.index = data.index[-1:]
                     if "last" not in data.columns:
@@ -573,22 +710,27 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False, sync_last
 
                     data = pd.concat([data, last_row]).sort_index()
                     data.loc[:, '_idx_'] = data.index
-                    data = data.drop_duplicates(subset=['_idx_','symbol','symbol_group','asset_class'], keep='first')
+                    data = data.drop_duplicates(
+                        subset=['_idx_', 'symbol', 'symbol_group', 'asset_class'],
+                        keep='first')
                     data = data.drop('_idx_', axis=1)
                     data = data.sort_index()
                 # ----------------------------
 
                 if "S" in resolution and "last" in data.columns:
-                    ohlc = data[data['symbol']==sym]['last'].resample(resolution).ohlc()
-                    symdata = data[data['symbol']==sym].resample(resolution).apply(ticks_ohlc_dict).fillna(value=np.nan)
+                    ohlc = data[data['symbol'] == sym]['last'].resample(resolution).ohlc()
+                    symdata = data[data['symbol'] == sym].resample(
+                        resolution).apply(ticks_ohlc_dict).fillna(value=np.nan)
                     symdata.rename(columns={'lastsize': 'volume'}, inplace=True)
+
                     symdata['open']  = ohlc['open']
                     symdata['high']  = ohlc['high']
                     symdata['low']   = ohlc['low']
                     symdata['close'] = ohlc['close']
                 else:
-                    original_length = len(data[data['symbol']==sym])
-                    symdata = data[data['symbol']==sym].resample(resolution).apply(bars_ohlc_dict).fillna(value=np.nan)
+                    original_length = len(data[data['symbol'] == sym])
+                    symdata = data[data['symbol'] == sym].resample(
+                        resolution).apply(bars_ohlc_dict).fillna(value=np.nan)
 
                     # deal with new rows caused by resample
                     if len(symdata) > original_length:
@@ -598,22 +740,29 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False, sync_last
 
                         # no fill / return original index
                         if ffill:
-                            symdata['open']  = np.where(symdata['volume']<=0, symdata['close'], symdata['open'])
-                            symdata['high']  = np.where(symdata['volume']<=0, symdata['close'], symdata['high'])
-                            symdata['low']   = np.where(symdata['volume']<=0, symdata['close'], symdata['low'])
+                            symdata['open'] = np.where(symdata['volume'] <= 0,
+                                symdata['close'], symdata['open'])
+                            symdata['high'] = np.where(symdata['volume'] <= 0,
+                                symdata['close'], symdata['high'])
+                            symdata['low'] = np.where(symdata['volume'] <= 0,
+                                symdata['close'], symdata['low'])
                         else:
-                            symdata['open']  = np.where(symdata['volume']<=0, np.nan, symdata['open'])
-                            symdata['high']  = np.where(symdata['volume']<=0, np.nan, symdata['high'])
-                            symdata['low']   = np.where(symdata['volume']<=0, np.nan, symdata['low'])
-                            symdata['close'] = np.where(symdata['volume']<=0, np.nan, symdata['close'])
+                            symdata['open'] = np.where(symdata['volume'] <= 0,
+                                np.nan, symdata['open'])
+                            symdata['high'] = np.where(symdata['volume'] <= 0,
+                                np.nan, symdata['high'])
+                            symdata['low'] = np.where(symdata['volume'] <= 0,
+                                np.nan, symdata['low'])
+                            symdata['close'] = np.where(symdata['volume'] <= 0,
+                                np.nan, symdata['close'])
 
                     # drop NANs
                     if dropna:
                         symdata.dropna(inplace=True)
 
                 symdata['symbol'] = sym
-                symdata['symbol_group'] = meta_data[meta_data.index==sym]['symbol_group'].values[0]
-                symdata['asset_class'] = meta_data[meta_data.index==sym]['asset_class'].values[0]
+                symdata['symbol_group'] = meta_data[meta_data.index == sym]['symbol_group'].values[0]
+                symdata['asset_class'] = meta_data[meta_data.index == sym]['asset_class'].values[0]
 
                 # cleanup
                 symdata.dropna(inplace=True, subset=['open', 'high', 'low', 'close', 'volume'])
@@ -643,90 +792,11 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False, sync_last
 
     return data
 
-# -------------------------------------------
-class make_object:
-    def __init__(self, **entries):
-        self.__dict__.update(entries)
 
-# -------------------------------------------
-def round_to_fraction(val, res, decimals=None):
-    """ round to closest resolution """
-    if decimals is None and "." in str(res):
-        decimals = len(str(res).split('.')[1])
-
-    return round(round(val / res)*res, decimals)
-
-# -------------------------------------------
-def backdate(res, date=None, as_datetime=False, fmt='%Y-%m-%d', tz="UTC"):
-    if res is None:
-        return None
-
-    if date is None:
-        date = datetime.datetime.now()
-    else:
-        try: date = parse_date(date)
-        except: pass
-
-    new_date = date
-
-    periods = int("".join([s for s in res if s.isdigit()]))
-
-    if periods > 0:
-
-        if "K" in res:
-            new_date = date - datetime.timedelta(microseconds=periods)
-        elif "S" in res:
-            new_date = date - datetime.timedelta(seconds=periods)
-        elif "T" in res:
-            new_date = date - datetime.timedelta(minutes=periods)
-        elif "H" in res or "V" in res:
-            new_date = date - datetime.timedelta(hours=periods)
-        elif "W" in res:
-            new_date = date - datetime.timedelta(weeks=periods)
-        else: # days
-            new_date = date - datetime.timedelta(days=periods)
-
-        # not a week day:
-        while new_date.weekday() > 4: # Mon-Fri are 0-4
-            new_date = backdate(res="1D", date=new_date, as_datetime=True)
-
-    if as_datetime:
-        return new_date
-    else:
-        return new_date.strftime(fmt)
-
-# -------------------------------------------
-def previous_weekday(day=None, as_datetime=False):
-    if day is None:
-        day = datetime.datetime.now()
-    else:
-        day = datetime.datetime.strptime(day, '%Y-%m-%d')
-
-    day -= datetime.timedelta(days=1)
-    while day.weekday() > 4: # Mon-Fri are 0-4
-        day -= datetime.timedelta(days=1)
-
-    if as_datetime:
-        return day
-    return day.strftime("%Y-%m-%d")
-
-# -------------------------------------------
-def is_third_friday(day=None):
-    if day is None: day = datetime.datetime.now()
-    defacto_friday = (day.weekday() == 4) or (day.weekday() == 3 and day.hour() >= 17)
-    return defacto_friday and 14 < day.day < 22
-
-# -------------------------------------------
-def after_third_friday(day=None):
-    if day is None: day = datetime.datetime.now()
-    now = day.replace(day=1, hour=16, minute=0, second=0, microsecond=0)
-    now += relativedelta.relativedelta(weeks=2, weekday=relativedelta.FR)
-    return day > now
-
-
-# ===========================================
+# =============================================
 # store event in a temp data store
-# ===========================================
+# =============================================
+
 class DataStore():
     def __init__(self, output_file=None):
         self.auto = None
@@ -766,11 +836,12 @@ class DataStore():
             self.recorded = pd.concat([self.recorded, row])
 
         # merge rows (play nice with multi-symbol portfolios)
-        meta_data = self.recorded.groupby(["symbol"])[['symbol', 'symbol_group', 'asset_class']].last()
+        meta_data = self.recorded.groupby(["symbol"])[
+            ['symbol', 'symbol_group', 'asset_class']].last()
         combined = []
 
         for sym in meta_data.index.values:
-            df = self.recorded[self.recorded['symbol']==sym].copy()
+            df = self.recorded[self.recorded['symbol'] == sym].copy()
             symdata = df.groupby(df.index).sum()
             symdata.index.rename('datetime', inplace=True)
 
@@ -784,7 +855,7 @@ class DataStore():
 
         # cleanup: remove non-option data if not working with options
         opt_cols = df.columns[df.columns.str.startswith('opt_')].tolist()
-        if len(opt_cols) == len(df[ opt_cols ].isnull().all()):
+        if len(opt_cols) == len(df[opt_cols].isnull().all()):
             self.recorded.drop(opt_cols, axis=1, inplace=True)
 
         # cleanup: positions
@@ -798,7 +869,7 @@ class DataStore():
         # cleanup: symbol names
         data = self.recorded.copy()
         for asset_class in data['asset_class'].unique().tolist():
-            data['symbol'] = data['symbol'].str.replace("_"+str(asset_class), "")
+            data['symbol'] = data['symbol'].str.replace("_" + str(asset_class), "")
 
         # save
         if ".csv" in self.output_file:
@@ -809,3 +880,4 @@ class DataStore():
             data.to_pickle(self.output_file)
 
         chmod(self.output_file)
+

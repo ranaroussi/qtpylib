@@ -40,10 +40,12 @@ from qtpylib import tools
 if sys.version_info < (3, 4):
     raise SystemError("QTPyLib requires Python version >= 3.4")
 
+# =============================================
 import logging
 logging.getLogger('requests').setLevel(logging.WARNING)
+# =============================================
 
-# -------------------------------------------
+
 def create_continuous_contract(df, resolution="1T"):
 
     def _merge_contracts(m1, m2):
@@ -62,9 +64,7 @@ def create_continuous_contract(df, resolution="1T"):
                 return m1 # didn't rolled over yet
             roll_date = m_highest[m_highest].index[-1]
 
-
-        return pd.concat([ m1[m1.index<=roll_date], m2[m2.index>roll_date] ])
-
+        return pd.concat([m1[m1.index <= roll_date], m2[m2.index > roll_date]])
 
     def _continuous_contract_flags(daily_df):
         # grab expirations
@@ -74,19 +74,19 @@ def create_continuous_contract(df, resolution="1T"):
         # set continuous contract markets
         flags = None
         for expiration in expirations:
-            new_contract = daily_df[daily_df['expiry']==expiration].copy()
+            new_contract = daily_df[daily_df['expiry'] == expiration].copy()
             flags = _merge_contracts(flags, new_contract)
 
         # add gap
         flags['gap'] = 0
         for expiration in expirations:
             try:
-                minidf = daily_df[daily_df.index==expiration][['symbol', 'expiry', 'diff']]
+                minidf = daily_df[daily_df.index == expiration][['symbol', 'expiry', 'diff']]
                 expiry = flags[
-                    (flags.index>expiration) & (flags['expiry']>=expiration)
+                    (flags.index > expiration) & (flags['expiry'] >= expiration)
                 ]['expiry'][0]
-                gap = minidf[minidf['expiry']==expiry]['diff'][0]
-                flags.loc[flags.index<=expiration, 'gap'] = gap
+                gap = minidf[minidf['expiry'] == expiry]['diff'][0]
+                flags.loc[flags.index <= expiration, 'gap'] = gap
             except:
                 pass
 
@@ -126,18 +126,18 @@ def create_continuous_contract(df, resolution="1T"):
     contract = pd.merge(df, flags, how='left', on=['datetime', 'symbol']).ffill()
     contract.set_index('datetime', inplace=True)
 
-    contract = contract[contract.expiry_y==contract.expiry_x]
+    contract = contract[contract.expiry_y == contract.expiry_x]
     contract['expiry'] = contract['expiry_y']
     contract.drop(['expiry_y', 'expiry_x'], axis=1, inplace=True)
 
     try:
-        contract['open']   = contract['open']+contract['gap']
-        contract['high']   = contract['high']+contract['gap']
-        contract['low']    = contract['low']+contract['gap']
-        contract['close']  = contract['close']+contract['gap']
+        contract['open']  = contract['open'] + contract['gap']
+        contract['high']  = contract['high'] + contract['gap']
+        contract['low']   = contract['low'] + contract['gap']
+        contract['close'] = contract['close'] + contract['gap']
         # contract['volume'] = df['volume'].resample("D").sum()
     except:
-        contract['last']  = contract['last']+contract['gap']
+        contract['last'] = contract['last'] + contract['gap']
 
     contract.drop(['gap'], axis=1, inplace=True)
 
@@ -149,24 +149,25 @@ def get_active_contract(symbol, url=None, n=1):
 
     # cell content reader
     def read_cells(row):
-        cells = row.findAll('th')+row.findAll('td')
-        return [cells[0].text.strip(), '', cells[7].text.strip().replace(',','')]
+        cells = row.findAll('th') + row.findAll('td')
+        return [cells[0].text.strip(), '', cells[7].text.strip().replace(',', '')]
 
     def get_contracts(url):
 
         html = requests.get(url, timeout=5)
         html = bs(html.text, 'html.parser')
 
-        data = html.find('table', attrs={'id':'settlementsFuturesProductTable'})
+        data = html.find('table', attrs={'id': 'settlementsFuturesProductTable'})
 
         rows = data.findAll('tr')
         text = '\n'.join(map(lambda row: ",".join(read_cells(row)), rows[2:]))
 
         # Convert to DataFrame
-        df = pd.read_csv(StringIO(text), names=['_', 'expiry', 'volume'], index_col=['_'], parse_dates=['_'])
+        df = pd.read_csv(StringIO(text), names=['_', 'expiry', 'volume'],
+            index_col=['_'], parse_dates=['_'])
         df.index = df.index.str.replace('JLY', 'JUL')
         for index, row in df.iterrows():
-            try: df.loc[index, 'expiry'] = parse_date("01-"+index).strftime('%Y%m')
+            try: df.loc[index, 'expiry'] = parse_date("01-" + index).strftime('%Y%m')
             except: pass
 
         # remove duplidates
@@ -179,7 +180,6 @@ def get_active_contract(symbol, url=None, n=1):
 
         return df[:13].dropna()
 
-
     if url is None:
         try: url = _get_futures_url(symbol, 'quotes_settlements_futures')
         except: pass
@@ -187,19 +187,19 @@ def get_active_contract(symbol, url=None, n=1):
     try:
         c = get_contracts(url)
         if tools.after_third_friday():
-            c = c[c.expiry!=datetime.datetime.now().strftime('%Y%m')]
+            c = c[c.expiry != datetime.datetime.now().strftime('%Y%m')]
 
         # based on volume
-        if len(c[c.volume>100].index):
+        if len(c[c.volume > 100].index):
             return c.sort_values(by=['volume', 'expiry'], ascending=False)[:n]['expiry'].values[0]
         else:
             # based on date
             return c[:1]['expiry'].values[0]
     except:
         if tools.after_third_friday():
-            return (datetime.datetime.now()+(datetime.timedelta(365/12)*2)).strftime('%Y%m')
+            return (datetime.datetime.now() + (datetime.timedelta(365 / 12) * 2)).strftime('%Y%m')
         else:
-            return (datetime.datetime.now()+datetime.timedelta(365/12)).strftime('%Y%m')
+            return (datetime.datetime.now() + datetime.timedelta(365 / 12)).strftime('%Y%m')
 
 
 # -------------------------------------------
@@ -207,13 +207,13 @@ def get_contract_ticksize(symbol, fallback=0.01, ttl=84600):
 
     logging.warning("DEPRECATED! Use instrument.get_ticksize() or instrument.ticksize instead.")
 
-    cache_file = tempfile.gettempdir()+"/ticksizes.pkl"
+    cache_file = tempfile.gettempdir() + "/ticksizes.pkl"
     used_fallback = False
 
     if os.path.exists(cache_file):
         df = pd.read_pickle(cache_file)
         if (int(time.time()) - int(os.path.getmtime(cache_file))) < ttl:
-            filtered = df[df['symbol']==symbol]
+            filtered = df[df['symbol'] == symbol]
             if len(filtered.index) > 0:
                 return float(filtered['ticksize'].values[0])
 
@@ -236,7 +236,7 @@ def get_contract_ticksize(symbol, fallback=0.01, ttl=84600):
             ticksize_text = ticksize_text.split(' ')[0]
         if "1/" in ticksize_text:
             ticksize_text = ticksize_text.split("1/")[1].split(" ")[0]
-            ticksize = 1/float(re.compile(r'[^\d.]+').sub('', ticksize_text))
+            ticksize = 1 / float(re.compile(r'[^\d.]+').sub('', ticksize_text))
         else:
             ticksize = float(re.compile(r'[^\d.]+').sub('', ticksize_text))
 
@@ -244,9 +244,9 @@ def get_contract_ticksize(symbol, fallback=0.01, ttl=84600):
         ticksize = fallback
         used_fallback = True
 
-    symdf = pd.DataFrame(index=[0], data={'symbol':symbol, 'ticksize':ticksize})
+    symdf = pd.DataFrame(index=[0], data={'symbol': symbol, 'ticksize': ticksize})
     if os.path.exists(cache_file):
-        df = df[df['symbol']!=symbol].append(symdf[['symbol', 'ticksize']])
+        df = df[df['symbol'] != symbol].append(symdf[['symbol', 'ticksize']])
     else:
         df = symdf
 
@@ -269,9 +269,11 @@ def make_tuple(symbol, expiry=None, exchange=None):
     return None
 
 # -------------------------------------------
+
+
 def get_ib_futures(symbol=None, exchange=None, ttl=86400):
 
-    cache_file = tempfile.gettempdir()+"/futures_spec.pkl"
+    cache_file = tempfile.gettempdir() + "/futures_spec.pkl"
 
     if symbol is not None:
         symbol = symbol.upper()
@@ -281,19 +283,19 @@ def get_ib_futures(symbol=None, exchange=None, ttl=86400):
             return df
 
         if exchange is None:
-            symdf = df[df['symbol']==symbol]
+            symdf = df[df['symbol'] == symbol]
             if len(symdf) > 0:
                 return symdf.to_dict(orient='records')[0]
             else:
-                symdf = df[df['class']==symbol]
+                symdf = df[df['class'] == symbol]
                 if len(symdf) > 0:
                     return symdf.to_dict(orient='records')[0]
 
-        symdf = df[(df['exchange']==exchange) & (df['symbol']==symbol)]
+        symdf = df[(df['exchange'] == exchange) & (df['symbol'] == symbol)]
         if len(symdf) == 1:
             return symdf.to_dict(orient='records')[0]
         else:
-            symdf = df[(df['exchange']==exchange) & (df['class']==symbol)]
+            symdf = df[(df['exchange'] == exchange) & (df['class'] == symbol)]
             if len(symdf) == 1:
                 return symdf.to_dict(orient='records')[0]
 
@@ -324,22 +326,21 @@ def get_ib_futures(symbol=None, exchange=None, ttl=86400):
 
         return ",".join(row_data)
 
-    divs = html.findAll('div', attrs={'class':'table-responsive'})
+    divs = html.findAll('div', attrs={'class': 'table-responsive'})
 
     for div in divs:
-        tables = div.findAll('table');
+        tables = div.findAll('table')
         for table in tables:
-            rows = table.findAll('tr');
+            rows = table.findAll('tr')
             for row in rows:
                 records.append(grab_row(row, 'td'))
 
+    text = '\n'.join(filter(None, records))
 
-    text = '\n'.join( filter(None, records) )
-
-    df = pd.read_csv( StringIO(text), names=['exchange','symbol','description','class',
-                                             'intraday_initial','intraday_maintenance',
-                                             'overnight_initial','overnight_maintenance',
-                                             'currency','has_options'] )
+    df = pd.read_csv(StringIO(text), names=['exchange', 'symbol', 'description', 'class',
+                                            'intraday_initial', 'intraday_maintenance',
+                                            'overnight_initial', 'overnight_maintenance',
+                                            'currency', 'has_options'])
 
     # fix data
     df['intraday_initial'] = pd.to_numeric(df['intraday_initial'], errors='coerce')
@@ -348,7 +349,7 @@ def get_ib_futures(symbol=None, exchange=None, ttl=86400):
     df['overnight_maintenance'] = pd.to_numeric(df['overnight_maintenance'], errors='coerce')
 
     df['currency'].fillna("USD", inplace=True)
-    df['has_options'] = np.where(df['has_options']=='No', False, True)
+    df['has_options'] = np.where(df['has_options'] == 'No', False, True)
 
     df.dropna(how='all', inplace=True)
 
@@ -370,6 +371,7 @@ def _get_futures_url(symbol, page):
         return futures_contracts[symbol.upper()]['base_url'].replace('{}', page)
     except:
         return None
+
 
 futures_contracts = {
     "GE": {

@@ -53,7 +53,9 @@ tools.createLogger(__name__)
 __threads__ = tools.read_single_argv("--max_threads")
 __threads__ = int(__threads__) if tools.is_number(__threads__) else 1
 asynctools.multitasking.createPool(__name__, __threads__)
+
 # =============================================
+
 
 class Algo(Broker):
     """Algo class initilizer (sub-class of Broker)
@@ -117,7 +119,8 @@ class Algo(Broker):
         self.log = logging.getLogger(self.name)
 
         # override args with any (non-default) command-line args
-        self.args = {arg: val for arg, val in locals().items() if arg not in ('__class__', 'self', 'kwargs')}
+        self.args = {arg: val for arg, val in locals().items(
+            ) if arg not in ('__class__', 'self', 'kwargs')}
         self.args.update(kwargs)
         self.args.update(self.load_cli_args())
 
@@ -205,10 +208,11 @@ class Algo(Broker):
     def add_stale_tick(self):
         ticks = self.ticks.copy()
         if len(self.ticks.index) > 0:
-            last_tick_sec = float(tools.datetime64_to_datetime(ticks.index.values[-1]).strftime('%M.%S'))
+            last_tick_sec = float(tools.datetime64_to_datetime(
+                ticks.index.values[-1]).strftime('%M.%S'))
 
             for sym in list(self.ticks["symbol"].unique()):
-                tick = ticks[ticks['symbol']==sym][-5:].to_dict(orient='records')[-1]
+                tick = ticks[ticks['symbol'] == sym][-5:].to_dict(orient='records')[-1]
                 tick['timestamp'] = datetime.utcnow()
 
                 if last_tick_sec != float(tick['timestamp'].strftime("%M.%S")):
@@ -219,7 +223,6 @@ class Algo(Broker):
 
                     self._tick_handler(tick, stale_tick=True)
 
-
     # ---------------------------------------
     def load_cli_args(self):
         """
@@ -229,34 +232,34 @@ class Algo(Broker):
             a dict of any non-default args passed on the command-line.
         """
         parser = argparse.ArgumentParser(description='QTPyLib Algo',
-            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+                            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
         parser.add_argument('--ibport', default=self.args["ibport"],
-            help='IB TWS/GW Port', type=int)
+                            help='IB TWS/GW Port', type=int)
         parser.add_argument('--ibclient', default=self.args["ibclient"],
-            help='IB TWS/GW Client ID', type=int)
+                            help='IB TWS/GW Client ID', type=int)
         parser.add_argument('--ibserver', default=self.args["ibserver"],
-            help='IB TWS/GW Server hostname')
+                            help='IB TWS/GW Server hostname')
         parser.add_argument('--sms', default=self.args["sms"],
-            help='Numbers to text orders', nargs='+')
+                            help='Numbers to text orders', nargs='+')
         parser.add_argument('--log', default=self.args["log"],
-            help='Path to store trade data')
-
+                            help='Path to store trade data')
         parser.add_argument('--backtest', default=self.args["backtest"],
-            help='Work in Backtest mode (flag)', action='store_true')
+                            help='Work in Backtest mode (flag)',
+                            action='store_true')
         parser.add_argument('--start', default=self.args["start"],
-            help='Backtest start date')
+                            help='Backtest start date')
         parser.add_argument('--end', default=self.args["end"],
-            help='Backtest end date')
+                            help='Backtest end date')
         parser.add_argument('--data', default=self.args["data"],
-            help='Path to backtester CSV files')
+                            help='Path to backtester CSV files')
         parser.add_argument('--output', default=self.args["output"],
-            help='Path to save the recorded data')
-
+                            help='Path to save the recorded data')
         parser.add_argument('--blotter',
-            help='Log trades to this Blotter\'s MySQL')
+                            help='Log trades to this Blotter\'s MySQL')
         parser.add_argument('--continuous', default=self.args["continuous"],
-            help='Construct continuous Futures contracts (flag)', action='store_true')
+                            help='Construct continuous Futures contracts (flag)',
+                            action='store_true')
 
         # only return non-default cmd line args
         # (meaning only those actually given)
@@ -514,7 +517,6 @@ class Algo(Broker):
         """
         return self.blotter.history(symbols, start, end, resolution, tz)
 
-
     # ---------------------------------------
     # shortcuts to broker._create_order
     # ---------------------------------------
@@ -595,7 +597,6 @@ class Algo(Broker):
             if not self.backtest:
                 self._create_order(**kwargs)
 
-
     # ---------------------------------------
     def cancel_order(self, orderId):
         """ Cancels a un-filled order
@@ -640,8 +641,8 @@ class Algo(Broker):
                 The body of the SMS message to send
 
         """
-        logging.info("SMS: "+str(text))
-        sms.send_text(self.name +': '+ str(text), self.sms_numbers)
+        logging.info("SMS: " + str(text))
+        sms.send_text(self.name + ': ' + str(text), self.sms_numbers)
 
     # ---------------------------------------
     def _caller(self, caller):
@@ -658,7 +659,6 @@ class Algo(Broker):
         self.books[symbol] = book
         self.on_orderbook(self.get_instrument(symbol))
 
-
     # ---------------------------------------
     @asynctools.multitasking.task
     def _quote_handler(self, quote):
@@ -666,14 +666,13 @@ class Algo(Broker):
         self.quotes[quote['symbol']] = quote
         self.on_quote(self.get_instrument(quote))
 
-
     # ---------------------------------------
     @staticmethod
     def _get_window_per_symbol(df, window):
         # truncate tick window per symbol
         dfs = []
         for sym in list(df["symbol"].unique()):
-            dfs.append(df[df['symbol']==sym][-window:])
+            dfs.append(df[df['symbol'] == sym][-window:])
         return pd.concat(dfs).sort_index()
 
     # ---------------------------------------
@@ -681,10 +680,12 @@ class Algo(Broker):
     def _thread_safe_merge(symbol, basedata, newdata):
         data = newdata
         if "symbol" in basedata.columns:
-            data = pd.concat([basedata[basedata['symbol']!=symbol], data])
+            data = pd.concat([basedata[basedata['symbol'] != symbol], data])
 
         data.loc[:, '_idx_'] = data.index
-        data = data.drop_duplicates(subset=['_idx_','symbol','symbol_group','asset_class'], keep='last')
+        data = data.drop_duplicates(
+            subset=['_idx_', 'symbol', 'symbol_group', 'asset_class'],
+            keep='last')
         data = data.drop('_idx_', axis=1)
         data = data.sort_index()
 
@@ -719,7 +720,7 @@ class Algo(Broker):
 
             if len(bars.index) > self.tick_bar_count > 0 or stale_tick:
                 self.record_ts = tick.index[0]
-                self._base_bar_handler(bars[bars['symbol']==symbol][-1:])
+                self._base_bar_handler(bars[bars['symbol'] == symbol][-1:])
 
                 window = int("".join([s for s in self.resolution if s.isdigit()]))
                 if self.threads == 0:
@@ -756,22 +757,27 @@ class Algo(Broker):
         if is_tick_or_volume_bar:
             # just add a bar (used by tick bar bandler)
             if self.threads == 0:
-                self.bars = self._update_window(self.bars, bar, window=self.bar_window)
+                self.bars = self._update_window(self.bars, bar,
+                    window=self.bar_window)
             else:
-                self_bars = self._update_window(self_bars, bar, window=self.bar_window)
+                self_bars = self._update_window(self_bars, bar,
+                    window=self.bar_window)
         else:
             # add the bar and resample to resolution
             if self.threads == 0:
-                self.bars = self._update_window(self.bars, bar, window=self.bar_window, resolution=self.resolution)
+                self.bars = self._update_window(self.bars, bar,
+                    window=self.bar_window, resolution=self.resolution)
             else:
-                self_bars = self._update_window(self_bars, bar, window=self.bar_window, resolution=self.resolution)
+                self_bars = self._update_window(self_bars, bar,
+                    window=self.bar_window, resolution=self.resolution)
 
         # assign new data to self.bars if threaded
         if self.threads > 0:
             self.bars = self._thread_safe_merge(symbol, self.bars, self_bars)
 
         # new bar?
-        hash_string = bar[:1]['symbol'].to_string().translate(str.maketrans({key: None for key in "\n -:+"}))
+        hash_string = bar[:1]['symbol'].to_string().translate(
+            str.maketrans({key: None for key in "\n -:+"}))
         this_bar_hash = abs(hash(hash_string)) % (10 ** 8)
 
         newbar = True
@@ -792,7 +798,6 @@ class Algo(Broker):
         """ threaded version of _base_bar_handler (called by blotter's) """
         self._base_bar_handler(bar)
 
-
     # ---------------------------------------
     def _update_window(self, df, data, window=None, resolution=None):
         if df is None:
@@ -810,7 +815,9 @@ class Algo(Broker):
 
         # remove duplicates rows
         df.loc[:, '_idx_'] = df.index
-        df.drop_duplicates(subset=['_idx_','symbol','symbol_group','asset_class'], keep='last', inplace=True)
+        df.drop_duplicates(
+            subset=['_idx_', 'symbol', 'symbol_group', 'asset_class'],
+            keep='last', inplace=True)
         df.drop('_idx_', axis=1, inplace=True)
 
         # return
@@ -826,7 +833,7 @@ class Algo(Broker):
     def _add_signal_history(self, df, symbol):
         """ Initilize signal history """
         if symbol not in self.signals.keys() or len(self.signals[symbol]) == 0:
-            self.signals[symbol] = [nan]*len(df.index)
+            self.signals[symbol] = [nan] * len(df.index)
         else:
             self.signals[symbol].append(nan)
 

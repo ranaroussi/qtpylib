@@ -31,6 +31,7 @@ if sys_version_info < (3, 4):
     raise SystemError("QTPyLib requires Python version >= 3.4")
 # =============================================
 
+
 class multitasking():
     """
     Non-blocking Python methods using decorators
@@ -126,8 +127,11 @@ class multitasking():
             osexit(0)
 
 # =============================================
+
+
 class RecurringTask(Thread):
     """Calls a function at a sepecified interval."""
+
     def __init__(self, func, interval_sec, init_sec=0, *args, **kwargs):
         """Call `func` every `interval_sec` seconds.
 
@@ -177,4 +181,3 @@ class RecurringTask(Thread):
     def stop(self):
         """Stop the recurring task."""
         self._running = False
-

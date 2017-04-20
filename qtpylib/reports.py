@@ -26,6 +26,8 @@ from qtpylib.blotter import (
 if sys.version_info < (3, 4):
     raise SystemError("QTPyLib requires Python version >= 3.4")
 # =============================================
+
+
 class datetimeJSONEncoder(JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime.datetime) | \
@@ -35,20 +37,23 @@ class datetimeJSONEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 
-app = Flask(__name__, template_folder=path['library']+"/_webapp")
+app = Flask(__name__, template_folder=path['library'] + "/_webapp")
 app.json_encoder = datetimeJSONEncoder
+
 
 @app.template_filter('strftime')
 def _jinja2_strftime(date, fmt=None):
     try: date = parse_date(date)
     except: pass
     native = date.replace(tzinfo=None)
-    format='%Y-%m-%d %H:%M:%S%z'
+    format = '%Y-%m-%d %H:%M:%S%z'
     return native.strftime(format)
+
 
 # =============================================
 tools.createLogger(__name__)
 # =============================================
+
 
 class Reports():
     """Reports class initilizer
@@ -69,22 +74,22 @@ class Reports():
     def __init__(self, blotter=None, port=5000, host="0.0.0.0", password=None, nopass=False, **kwargs):
         # return
         self._password = password if password is not None else hashlib.sha1(
-            str(datetime.datetime.now()
-        ).encode()).hexdigest()[:6]
+            str(datetime.datetime.now()).encode()).hexdigest()[:6]
 
         # initilize class logger
         self.log = logging.getLogger(__name__)
 
         # override args with any (non-default) command-line args
-        self.args = {arg: val for arg, val in locals().items() if arg not in ('__class__', 'self', 'kwargs')}
+        self.args = {arg: val for arg, val in locals().items(
+            ) if arg not in ('__class__', 'self', 'kwargs')}
         self.args.update(kwargs)
         self.args.update(self.load_cli_args())
 
         self.dbconn = None
         self.dbcurr = None
 
-        self.host  = self.args['host'] if self.args['host'] is not None else host
-        self.port  = self.args['port'] if self.args['port'] is not None else port
+        self.host = self.args['host'] if self.args['host'] is not None else host
+        self.port = self.args['port'] if self.args['port'] is not None else port
 
         # blotter / db connection
         self.blotter_name = self.args['blotter'] if self.args['blotter'] is not None else blotter
@@ -111,23 +116,23 @@ class Reports():
             a dict of any non-default args passed on the command-line.
         """
         parser = argparse.ArgumentParser(description='QTPyLib Reporting',
-            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+                            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
         parser.add_argument('--port', default=self.args["port"],
-            help='HTTP port to use', type=int)
+                            help='HTTP port to use', type=int)
         parser.add_argument('--host', default=self.args["host"],
-            help='Host to bind the http process to')
+                            help='Host to bind the http process to')
         parser.add_argument('--blotter',
-            help='Use this Blotter\'s MySQL server settings')
+                            help='Use this Blotter\'s MySQL server settings')
         parser.add_argument('--nopass',
-            help='Skip password for web app (flag)', action='store_true')
+                            help='Skip password for web app (flag)',
+                            action='store_true')
 
         # only return non-default cmd line args
         # (meaning only those actually given)
         cmd_args, unknown = parser.parse_known_args()
         args = {arg: val for arg, val in vars(cmd_args).items() if val != parser.get_default(arg)}
         return args
-
 
     # ---------------------------------------
     def send_static(self, path):
@@ -142,11 +147,11 @@ class Reports():
         else:
             return make_response("no")
 
-
     # ---------------------------------------
     def algos(self, json=True):
 
-        algos = pd.read_sql("SELECT DISTINCT algo FROM trades", self.dbconn).to_dict(orient="records")
+        algos = pd.read_sql("SELECT DISTINCT algo FROM trades",
+            self.dbconn).to_dict(orient="records")
 
         if json:
             return jsonify(algos)
@@ -180,24 +185,24 @@ class Reports():
         trades_where = []
 
         if isinstance(start, str):
-            trades_where.append("entry_time>='"+start+"'")
+            trades_where.append("entry_time>='" + start + "'")
         if isinstance(end, str):
-            trades_where.append("exit_time<='"+end+"'")
+            trades_where.append("exit_time<='" + end + "'")
         if algo_id is not None:
-            trades_where.append("algo='"+algo_id+"'")
+            trades_where.append("algo='" + algo_id + "'")
 
         if len(trades_where) > 0:
-            trades_query += " AND "+" AND ".join(trades_where)
+            trades_query += " AND " + " AND ".join(trades_where)
 
-        trades  = pd.read_sql(trades_query, self.dbconn)
+        trades = pd.read_sql(trades_query, self.dbconn)
         trades['exit_time'].fillna(0, inplace=True)
 
-        trades['slippage'] = abs(trades['entry_price']-trades['market_price'])
+        trades['slippage'] = abs(trades['entry_price'] - trades['market_price'])
 
         trades['slippage'] = np.where(
-            ( (trades['direction'] == "LONG") & (trades['entry_price'] > trades['market_price']) ) |
-            ( (trades['direction'] == "SHORT") & (trades['entry_price'] < trades['market_price']) )
-        , -trades['slippage'], trades['slippage'])
+            ((trades['direction'] == "LONG") & (trades['entry_price'] > trades['market_price'])) |
+            ((trades['direction'] == "SHORT") & (trades['entry_price'] < trades['market_price'])),
+            -trades['slippage'], trades['slippage'])
 
         trades = trades.sort_values(['exit_time', 'entry_time'], ascending=[False, False])
 
@@ -215,12 +220,11 @@ class Reports():
 
         trades_query = "SELECT * FROM trades WHERE exit_time IS NULL"
         if algo_id is not None:
-            trades_query += " AND algo='"+algo_id+"'"
+            trades_query += " AND algo='" + algo_id + "'"
 
-        trades  = pd.read_sql(trades_query, self.dbconn)
+        trades = pd.read_sql(trades_query, self.dbconn)
 
-
-        last_query  = "SELECT s.id, s.symbol, max(t.last) as last_price FROM ticks t LEFT JOIN symbols s ON (s.id=t.symbol_id) GROUP BY s.id"
+        last_query = "SELECT s.id, s.symbol, max(t.last) as last_price FROM ticks t LEFT JOIN symbols s ON (s.id=t.symbol_id) GROUP BY s.id"
         last_prices = pd.read_sql(last_query, self.dbconn)
 
         trades = trades.merge(last_prices, on=['symbol'])
@@ -230,11 +234,11 @@ class Reports():
                 trades['entry_price']-trades['last_price'],
                 trades['last_price']-trades['entry_price'])
 
-        trades['slippage'] = abs(trades['entry_price']-trades['market_price'])
+        trades['slippage'] = abs(trades['entry_price'] - trades['market_price'])
         trades['slippage'] = np.where(
-            ( (trades['direction'] == "LONG") & (trades['entry_price'] > trades['market_price']) ) |
-            ( (trades['direction'] == "SHORT") & (trades['entry_price'] < trades['market_price']) )
-        , -trades['slippage'], trades['slippage'])
+            ((trades['direction'] == "LONG") & (trades['entry_price'] > trades['market_price'])) |
+            ((trades['direction'] == "SHORT") & (trades['entry_price'] < trades['market_price'])),
+            -trades['slippage'], trades['slippage'])
 
         trades = trades.sort_values(['entry_time'], ascending=[False])
 
@@ -246,7 +250,7 @@ class Reports():
 
     # ---------------------------------------
     def trades_by_algo(self, algo_id=None, start=None, end=None):
-        trades  = self.trades(start, end, algo_id=algo_id, json=False)
+        trades = self.trades(start, end, algo_id=algo_id, json=False)
         return jsonify(trades)
 
     # ---------------------------------------
@@ -275,7 +279,6 @@ class Reports():
         else:
             return bars
 
-
     # ---------------------------------------
     def index(self, start=None, end=None):
         if not self.args['nopass']:
@@ -283,7 +286,6 @@ class Reports():
                 return render_template('login.html')
 
         return render_template('dashboard.html')
-
 
     # ---------------------------------------
     def run(self):
@@ -308,12 +310,15 @@ class Reports():
         app.add_url_rule('/positions/<path:algo_id>', 'positions', view_func=self.positions)
 
         app.add_url_rule('/algo/<path:algo_id>', 'trades_by_algo', view_func=self.trades_by_algo)
-        app.add_url_rule('/algo/<algo_id>/<path:start>', 'trades_by_algo', view_func=self.trades_by_algo)
-        app.add_url_rule('/algo/<algo_id>/<start>/<path:end>', 'trades_by_algo', view_func=self.trades_by_algo)
+        app.add_url_rule('/algo/<algo_id>/<path:start>',
+                         'trades_by_algo', view_func=self.trades_by_algo)
+        app.add_url_rule('/algo/<algo_id>/<start>/<path:end>',
+                         'trades_by_algo', view_func=self.trades_by_algo)
 
         app.add_url_rule('/bars/<resolution>/<symbol>', 'bars', view_func=self.bars)
         app.add_url_rule('/bars/<resolution>/<symbol>/<path:start>', 'bars', view_func=self.bars)
-        app.add_url_rule('/bars/<resolution>/<symbol>/<start>/<path:end>', 'bars', view_func=self.bars)
+        app.add_url_rule('/bars/<resolution>/<symbol>/<start>/<path:end>',
+                         'bars', view_func=self.bars)
 
         app.add_url_rule('/trades', 'trades', view_func=self.trades)
         app.add_url_rule('/trades/<path:start>', 'trades', view_func=self.trades)
@@ -331,7 +336,7 @@ class Reports():
         # -----------------------------------
         # run flask app
         app.run(
-            # debug = True,
-            host  = str(self.host),
-            port  = int(self.port)
-        )
+            debug=True,
+            host=str(self.host),
+            port=int(self.port)
+            )
