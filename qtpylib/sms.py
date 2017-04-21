@@ -19,8 +19,8 @@
 # limitations under the License.
 #
 
-import nexmo
-from twilio.rest import TwilioRestClient as twilioClient
+from nexmo import Client as nexmoClient
+from twilio.rest import Client as twilioClient
 import sys
 
 import configparser
@@ -171,7 +171,7 @@ def _send_nexmo(msg, numbers):
         ' ')[0] if "secret" in SMS_CREDENTIALS else None
 
     nexmo_from = SMS_CREDENTIALS['from'].strip().split(
-        ' ')[0] if "from" in SMS_CREDENTIALS else "QTPy"
+        ' ')[0] if "from" in SMS_CREDENTIALS else "QTPyLib"
 
     if nexmo_key is None or nexmo_secret is None or nexmo_from is None:
         return
@@ -181,7 +181,7 @@ def _send_nexmo(msg, numbers):
 
     # send message
     sent = 0
-    smsClient = nexmo.Client(key=nexmo_key, secret=nexmo_secret)
+    smsClient = nexmoClient(key=nexmo_key, secret=nexmo_secret)
     for number in numbers:
         if "+" not in number:
             number = "+" + str(number)
@@ -196,7 +196,7 @@ def _send_nexmo(msg, numbers):
 # ---------------------------------------------
 
 def _send_twilio(msg, numbers):
-    global SMS_SERVICE, SMS_CREDENTIALS
+    global SMS_CREDENTIALS
 
     twilio_sid = SMS_CREDENTIALS['sid'].strip().split(
         ' ')[0] if "sid" in SMS_CREDENTIALS else None
@@ -205,7 +205,7 @@ def _send_twilio(msg, numbers):
         ' ')[0] if "token" in SMS_CREDENTIALS else None
 
     twilio_from = SMS_CREDENTIALS['from'].strip().split(
-        ' ')[0] if "from" in SMS_CREDENTIALS else "QTPy"
+        ' ')[0] if "from" in SMS_CREDENTIALS else "QTPyLib"
 
     if twilio_sid is None or twilio_token is None or twilio_from is None:
         return

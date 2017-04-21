@@ -52,7 +52,7 @@ Requirements
 * `pytz <http://pytz.sourceforge.net>`_ (tested to with with >=2016.6.1)
 * `dateutil <https://pypi.python.org/pypi/python-dateutil>`_ (tested to with with >=2.5.1)
 * `Nexmo <https://github.com/Nexmo/nexmo-python>`_ for SMS support (tested to with with >=1.2.0)
-* `Twilio <https://github.com/twilio/twilio-python>`_ for SMS support (tested to with with >=5.4.0)
+* `Twilio <https://github.com/twilio/twilio-python>`_ for SMS support (tested to with with >=6.0.0)
 * `Flask <http://flask.pocoo.org>`_ for the Dashboard (tested to work with >=0.11)
 * `Requests <https://github.com/kennethreitz/requests>`_ (tested to with with >=2.10.0)
 * `Beautiful Soup <https://pypi.python.org/pypi/beautifulsoup4>`_ (tested to work with >=4.3.2)
