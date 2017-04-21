@@ -50,7 +50,7 @@ if len(sms_ini.sections()) > 0:
 # ---------------------------------------------
 
 def send_text(msg, numbers):
-    global SMS_SERVICE, SMS_CREDENTIALS
+    global SMS_SERVICE
 
     numbers = _ready_to_send(numbers)
     if numbers == False:
@@ -72,7 +72,6 @@ def send_text(msg, numbers):
 # ---------------------------------------------
 
 def _send_trade(trade, numbers, timezone="UTC"):
-    global SMS_SERVICE, SMS_CREDENTIALS
 
     numbers = _ready_to_send(numbers)
     if numbers == False:
@@ -143,7 +142,7 @@ def _send_trade(trade, numbers, timezone="UTC"):
 # ---------------------------------------------
 
 def _ready_to_send(numbers):
-    global SMS_SERVICE, SMS_CREDENTIALS
+    global SMS_SERVICE
 
     # get credentials
     if SMS_SERVICE is None:
@@ -162,7 +161,7 @@ def _ready_to_send(numbers):
 # ---------------------------------------------
 
 def _send_nexmo(msg, numbers):
-    global SMS_SERVICE, SMS_CREDENTIALS
+    global SMS_CREDENTIALS
 
     nexmo_key = SMS_CREDENTIALS['key'].strip().split(
         ' ')[0] if "key" in SMS_CREDENTIALS else None
