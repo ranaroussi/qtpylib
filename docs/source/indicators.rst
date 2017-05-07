@@ -192,6 +192,15 @@ Typical Price
     ...
 
 
+Traders Dynamic Index (TDI)
+---------------------------------
+.. code:: python
+
+    bars['typical'] = bars['close'].tdi([rsi_len=13, bollinger_len=34,
+            rsi_smoothing=2, rsi_signal_len=7, bollinger_std=1.6185])
+    ...
+
+
 Price Volume Trend
 ------------------
 

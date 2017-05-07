@@ -1,7 +1,19 @@
 Release Notes
 =============
 
-*March 35, 2017*
+*May 7, 2017*
+
+1.5.72
+-----------
+- Better PEP8 compliance
+- Checking for Python version >= 3.4
+- Upgraded to Twilio version >= 6.0.0
+- Improved Stochastic indicator
+- Added Awesome Oscillator and TDI indicators
+- Misc bugfixes, code improvements, cleanup and abstraction
+
+
+*March 25, 2017*
 
 1.5.71
 -----------
