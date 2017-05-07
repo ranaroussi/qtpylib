@@ -3,7 +3,7 @@ Release Notes
 
 *May 7, 2017*
 
-1.5.74
+1.5.73
 -----------
 - Requires ezIBpy >= 1.12.51
 
