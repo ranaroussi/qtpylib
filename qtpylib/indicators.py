@@ -84,6 +84,22 @@ def heikinashi(bars):
 
 # ---------------------------------------------
 
+def tdi(series, rsi_len=13, bollinger_len=34, rsi_smoothing=2, rsi_signal_len=7, bollinger_std=1.6185):
+    rsi_series = rsi(series, rsi_len)
+    bb_series = bollinger_bands(rsi_series, bollinger_len, bollinger_std)
+    signal = sma(rsi_series, rsi_signal_len)
+    rsi_series = sma(rsi_series, rsi_smoothing)
+
+    return pd.DataFrame(index=series.index, data={
+        "rsi": rsi_series,
+        "signal": signal,
+        "bbupper": bb_series['upper'],
+        "bblower": bb_series['lower'],
+        "bbmid": bb_series['mid']
+    })
+
+# ---------------------------------------------
+
 def awesome_oscillator(df, weighted=False, fast=5, slow=34):
     midprice = (df['high'] + df['low']) / 2
 
@@ -518,6 +534,7 @@ PandasObject.rsi = rsi
 PandasObject.stoch = stoch
 PandasObject.zscore = zscore
 PandasObject.pvt = pvt
+PandasObject.tdi = tdi
 PandasObject.true_range = true_range
 PandasObject.mid_price = mid_price
 PandasObject.typical_price = typical_price
