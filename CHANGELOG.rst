@@ -3,6 +3,10 @@ Release Notes
 
 *May 7, 2017*
 
+1.5.74
+-----------
+- Requires ezIBpy >= 1.12.51
+
 1.5.72
 -----------
 - Better PEP8 compliance
