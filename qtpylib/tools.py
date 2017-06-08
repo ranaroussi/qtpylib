@@ -781,6 +781,8 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False, sync_last
     if tz is None:
         try:
             tz = str(data.index.tz)
+            if tz == 'None':
+                tz = None
         except:
             tz = None
 
