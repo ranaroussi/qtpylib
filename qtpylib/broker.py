@@ -768,6 +768,7 @@ class Broker():
                 "averageCost":   0.0,
                 "unrealizedPNL": 0.0,
                 "realizedPNL":   0.0,
+                "totalPNL":      0.0,
                 "account":       None
             }
 
