@@ -575,6 +575,23 @@ class Instrument(str):
         return float(ticksize)
 
     # ---------------------------------------
+    def pnl_in_range(self, min_pnl, max_pnl):
+        """ Check if instrument pnl is within given range
+
+        :Parameters:
+            min_pnl : flaot
+                minimum session pnl (in USD / IB currency)
+            max_pnl : flaot
+                maximum session pnl (in USD / IB currency)
+
+        :Retruns:
+            status : bool
+                if pnl is within range
+        """
+        portfolio = self.get_portfolio()
+        return -abs(min_pnl) < portfolio['totalPNL'] < abs(max_pnl)
+
+    # ---------------------------------------
     def log_signal(self, signal):
         """ Log Signal for instrument
 
