@@ -202,11 +202,11 @@ While the Blotter running in the background, write the dashboard:
     # dashboard.py
     from qtpylib.reports import Reports
 
-    class Dahboard(Reports):
+    class Dashboard(Reports):
         pass # we just need the name
 
     if __name__ == "__main__":
-        dashboard = Dahboard(port = 5000)
+        dashboard = Dashboard(port = 5000)
         dashboard.run()
 
 
