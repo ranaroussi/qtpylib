@@ -43,9 +43,9 @@ class multitasking():
     __TASKS__ = []
 
     # processing
-    __CPU_CORES__   = cpu_count()
-    __POOLS__       = {}
-    __POOL_NAME__   = "Main"
+    __CPU_CORES__ = cpu_count()
+    __POOLS__ = {}
+    __POOL_NAME__ = "Main"
 
     @classmethod
     def getPool(cls, name=None):
@@ -63,8 +63,10 @@ class multitasking():
 
         cls.__POOL_NAME__ = name
 
-        try: threads = int(threads)
-        except: threads = 1
+        try:
+            threads = int(threads)
+        except:
+            threads = 1
 
         # 1 thread is no threads
         if threads < 2:
@@ -154,12 +156,12 @@ class RecurringTask(Thread):
         """
 
         # threading.Thread.__init__(self, *args, **kwargs) # For some reason super() doesn't work
-        super().__init__(*args, **kwargs) # Works!
-        self._func        = func
+        super().__init__(*args, **kwargs)  # Works!
+        self._func = func
         self.interval_sec = interval_sec
-        self.init_sec     = init_sec
-        self._running     = True
-        self._functime    = None # Time the next call should be made
+        self.init_sec = init_sec
+        self._running = True
+        self._functime = None  # Time the next call should be made
 
         self.start()
 
