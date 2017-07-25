@@ -188,20 +188,23 @@ class Broker():
     def register_combo(self, parent, legs):
         """ add contracts to groups """
         parent = self.ibConn.contractString(parent)
-        group = [self.ibConn.contractString(leg) for leg in legs]
-        self.instrument_combos[parent] = group
+        legs_dict = {}
+        for leg in legs:
+            leg = self.ibConn.contractString(leg)
+            legs_dict[leg] = self.get_instrument(leg)
+        self.instrument_combos[parent] = legs_dict
 
     def get_combo(self, symbol):
         """ get group by child symbol """
         for parent, legs in self.instrument_combos.items():
-            if symbol == parent or symbol in legs:
+            if symbol == parent or symbol in legs.keys():
                 return {
                     "parent": self.get_instrument(parent),
-                    "legs": [self.get_instrument(leg) for leg in legs]
+                    "legs": legs,
                 }
         return {
                 "parent": None,
-                "legs": None
+                "legs": {},
             }
 
 
