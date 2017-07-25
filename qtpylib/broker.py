@@ -104,6 +104,7 @@ class Broker():
 
         self.instruments = instrument_tuples_dict
         self.symbols = list(self.instruments.keys())
+        self.instrument_combos = {}
 
         # -----------------------------------
         # track orders & trades
@@ -164,6 +165,31 @@ class Broker():
         # -----------------------------------
         # do stuff on exit
         atexit.register(self._on_exit)
+
+    # ---------------------------------------
+    """
+    instrument group methods
+    used with spreads to get the group members (contratc legs) as symbols
+    """
+    def register_combo(self, parent, legs):
+        """ add contracts to groups """
+        parent = self.ibConn.contractString(parent)
+        group = [self.ibConn.contractString(leg) for leg in legs]
+        self.instrument_combos[parent] = group
+
+    def get_combo(self, symbol):
+        """ get group by child symbol """
+        for parent, legs in self.instrument_combos.items():
+            if symbol == parent or symbol in legs:
+                return {
+                    "parent": self.get_instrument(parent),
+                    "legs": [self.get_instrument(leg) for leg in legs]
+                }
+        return {
+                "parent": None,
+                "legs": None
+            }
+
 
     # -------------------------------------------
     def _on_exit(self):

@@ -359,7 +359,7 @@ class Instrument(str):
         """
         return self.parent.get_contract_details(self)
 
-        # ---------------------------------------
+    # ---------------------------------------
     def get_tickerId(self):
         """Get contract's tickerId for this instrument
 
@@ -368,6 +368,16 @@ class Instrument(str):
                 IB Contract's tickerId
         """
         return self.parent.get_tickerId(self)
+
+    # ---------------------------------------
+    def get_combo(self):
+        """Get instrument's group if part of an instrument group
+
+        :Retruns:
+            tickerId : int
+                IB Contract's tickerId
+        """
+        return self.parent.get_combo(self)
 
     # ---------------------------------------
     def get_positions(self, attr=None):
@@ -660,6 +670,12 @@ class Instrument(str):
     def tickerId(self):
         """(Property) Shortcut to self.get_tickerId()"""
         return self.get_tickerId()
+
+    # ---------------------------------------
+    @property
+    def combo(self):
+        """(Property) Shortcut to self.get_combo()"""
+        return self.get_combo()
 
     # ---------------------------------------
     @property
