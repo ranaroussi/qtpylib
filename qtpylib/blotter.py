@@ -776,6 +776,7 @@ class Blotter():
                     # fix expiry formatting (no floats)
                     df['expiry'] = df['expiry'].fillna(0).astype(int).astype(str)
                     df.loc[df['expiry'] == "0", 'expiry'] = ""
+                    df = df[df['sec_type'] != 'BAG']
 
                     df.fillna("", inplace=True)
                     df.to_csv(self.args['symbols'], header=True, index=False)
