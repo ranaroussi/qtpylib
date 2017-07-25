@@ -166,6 +166,20 @@ class Broker():
         # do stuff on exit
         atexit.register(self._on_exit)
 
+
+    # ---------------------------------------
+    def add_instruments(self, *instruments):
+        """ add instruments after initialization """
+        for instrument in instruments:
+            if isinstance(instrument, ezibpy.utils.Contract):
+                instrument = self.ibConn.contract_to_tuple(instrument)
+                contractString = self.ibConn.contractString(instrument)
+                self.instruments[contractString] = instrument
+                self.ibConn.createContract(instrument)
+
+        self.symbols = list(self.instruments.keys())
+
+
     # ---------------------------------------
     """
     instrument group methods
