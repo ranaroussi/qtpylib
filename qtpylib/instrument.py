@@ -140,6 +140,12 @@ class Instrument(str):
         return self.get_ticks(lookback=1, as_dict=True)
 
     # ---------------------------------------
+    def get_price(self):
+        """ Shortcut to self.get_ticks(lookback=1, as_dict=True)['last'] """
+        tick = self.get_ticks(lookback=1, as_dict=True)
+        return None if tick is None else tick['last']
+
+    # ---------------------------------------
     def get_quote(self):
         """ Get last quote for this instrument
 
@@ -634,6 +640,12 @@ class Instrument(str):
     def tick(self):
         """(Property) Shortcut to self.get_tick()"""
         return self.get_tick()
+
+    # ---------------------------------------
+    @property
+    def price(self):
+        """(Property) Shortcut to self.get_price()"""
+        return self.get_price()
 
     # ---------------------------------------
     @property
