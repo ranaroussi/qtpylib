@@ -95,7 +95,10 @@ class Broker():
         instrument_tuples_dict = {}
         for instrument in instruments:
             try:
-                instrument = tools.create_ib_tuple(instrument)
+                if isinstance(instrument, ezibpy.utils.Contract):
+                    instrument = self.ibConn.contract_to_tuple(instrument)
+                else:
+                    instrument = tools.create_ib_tuple(instrument)
                 contractString = self.ibConn.contractString(instrument)
                 instrument_tuples_dict[contractString] = instrument
                 self.ibConn.createContract(instrument)
