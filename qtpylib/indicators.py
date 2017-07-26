@@ -74,7 +74,8 @@ def session(df, start='17:00', end='16:00'):
 def heikinashi(bars):
     bars['ha_close'] = (bars['open'] + bars['high'] + bars['low'] + bars['close']) / 4
     bars['ha_open'] = (bars['open'].shift(1) + bars['close'].shift(1)) / 2
-    bars.loc[1:, 'ha_open'] = (( bars['ha_open'].shift(1) + bars['ha_close'].shift(1)) / 2)
+    bars.loc[:1, 'ha_open'] = bars['open'].values[0]
+    bars.loc[1:, 'ha_open'] = ((bars['ha_open'].shift(1) + bars['ha_close'].shift(1)) / 2)[1:]
     bars['ha_high'] = bars.loc[:, ['high', 'ha_open', 'ha_close']].max(axis=1)
     bars['ha_low'] = bars.loc[:, ['low', 'ha_open', 'ha_close']].min(axis=1)
 
@@ -167,15 +168,26 @@ def atr(bars, window=14, exp=False):
 
 # ---------------------------------------------
 
+def crossed(series1, series2, direction=None):
+    if isinstance(series2, int) or isinstance(series2, float):
+        series2 = pd.Series(index=series1.index, data=series2)
+
+    if direction is None or direction == "above":
+        above = pd.Series((series1 > series2) & (series1.shift(1) <= series2.shift(1)))
+
+    if direction is None or direction == "below":
+        below = pd.Series((series1 < series2) & (series1.shift(1) >= series2.shift(1)))
+
+    if direction is None:
+        return above or below
+
+    return above if direction is "above" else below
+
 def crossed_above(series1, series2):
-    return pd.Series((series1 > series2) & (series1.shift(1) <= series2.shift(1)))
-
-
-# ---------------------------------------------
+    return crossed(series1, series2, "above")
 
 def crossed_below(series1, series2):
-    return pd.Series((series1 < series2) & (series1.shift(1) >= series2.shift(1)))
-
+    return crossed(series1, series2, "below")
 
 # ---------------------------------------------
 
@@ -515,6 +527,7 @@ PandasObject.session = session
 PandasObject.atr = atr
 PandasObject.bollinger_bands = bollinger_bands
 PandasObject.cci = cci
+PandasObject.crossed = crossed
 PandasObject.crossed_above = crossed_above
 PandasObject.crossed_below = crossed_below
 PandasObject.heikinashi = heikinashi

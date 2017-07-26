@@ -95,7 +95,10 @@ class Broker():
         instrument_tuples_dict = {}
         for instrument in instruments:
             try:
-                instrument = tools.create_ib_tuple(instrument)
+                if isinstance(instrument, ezibpy.utils.Contract):
+                    instrument = self.ibConn.contract_to_tuple(instrument)
+                else:
+                    instrument = tools.create_ib_tuple(instrument)
                 contractString = self.ibConn.contractString(instrument)
                 instrument_tuples_dict[contractString] = instrument
                 self.ibConn.createContract(instrument)
@@ -104,6 +107,7 @@ class Broker():
 
         self.instruments = instrument_tuples_dict
         self.symbols = list(self.instruments.keys())
+        self.instrument_combos = {}
 
         # -----------------------------------
         # track orders & trades
@@ -164,6 +168,48 @@ class Broker():
         # -----------------------------------
         # do stuff on exit
         atexit.register(self._on_exit)
+
+
+    # ---------------------------------------
+    def add_instruments(self, *instruments):
+        """ add instruments after initialization """
+        for instrument in instruments:
+            if isinstance(instrument, ezibpy.utils.Contract):
+                instrument = self.ibConn.contract_to_tuple(instrument)
+                contractString = self.ibConn.contractString(instrument)
+                self.instruments[contractString] = instrument
+                self.ibConn.createContract(instrument)
+
+        self.symbols = list(self.instruments.keys())
+
+
+    # ---------------------------------------
+    """
+    instrument group methods
+    used with spreads to get the group members (contratc legs) as symbols
+    """
+    def register_combo(self, parent, legs):
+        """ add contracts to groups """
+        parent = self.ibConn.contractString(parent)
+        legs_dict = {}
+        for leg in legs:
+            leg = self.ibConn.contractString(leg)
+            legs_dict[leg] = self.get_instrument(leg)
+        self.instrument_combos[parent] = legs_dict
+
+    def get_combo(self, symbol):
+        """ get group by child symbol """
+        for parent, legs in self.instrument_combos.items():
+            if symbol == parent or symbol in legs.keys():
+                return {
+                    "parent": self.get_instrument(parent),
+                    "legs": legs,
+                }
+        return {
+                "parent": None,
+                "legs": {},
+            }
+
 
     # -------------------------------------------
     def _on_exit(self):
@@ -768,6 +814,7 @@ class Broker():
                 "averageCost":   0.0,
                 "unrealizedPNL": 0.0,
                 "realizedPNL":   0.0,
+                "totalPNL":      0.0,
                 "account":       None
             }
 

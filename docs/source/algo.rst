@@ -243,6 +243,30 @@ invoked once when you strategy starts.
 
 -----
 
+Adding Contracts After Initialization
+-------------------------------------
+
+Im some cases, you'd want to add instruments/contracts to your
+Strategy after it has already been initialized.
+
+This can be achieved using:
+
+.. code:: python
+
+    # strategy.py
+    strategy = MyStrategy(
+        instruments = ["AAPL"]
+        resolution  = "1T"
+    )
+
+    strategy.add_instruments("GOOG", "MSFT", "FUT.ES", ...)
+    # ^^ accepts strings, IB contracts and instrument Tuples
+
+    strategy.run()
+
+
+-----
+
 Available Arguments
 -------------------
 
@@ -252,13 +276,8 @@ or via CLI (**all are optional**).
 Algo Parameters
 ~~~~~~~~~~~~~~~
 
-**Required Parameters:**
-
-- ``instruments`` List of stock symbols (for US Stocks) / IB Contract Tuples
-- ``resolution`` Bar resolution (pandas resample resolution: 1T/4H/etc - use ``K`` for tick bars or ``V`` for volume bars).
-
-**Optional Parameters:**
-
+- ``instruments`` List of stock symbols (for US Stocks) / IB Contract Tuples. Default is empty (no instruments)
+- ``resolution`` Bar resolution (pandas resample resolution + ``K`` for tick bars and ``V`` for volume bars). Default is 1T (1 min)
 - ``tick_window`` Length of tick lookback window to keep (defaults to ``1``)
 - ``bar_window`` Length of bar lookback window to keep (defaults to ``100``)
 - ``timezone`` Convert IB timestamps to this timezone, eg. "US/Central" (defaults to ``UTC``)
@@ -430,8 +449,8 @@ Instruments Tuples
 ------------------
 
 When initilizing your algo, you're required to pass a list of instruments
-you want to trades. List items can be a Ticker Symbol ``String`` (for **US Stocks** only)
-or an ``Tuple`` in IB format for other instruments.
+you want to trades. List items can be a Ticker Symbol ``String`` (for **US Stocks** only),
+and either an IB Contract object or a ``Tuple`` in IB format for all other instruments.
 
 **Example: US Stocks**
 

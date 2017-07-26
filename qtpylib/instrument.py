@@ -91,7 +91,7 @@ class Instrument(str):
             bars.loc[:, 'datetime'] = bars.index
             bars = bars.to_dict(orient='records')
             if lookback == 1:
-                bars = bars[0]
+                bars = bars[0] if len(bars) > 0 else None
 
         return bars
 
@@ -130,7 +130,7 @@ class Instrument(str):
             ticks.loc[:, 'datetime'] = ticks.index
             ticks = ticks.to_dict(orient='records')
             if lookback == 1:
-                ticks = ticks[0]
+                ticks = ticks[0] if len(ticks) > 0 else None
 
         return ticks
 
@@ -138,6 +138,12 @@ class Instrument(str):
     def get_tick(self):
         """ Shortcut to self.get_ticks(lookback=1, as_dict=True) """
         return self.get_ticks(lookback=1, as_dict=True)
+
+    # ---------------------------------------
+    def get_price(self):
+        """ Shortcut to self.get_ticks(lookback=1, as_dict=True)['last'] """
+        tick = self.get_ticks(lookback=1, as_dict=True)
+        return None if tick is None else tick['last']
 
     # ---------------------------------------
     def get_quote(self):
@@ -359,7 +365,7 @@ class Instrument(str):
         """
         return self.parent.get_contract_details(self)
 
-        # ---------------------------------------
+    # ---------------------------------------
     def get_tickerId(self):
         """Get contract's tickerId for this instrument
 
@@ -368,6 +374,16 @@ class Instrument(str):
                 IB Contract's tickerId
         """
         return self.parent.get_tickerId(self)
+
+    # ---------------------------------------
+    def get_combo(self):
+        """Get instrument's group if part of an instrument group
+
+        :Retruns:
+            tickerId : int
+                IB Contract's tickerId
+        """
+        return self.parent.get_combo(self)
 
     # ---------------------------------------
     def get_positions(self, attr=None):
@@ -575,6 +591,23 @@ class Instrument(str):
         return float(ticksize)
 
     # ---------------------------------------
+    def pnl_in_range(self, min_pnl, max_pnl):
+        """ Check if instrument pnl is within given range
+
+        :Parameters:
+            min_pnl : flaot
+                minimum session pnl (in USD / IB currency)
+            max_pnl : flaot
+                maximum session pnl (in USD / IB currency)
+
+        :Retruns:
+            status : bool
+                if pnl is within range
+        """
+        portfolio = self.get_portfolio()
+        return -abs(min_pnl) < portfolio['totalPNL'] < abs(max_pnl)
+
+    # ---------------------------------------
     def log_signal(self, signal):
         """ Log Signal for instrument
 
@@ -607,6 +640,12 @@ class Instrument(str):
     def tick(self):
         """(Property) Shortcut to self.get_tick()"""
         return self.get_tick()
+
+    # ---------------------------------------
+    @property
+    def price(self):
+        """(Property) Shortcut to self.get_price()"""
+        return self.get_price()
 
     # ---------------------------------------
     @property
@@ -643,6 +682,12 @@ class Instrument(str):
     def tickerId(self):
         """(Property) Shortcut to self.get_tickerId()"""
         return self.get_tickerId()
+
+    # ---------------------------------------
+    @property
+    def combo(self):
+        """(Property) Shortcut to self.get_combo()"""
+        return self.get_combo()
 
     # ---------------------------------------
     @property

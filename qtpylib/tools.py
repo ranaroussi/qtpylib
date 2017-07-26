@@ -720,7 +720,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False, sync_last
                     data = data.sort_index()
                 # ----------------------------
 
-                if "S" in resolution and "last" in data.columns:
+                if "last" in data.columns:
                     ohlc = data[data['symbol'] == sym]['last'].resample(resolution).ohlc()
                     symdata = data[data['symbol'] == sym].resample(
                         resolution).apply(ticks_ohlc_dict).fillna(value=np.nan)
@@ -730,6 +730,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False, sync_last
                     symdata['high']  = ohlc['high']
                     symdata['low']   = ohlc['low']
                     symdata['close'] = ohlc['close']
+
                 else:
                     original_length = len(data[data['symbol'] == sym])
                     symdata = data[data['symbol'] == sym].resample(
@@ -781,6 +782,8 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False, sync_last
     if tz is None:
         try:
             tz = str(data.index.tz)
+            if tz == 'None':
+                tz = None
         except:
             tz = None
 

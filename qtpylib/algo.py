@@ -63,9 +63,9 @@ class Algo(Broker):
     :Parameters:
 
         instruments : list
-            List of IB contract tuples
+            List of IB contract tuples. Default is empty list
         resolution : str
-            Desired bar resolution (using pandas resolution: 1T, 1H, etc). Use K for tick bars.
+            Desired bar resolution (using pandas resolution: 1T, 1H, etc). Use K for tick bars. Default is 1T (1min)
         tick_window : int
             Length of tick lookback window to keep. Defaults to 1
         bar_window : int
@@ -102,7 +102,7 @@ class Algo(Broker):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, instruments, resolution,
+    def __init__(self, instruments=[], resolution="1T",
         tick_window=1, bar_window=100, timezone="UTC", preload=None,
         continuous=True, blotter=None, sms=[], log=None, backtest=False,
         start=None, end=None, data=None, output=None,
