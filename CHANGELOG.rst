@@ -1,6 +1,29 @@
 Release Notes
 =============
 
+*July 26, 2017*
+
+1.5.74
+-----------
+- Checks for ``Python >= 3.4`` before running
+- Requires ``ezIBpy >= 1.12.56``
+- Option to group contracts togther (groundwork for spreads / combo orders)
+- Allows to add contracts/symbols to ``Algo`` *after* initialization via ``Broker.add_instruments(...)``
+- ``Algo`` instruments now accepts IB Contracts as instruments
+- Instrument's ``get_ticks()`` and ``get_bars()`` returns ``None`` when empty and reqested in ``dict`` format
+- Added ``instrument.get_price()`` and ``instrument.price`` (returns current market price)
+- Added ``instrument.pnl_in_range(min, max)`` method to the instrument object
+- Added ``TotalPNL`` to the portfolio object (``unrealizedPNL + realizedPNL``)
+- Added option to get timezone as delta in ``tools.get_timezone()``
+- Better Heikin-Ashi candle formula (fixed first candle's open calculation)
+- Improved Stochastic indicator
+- Added Awesome Oscillator indicator
+- Added TDI (Traders Dynamic Index) indicator
+- Added ``crossed()`` indicator (returns ``True`` if first series crosses above or below second series)
+- Crossing indicators/methods works with numbers as 2nd series (ie ``bars['close'].crossed_above(30)``)
+- Misc bugfixes, code improvements, cleanup and abstraction
+
+
 *May 7, 2017*
 
 1.5.73

@@ -68,11 +68,16 @@ Crossed Above/Below
     bars['sma'] = bars['close'].rolling_mean(10)
 
     if bars['close'].crossed_above(bars['sma']):
+        # crossed above
         ...
 
-    if bars['close'].crossed_below(bars['sma']):
+    if bars['rsi'].crossed_below(10):
+        # crossed below
         ...
 
+    if bars['close'].crossed(bars['open']):
+        # crossed either above or below
+        ...
 
 Heikin Ashi
 -----------
