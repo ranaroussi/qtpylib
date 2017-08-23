@@ -16,6 +16,7 @@ import pandas as pd
 import pymysql
 import sys
 
+from time import time as timetime
 from qtpylib import path, tools
 from qtpylib.blotter import (
     Blotter, load_blotter_args
@@ -33,7 +34,7 @@ class datetimeJSONEncoder(JSONEncoder):
         if isinstance(obj, datetime.datetime) | \
             isinstance(obj, datetime.date) | \
             isinstance(obj, datetime.time):
-            return int(obj.strftime('%s'))
+            return int(timetime())
         return JSONEncoder.default(self, obj)
 
 
