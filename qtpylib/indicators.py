@@ -38,6 +38,40 @@ warnings.simplefilter(action="ignore", category=RuntimeWarning)
 # =============================================
 
 
+def numpy_rolling_window(data, window):
+    shape = data.shape[:-1] + (data.shape[-1] - window + 1, window)
+    strides = data.strides + (data.strides[-1],)
+    return np.lib.stride_tricks.as_strided(data, shape=shape, strides=strides)
+
+
+def numpy_rolling_series(func):
+    def func_wrapper(data, window, as_source=False):
+        series = data.values if isinstance(data, pd.Series) else data
+
+        new_series = np.empty(len(series)) * np.nan
+        calculated = func(series, window)
+        new_series[-len(calculated):] = calculated
+
+        if as_source and isinstance(data, pd.Series):
+            return pd.Series(index=data.index, data=new_series)
+
+        return new_series
+
+    return func_wrapper
+
+
+@numpy_rolling_series
+def numpy_rolling_mean(data, window, as_source=False):
+    return np.mean(numpy_rolling_window(data, window), -1)
+
+
+@numpy_rolling_series
+def numpy_rolling_std(data, window, as_source=False):
+    return np.std(numpy_rolling_window(data, window), -1)
+
+# ---------------------------------------------
+
+
 def session(df, start='17:00', end='16:00'):
     """ remove previous globex day from df """
     if len(df) == 0:
@@ -58,7 +92,8 @@ def session(df, start='17:00', end='16:00'):
 
     # globex/forex session
     if is_same_day == False:
-        prev = (datetime.strptime(curr, '%Y-%m-%d') - timedelta(1)).strftime('%Y-%m-%d')
+        prev = (datetime.strptime(curr, '%Y-%m-%d') -
+                timedelta(1)).strftime('%Y-%m-%d')
 
     # slice
     if int_now >= int_start:
@@ -72,15 +107,18 @@ def session(df, start='17:00', end='16:00'):
 # ---------------------------------------------
 
 def heikinashi(bars):
-    bars['ha_close'] = (bars['open'] + bars['high'] + bars['low'] + bars['close']) / 4
+    bars = bars.copy()
+    bars['ha_close'] = (bars['open'] + bars['high'] +
+                        bars['low'] + bars['close']) / 4
     bars['ha_open'] = (bars['open'].shift(1) + bars['close'].shift(1)) / 2
     bars.loc[:1, 'ha_open'] = bars['open'].values[0]
-    bars.loc[1:, 'ha_open'] = ((bars['ha_open'].shift(1) + bars['ha_close'].shift(1)) / 2)[1:]
+    bars.loc[1:, 'ha_open'] = (
+        (bars['ha_open'].shift(1) + bars['ha_close'].shift(1)) / 2)[1:]
     bars['ha_high'] = bars.loc[:, ['high', 'ha_open', 'ha_close']].max(axis=1)
     bars['ha_low'] = bars.loc[:, ['low', 'ha_open', 'ha_close']].min(axis=1)
 
     return pd.DataFrame(index=bars.index, data={'open': bars['ha_open'],
-        'high': bars['ha_high'], 'low': bars['ha_low'], 'close': bars['ha_close'] })
+                                                'high': bars['ha_high'], 'low': bars['ha_low'], 'close': bars['ha_close']})
 
 
 # ---------------------------------------------
@@ -101,15 +139,17 @@ def tdi(series, rsi_len=13, bollinger_len=34, rsi_smoothing=2, rsi_signal_len=7,
 
 # ---------------------------------------------
 
+
 def awesome_oscillator(df, weighted=False, fast=5, slow=34):
     midprice = (df['high'] + df['low']) / 2
 
     if weighted:
-        ao = midprice.ewm(fast).mean() - midprice.ewm(slow).mean()
+        ao = (midprice.ewm(fast).mean() - midprice.ewm(slow).mean()).values
     else:
-        ao = midprice.rolling(fast).mean() - midprice.rolling(slow).mean()
+        ao = numpy_rolling_mean(midprice, fast) - \
+            numpy_rolling_mean(midprice, slow)
 
-    return pd.DataFrame(ao)
+    return pd.Series(index=df.index, data=ao)
 
 
 # ---------------------------------------------
@@ -138,7 +178,8 @@ def mid_price(bars):
 
 def ibs(bars):
     """ Internal bar strength """
-    res = np.round((bars['close'] - bars['low']) / (bars['high'] - bars['low']), 2)
+    res = np.round((bars['close'] - bars['low']) /
+                   (bars['high'] - bars['low']), 2)
     return pd.Series(index=bars.index, data=res)
 
 
@@ -169,35 +210,46 @@ def atr(bars, window=14, exp=False):
 # ---------------------------------------------
 
 def crossed(series1, series2, direction=None):
-    if isinstance(series2, int) or isinstance(series2, float):
+    if isinstance(series1, np.ndarray):
+        series1 = pd.Series(series1)
+
+    if isinstance(series2, int) or isinstance(series2, float) or isinstance(series2, np.ndarray):
         series2 = pd.Series(index=series1.index, data=series2)
 
     if direction is None or direction == "above":
-        above = pd.Series((series1 > series2) & (series1.shift(1) <= series2.shift(1)))
+        above = pd.Series((series1 > series2) & (
+            series1.shift(1) <= series2.shift(1)))
 
     if direction is None or direction == "below":
-        below = pd.Series((series1 < series2) & (series1.shift(1) >= series2.shift(1)))
+        below = pd.Series((series1 < series2) & (
+            series1.shift(1) >= series2.shift(1)))
 
     if direction is None:
         return above or below
 
     return above if direction is "above" else below
 
+
 def crossed_above(series1, series2):
     return crossed(series1, series2, "above")
+
 
 def crossed_below(series1, series2):
     return crossed(series1, series2, "below")
 
 # ---------------------------------------------
 
+
 def rolling_std(series, window=200, min_periods=None):
     min_periods = window if min_periods is None else min_periods
     try:
-        try:
-            return series.rolling(window=window, min_periods=min_periods).std()
-        except:
-            return pd.Series(series).rolling(window=window, min_periods=min_periods).std()
+        if min_periods == window:
+            return numpy_rolling_std(series, window, True)
+        else:
+            try:
+                return series.rolling(window=window, min_periods=min_periods).std()
+            except:
+                return pd.Series(series).rolling(window=window, min_periods=min_periods).std()
     except:
         return pd.rolling_std(series, window=window, min_periods=min_periods)
 
@@ -207,10 +259,13 @@ def rolling_std(series, window=200, min_periods=None):
 def rolling_mean(series, window=200, min_periods=None):
     min_periods = window if min_periods is None else min_periods
     try:
-        try:
-            return series.rolling(window=window, min_periods=min_periods).mean()
-        except:
-            return pd.Series(series).rolling(window=window, min_periods=min_periods).mean()
+        if min_periods == window:
+            return numpy_rolling_mean(series, window, True)
+        else:
+            try:
+                return series.rolling(window=window, min_periods=min_periods).mean()
+            except:
+                return pd.Series(series).rolling(window=window, min_periods=min_periods).mean()
     except:
         return pd.rolling_mean(series, window=window, min_periods=min_periods)
 
@@ -305,7 +360,8 @@ def rolling_vwap(bars, window=200, min_periods=None):
     typical = ((bars['high'] + bars['low'] + bars['close']) / 3)
     volume = bars['volume']
 
-    left = (volume * typical).rolling(window=window, min_periods=min_periods).sum()
+    left = (volume * typical).rolling(window=window,
+                                      min_periods=min_periods).sum()
     right = volume.rolling(window=window, min_periods=min_periods).sum()
 
     return pd.Series(index=bars.index, data=(left / right))
@@ -374,9 +430,9 @@ def bollinger_bands(series, window=20, stds=2):
     lower = sma - std * stds
 
     return pd.DataFrame(index=series.index, data={
-        'upper': upper.values,
-        'mid':   sma.values,
-        'lower': lower.values
+        'upper': upper,
+        'mid': sma,
+        'lower': lower
     })
 
 
@@ -390,7 +446,7 @@ def weighted_bollinger_bands(series, window=20, stds=2):
 
     return pd.DataFrame(index=series.index, data={
         'upper': upper.values,
-        'mid':   ema.values,
+        'mid': ema.values,
         'lower': lower.values
     })
 
@@ -399,7 +455,8 @@ def weighted_bollinger_bands(series, window=20, stds=2):
 
 def returns(series):
     try:
-        res = (series / series.shift(1) - 1).replace([np.inf, -np.inf], float('NaN'))
+        res = (series / series.shift(1) -
+               1).replace([np.inf, -np.inf], float('NaN'))
     except:
         res = nans(len(series))
 
@@ -410,7 +467,8 @@ def returns(series):
 
 def log_returns(series):
     try:
-        res = np.log(series / series.shift(1)).replace([np.inf, -np.inf], float('NaN'))
+        res = np.log(series / series.shift(1)
+                     ).replace([np.inf, -np.inf], float('NaN'))
     except:
         res = nans(len(series))
 
@@ -421,12 +479,9 @@ def log_returns(series):
 
 def implied_volatility(series, window=252):
     try:
-        logret = np.log(series / series.shift(1)).replace([np.inf, -np.inf], float('NaN'))
-        try:
-            res = logret.rolling(window=window).std() * np.sqrt(window)
-        except:
-            res = pd.rolling_std(logret, window=window) * np.sqrt(window)
-        return res
+        logret = np.log(series / series.shift(1)
+                        ).replace([np.inf, -np.inf], float('NaN'))
+        res = numpy_rolling_std(logret, window) * np.sqrt(window)
     except:
         res = nans(len(series))
 
@@ -478,14 +533,16 @@ def stoch(df, window=14, d=3, k=3, fast=False):
     compute the n period relative strength indicator
     http://excelta.blogspot.co.il/2013/09/stochastic-oscillator-technical.html
     """
-    highs_ma = pd.concat([df['high'].shift(i) for i in np.arange(window)], 1).apply(list, 1)
+    highs_ma = pd.concat([df['high'].shift(i)
+                          for i in np.arange(window)], 1).apply(list, 1)
     highs_ma = highs_ma.T.max().T
 
-    lows_ma = pd.concat([df['low'].shift(i) for i in np.arange(window)], 1).apply(list, 1)
+    lows_ma = pd.concat([df['low'].shift(i)
+                         for i in np.arange(window)], 1).apply(list, 1)
     lows_ma = lows_ma.T.min().T
 
     fast_k = ((df['close'] - lows_ma) / (highs_ma - lows_ma)) * 100
-    fast_d = fast_k.rolling(window=d).mean()
+    fast_d = numpy_rolling_mean(fast_k, d)
 
     if fast:
         data = {
@@ -494,8 +551,8 @@ def stoch(df, window=14, d=3, k=3, fast=False):
         }
 
     else:
-        slow_k = fast_k.rolling(window=k).mean()
-        slow_d = slow_k.rolling(window=d).mean()
+        slow_k = numpy_rolling_mean(fast_k, k)
+        slow_d = numpy_rolling_mean(slow_k, d)
         data = {
             'k': slow_k,
             'd': slow_d
@@ -508,16 +565,17 @@ def stoch(df, window=14, d=3, k=3, fast=False):
 
 def zscore(bars, window=20, stds=1, col='close'):
     """ get zscore of price """
-    std = bars[col].rolling(window).std() * stds
-    mean = bars[col].rolling(window).mean()
-    return (bars[col] - mean) / std
-
+    std = numpy_rolling_std(bars[col], window)
+    mean = numpy_rolling_mean(bars[col], window)
+    return (bars[col] - mean) / (std * stds)
 
 # ---------------------------------------------
 
+
 def pvt(bars):
     """ Price Volume Trend """
-    pvt = ((bars['close'] - bars['close'].shift(1)) / bars['close'].shift(1)) * bars['volume']
+    pvt = ((bars['close'] - bars['close'].shift(1)) /
+           bars['close'].shift(1)) * bars['volume']
     return pvt.cumsum()
 
 

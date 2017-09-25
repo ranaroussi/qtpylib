@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+*September 25, 2017*
+
+1.5.75
+-----------
+- Futures spec is now downloading from `qtpylib.io <http://qtpylib.io/resources/futures_spec.csv>`_ (updated daily)
+- Technical indicators made faster
+- Added ``tools.multi_shift`` method to for shifting multiple rows in Pandas DataFrames
+- Misc bugfixes and code improvements
+
 *July 26, 2017*
 
 1.5.74

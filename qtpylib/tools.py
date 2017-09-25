@@ -63,6 +63,20 @@ def read_single_argv(param, default=None):
         return args if "-" not in args else None
     return None
 
+# ---------------------------------------------
+
+def multi_shift(df, window):
+    """
+    get last N rows RELATIVE to another row in pandas
+    http://stackoverflow.com/questions/25724056/how-to-get-last-n-rows-relative-to-another-row-in-pandas-vector-solution
+    """
+    if isinstance(df, pd.Series):
+        df = pd.DataFrame(df)
+
+    dfs = [df.shift(i) for i in np.arange(window)]
+    for ix, df in enumerate(dfs[1:]):
+        dfs[ix+1].columns = [str(col) for col in df.columns +str(ix+1)]
+        return pd.concat(dfs, 1).apply(list, 1)
 
 # ---------------------------------------------
 
