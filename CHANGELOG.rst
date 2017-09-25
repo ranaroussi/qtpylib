@@ -3,6 +3,10 @@ Release Notes
 
 *September 25, 2017*
 
+1.5.76
+-----------
+- Fixed possible miscalculation of local machine's timezone (hotfix)
+
 1.5.75
 -----------
 - Futures spec is now downloading from `qtpylib.io <http://qtpylib.io/resources/futures_spec.csv>`_ (updated daily)
