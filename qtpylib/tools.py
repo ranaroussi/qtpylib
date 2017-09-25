@@ -439,11 +439,11 @@ def after_third_friday(day=None):
 # =============================================
 
 def get_timezone(as_timedelta=False):
-    """ utility to get the machine's timeozone """
+    """ utility to get the machine's timezone """
     try:
-        offset_hour = -(datetime.datetime.now() - datetime.datetime.utcnow()).seconds
+        offset_hour = -(time.altzone if time.daylight else time.timezone)
     except:
-        offset_hour = time.altzone if time.daylight else time.timezone
+        offset_hour = -(datetime.datetime.now() - datetime.datetime.utcnow()).seconds
 
     offset_hour = offset_hour // 3600
     offset_hour = offset_hour if offset_hour < 10 else offset_hour // 10
