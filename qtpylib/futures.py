@@ -43,6 +43,7 @@ if sys.version_info < (3, 4):
 # =============================================
 import logging
 logging.getLogger('requests').setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
 # =============================================
 
 
@@ -309,49 +310,10 @@ def get_ib_futures(symbol=None, exchange=None, ttl=86400):
             if symdf is not None:
                 return symdf
 
-    # else: fetch new...
+    # else...
 
-    html = requests.get('https://www.interactivebrokers.com/en/index.php?f=marginnew&p=fut')
-
-    # Parse HTML using BeautifulSoup
-    html = bs(html.text, 'html.parser')
-
-    records = []
-
-    def grab_row(row, what='td'):
-        row_data = []
-        cells = row.findAll(what, text=True)
-        for cell in cells:
-            row_data.append(cell.text)
-
-        return ",".join(row_data)
-
-    divs = html.findAll('div', attrs={'class': 'table-responsive'})
-
-    for div in divs:
-        tables = div.findAll('table')
-        for table in tables:
-            rows = table.findAll('tr')
-            for row in rows:
-                records.append(grab_row(row, 'td'))
-
-    text = '\n'.join(filter(None, records))
-
-    df = pd.read_csv(StringIO(text), names=['exchange', 'symbol', 'description', 'class',
-                                            'intraday_initial', 'intraday_maintenance',
-                                            'overnight_initial', 'overnight_maintenance',
-                                            'currency', 'has_options'])
-
-    # fix data
-    df['intraday_initial'] = pd.to_numeric(df['intraday_initial'], errors='coerce')
-    df['intraday_maintenance'] = pd.to_numeric(df['intraday_maintenance'], errors='coerce')
-    df['overnight_initial'] = pd.to_numeric(df['overnight_initial'], errors='coerce')
-    df['overnight_maintenance'] = pd.to_numeric(df['overnight_maintenance'], errors='coerce')
-
-    df['currency'].fillna("USD", inplace=True)
-    df['has_options'] = np.where(df['has_options'] == 'No', False, True)
-
-    df.dropna(how='all', inplace=True)
+    # download specs from qtpylib.io
+    df = pd.read_csv('http://qtpylib.io/resources/futures_spec.csv.gz')
 
     # output
     df.to_pickle(cache_file)
