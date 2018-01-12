@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+*January 12, 2018*
+
+1.5.77
+-----------
+- Check for ``dbskip`` on ``Blotter.mysql_connect()`` (issue 75)
+- Changed numpy.std() estimator bias (ddof = 1)
+- Fixed Heiken-Ashi bar calculation
+- Added Zero-lag SMA/EMA/HMA
+- Misc bugfixes and code improvements
+
+
 *September 25, 2017*
 
 1.5.76
