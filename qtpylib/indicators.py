@@ -67,7 +67,7 @@ def numpy_rolling_mean(data, window, as_source=False):
 
 @numpy_rolling_series
 def numpy_rolling_std(data, window, as_source=False):
-    return np.std(numpy_rolling_window(data, window), -1)
+    return np.std(numpy_rolling_window(data, window), axis=-1, ddof=1)
 
 # ---------------------------------------------
 
@@ -257,6 +257,7 @@ def rolling_std(series, window=200, min_periods=None):
 
 # ---------------------------------------------
 
+
 def rolling_mean(series, window=200, min_periods=None):
     min_periods = window if min_periods is None else min_periods
     if min_periods == window and len(series) > window:
@@ -268,6 +269,7 @@ def rolling_mean(series, window=200, min_periods=None):
             return pd.Series(series).rolling(window=window, min_periods=min_periods).mean()
 
 # ---------------------------------------------
+
 
 def rolling_min(series, window=14, min_periods=None):
     min_periods = window if min_periods is None else min_periods
@@ -552,6 +554,8 @@ def stoch(df, window=14, d=3, k=3, fast=False):
     return pd.DataFrame(index=df.index, data=data)
 
 # ---------------------------------------------
+
+
 def zlma(series, window=20, kind="ema"):
     """
     John Ehlers' Zero lag (exponential) moving average
@@ -565,14 +569,20 @@ def zlma(series, window=20, kind="ema"):
         return hma(series, lag)
     return sma(series, lag)
 
+
 def zlema(series, window):
     return zlma(series, window, kind="ema")
+
+
 def zlsma(series, window):
     return zlma(series, window, kind="sma")
+
+
 def zlhma(series, window):
     return zlma(series, window, kind="hma")
 
 # ---------------------------------------------
+
 
 def zscore(bars, window=20, stds=1, col='close'):
     """ get zscore of price """
