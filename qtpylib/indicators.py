@@ -67,7 +67,7 @@ def numpy_rolling_mean(data, window, as_source=False):
 
 @numpy_rolling_series
 def numpy_rolling_std(data, window, as_source=False):
-    return np.std(numpy_rolling_window(data, window), -1)
+    return np.std(numpy_rolling_window(data, window), axis=-1, ddof=1)
 
 # ---------------------------------------------
 
@@ -110,15 +110,20 @@ def heikinashi(bars):
     bars = bars.copy()
     bars['ha_close'] = (bars['open'] + bars['high'] +
                         bars['low'] + bars['close']) / 4
+
     bars['ha_open'] = (bars['open'].shift(1) + bars['close'].shift(1)) / 2
     bars.loc[:1, 'ha_open'] = bars['open'].values[0]
-    bars.loc[1:, 'ha_open'] = (
-        (bars['ha_open'].shift(1) + bars['ha_close'].shift(1)) / 2)[1:]
+    for x in range(2):
+        bars.loc[1:, 'ha_open'] = (
+            (bars['ha_open'].shift(1) + bars['ha_close'].shift(1)) / 2)[1:]
+
     bars['ha_high'] = bars.loc[:, ['high', 'ha_open', 'ha_close']].max(axis=1)
     bars['ha_low'] = bars.loc[:, ['low', 'ha_open', 'ha_close']].min(axis=1)
 
     return pd.DataFrame(index=bars.index, data={'open': bars['ha_open'],
-                                                'high': bars['ha_high'], 'low': bars['ha_low'], 'close': bars['ha_close']})
+                                                'high': bars['ha_high'],
+                                                'low': bars['ha_low'],
+                                                'close': bars['ha_close']})
 
 
 # ---------------------------------------------
@@ -242,45 +247,36 @@ def crossed_below(series1, series2):
 
 def rolling_std(series, window=200, min_periods=None):
     min_periods = window if min_periods is None else min_periods
-    try:
-        if min_periods == window:
-            return numpy_rolling_std(series, window, True)
-        else:
-            try:
-                return series.rolling(window=window, min_periods=min_periods).std()
-            except:
-                return pd.Series(series).rolling(window=window, min_periods=min_periods).std()
-    except:
-        return pd.rolling_std(series, window=window, min_periods=min_periods)
-
+    if min_periods == window and len(series) > window:
+        return numpy_rolling_std(series, window, True)
+    else:
+        try:
+            return series.rolling(window=window, min_periods=min_periods).std()
+        except:
+            return pd.Series(series).rolling(window=window, min_periods=min_periods).std()
 
 # ---------------------------------------------
+
 
 def rolling_mean(series, window=200, min_periods=None):
     min_periods = window if min_periods is None else min_periods
-    try:
-        if min_periods == window:
-            return numpy_rolling_mean(series, window, True)
-        else:
-            try:
-                return series.rolling(window=window, min_periods=min_periods).mean()
-            except:
-                return pd.Series(series).rolling(window=window, min_periods=min_periods).mean()
-    except:
-        return pd.rolling_mean(series, window=window, min_periods=min_periods)
-
+    if min_periods == window and len(series) > window:
+        return numpy_rolling_mean(series, window, True)
+    else:
+        try:
+            return series.rolling(window=window, min_periods=min_periods).mean()
+        except:
+            return pd.Series(series).rolling(window=window, min_periods=min_periods).mean()
 
 # ---------------------------------------------
+
 
 def rolling_min(series, window=14, min_periods=None):
     min_periods = window if min_periods is None else min_periods
     try:
-        try:
-            return series.rolling(window=window, min_periods=min_periods).min()
-        except:
-            return pd.Series(series).rolling(window=window, min_periods=min_periods).min()
+        return series.rolling(window=window, min_periods=min_periods).min()
     except:
-        return pd.rolling_min(series, window=window, min_periods=min_periods)
+        return pd.Series(series).rolling(window=window, min_periods=min_periods).min()
 
 
 # ---------------------------------------------
@@ -288,12 +284,9 @@ def rolling_min(series, window=14, min_periods=None):
 def rolling_max(series, window=14, min_periods=None):
     min_periods = window if min_periods is None else min_periods
     try:
-        try:
-            return series.rolling(window=window, min_periods=min_periods).min()
-        except:
-            return pd.Series(series).rolling(window=window, min_periods=min_periods).min()
+        return series.rolling(window=window, min_periods=min_periods).min()
     except:
-        return pd.rolling_min(series, window=window, min_periods=min_periods)
+        return pd.Series(series).rolling(window=window, min_periods=min_periods).min()
 
 
 # ---------------------------------------------
@@ -560,8 +553,36 @@ def stoch(df, window=14, d=3, k=3, fast=False):
 
     return pd.DataFrame(index=df.index, data=data)
 
+# ---------------------------------------------
+
+
+def zlma(series, window=20, kind="ema"):
+    """
+    John Ehlers' Zero lag (exponential) moving average
+    https://en.wikipedia.org/wiki/Zero_lag_exponential_moving_average
+    """
+    lag = (window - 1) // 2
+    series = 2 * series - series.shift(lag)
+    if kind in ['ewm', 'ema']:
+        return ema(series, lag)
+    elif kind == "hma":
+        return hma(series, lag)
+    return sma(series, lag)
+
+
+def zlema(series, window):
+    return zlma(series, window, kind="ema")
+
+
+def zlsma(series, window):
+    return zlma(series, window, kind="sma")
+
+
+def zlhma(series, window):
+    return zlma(series, window, kind="hma")
 
 # ---------------------------------------------
+
 
 def zscore(bars, window=20, stds=1, col='close'):
     """ get zscore of price """
