@@ -1143,6 +1143,10 @@ class Blotter():
 
     def mysql_connect(self):
 
+        # skip db connection
+        if self.args['dbskip']:
+            return
+
         # already connected?
         if self.dbcurr is not None or self.dbconn is not None:
             return
