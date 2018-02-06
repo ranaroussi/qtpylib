@@ -19,12 +19,12 @@
 # limitations under the License.
 #
 
-import numpy as np
-import pandas as pd
 import warnings
 import sys
-
 from datetime import datetime, timedelta
+
+import numpy as np
+import pandas as pd
 from pandas.core.base import PandasObject
 
 # =============================================
@@ -62,19 +62,20 @@ def numpy_rolling_series(func):
 
 @numpy_rolling_series
 def numpy_rolling_mean(data, window, as_source=False):
-    return np.mean(numpy_rolling_window(data, window), -1)
+    return np.mean(numpy_rolling_window(data, window), axis=-1)
 
 
 @numpy_rolling_series
 def numpy_rolling_std(data, window, as_source=False):
     return np.std(numpy_rolling_window(data, window), axis=-1, ddof=1)
 
+
 # ---------------------------------------------
 
 
 def session(df, start='17:00', end='16:00'):
     """ remove previous globex day from df """
-    if len(df) == 0:
+    if df.empty:
         return df
 
     # get start/end/now as decimals
@@ -91,7 +92,7 @@ def session(df, start='17:00', end='16:00'):
     curr = prev = df[-1:].index[0].strftime('%Y-%m-%d')
 
     # globex/forex session
-    if is_same_day == False:
+    if not is_same_day:
         prev = (datetime.strptime(curr, '%Y-%m-%d') -
                 timedelta(1)).strftime('%Y-%m-%d')
 
@@ -103,8 +104,8 @@ def session(df, start='17:00', end='16:00'):
 
     return df.copy()
 
-
 # ---------------------------------------------
+
 
 def heikinashi(bars):
     bars = bars.copy()
@@ -122,11 +123,11 @@ def heikinashi(bars):
     bars['ha_high'] = bars.loc[:, ['high', 'ha_open', 'ha_close']].max(axis=1)
     bars['ha_low'] = bars.loc[:, ['low', 'ha_open', 'ha_close']].min(axis=1)
 
-    return pd.DataFrame(index=bars.index, data={'open': bars['ha_open'],
-                                                'high': bars['ha_high'],
-                                                'low': bars['ha_low'],
-                                                'close': bars['ha_close']})
-
+    return pd.DataFrame(index=bars.index,
+                        data={'open': bars['ha_open'],
+                              'high': bars['ha_high'],
+                              'low': bars['ha_low'],
+                              'close': bars['ha_close']})
 
 # ---------------------------------------------
 
@@ -166,8 +167,8 @@ def awesome_oscillator(df, weighted=False, fast=5, slow=34):
 
 # ---------------------------------------------
 
-def nans(len=1):
-    mtx = np.empty(len)
+def nans(length=1):
+    mtx = np.empty(length)
     mtx[:] = np.nan
     return mtx
 
@@ -225,7 +226,7 @@ def crossed(series1, series2, direction=None):
     if isinstance(series1, np.ndarray):
         series1 = pd.Series(series1)
 
-    if isinstance(series2, int) or isinstance(series2, float) or isinstance(series2, np.ndarray):
+    if isinstance(series2, (float, int, np.ndarray)):
         series2 = pd.Series(index=series1.index, data=series2)
 
     if direction is None or direction == "above":
@@ -239,7 +240,7 @@ def crossed(series1, series2, direction=None):
     if direction is None:
         return above or below
 
-    return above if direction is "above" else below
+    return above if direction == "above" else below
 
 
 def crossed_above(series1, series2):
@@ -374,6 +375,7 @@ def rsi(series, window=14):
     """
     compute the n period relative strength indicator
     """
+
     # 100-(100/relative_strength)
     deltas = np.diff(series)
     seed = deltas[:window + 1]
@@ -410,13 +412,13 @@ def macd(series, fast=3, slow=10, smooth=16):
     using a fast and slow exponential moving avg'
     return value is emaslow, emafast, macd which are len(x) arrays
     """
-    macd = rolling_weighted_mean(series, window=fast) - \
+    macd_line = rolling_weighted_mean(series, window=fast) - \
         rolling_weighted_mean(series, window=slow)
-    signal = rolling_weighted_mean(macd, window=smooth)
-    histogram = macd - signal
-    # return macd, signal, histogram
+    signal = rolling_weighted_mean(macd_line, window=smooth)
+    histogram = macd_line - signal
+    # return macd_line, signal, histogram
     return pd.DataFrame(index=series.index, data={
-        'macd': macd.values,
+        'macd': macd_line.values,
         'signal': signal.values,
         'histogram': histogram.values
     })
@@ -425,14 +427,14 @@ def macd(series, fast=3, slow=10, smooth=16):
 # ---------------------------------------------
 
 def bollinger_bands(series, window=20, stds=2):
-    sma = rolling_mean(series, window=window, min_periods=1)
+    ma = rolling_mean(series, window=window, min_periods=1)
     std = rolling_std(series, window=window, min_periods=1)
-    upper = sma + std * stds
-    lower = sma - std * stds
+    upper = ma + std * stds
+    lower = ma - std * stds
 
     return pd.DataFrame(index=series.index, data={
         'upper': upper,
-        'mid': sma,
+        'mid': ma,
         'lower': lower
     })
 
@@ -469,7 +471,7 @@ def returns(series):
 def log_returns(series):
     try:
         res = np.log(series / series.shift(1)
-                     ).replace([np.inf, -np.inf], float('NaN'))
+                    ).replace([np.inf, -np.inf], float('NaN'))
     except:
         res = nans(len(series))
 
@@ -481,7 +483,7 @@ def log_returns(series):
 def implied_volatility(series, window=252):
     try:
         logret = np.log(series / series.shift(1)
-                        ).replace([np.inf, -np.inf], float('NaN'))
+                       ).replace([np.inf, -np.inf], float('NaN'))
         res = numpy_rolling_std(logret, window) * np.sqrt(window)
     except:
         res = nans(len(series))
@@ -605,12 +607,12 @@ def zscore(bars, window=20, stds=1, col='close'):
 
 def pvt(bars):
     """ Price Volume Trend """
-    pvt = ((bars['close'] - bars['close'].shift(1)) /
-           bars['close'].shift(1)) * bars['volume']
-    return pvt.cumsum()
-
+    trend = ((bars['close'] - bars['close'].shift(1)) /
+             bars['close'].shift(1)) * bars['volume']
+    return trend.cumsum()
 
 # =============================================
+
 
 PandasObject.session = session
 PandasObject.atr = atr
