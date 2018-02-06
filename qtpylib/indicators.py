@@ -130,18 +130,23 @@ def heikinashi(bars):
 
 # ---------------------------------------------
 
-def tdi(series, rsi_len=13, bollinger_len=34, rsi_smoothing=2, rsi_signal_len=7, bollinger_std=1.6185):
-    rsi_series = rsi(series, rsi_len)
-    bb_series = bollinger_bands(rsi_series, bollinger_len, bollinger_std)
-    signal = sma(rsi_series, rsi_signal_len)
-    rsi_series = sma(rsi_series, rsi_smoothing)
+
+def tdi(series, rsi_lookback=13, rsi_smooth_len=2,
+        rsi_signal_len=7, bb_lookback=34, bb_std=1.6185):
+
+    rsi_data = rsi(series, rsi_lookback)
+    rsi_smooth = sma(rsi_data, rsi_smooth_len)
+    rsi_signal = sma(rsi_data, rsi_signal_len)
+
+    bb_series = bollinger_bands(rsi_data, bb_lookback, bb_std)
 
     return pd.DataFrame(index=series.index, data={
-        "rsi": rsi_series,
-        "signal": signal,
-        "bbupper": bb_series['upper'],
-        "bblower": bb_series['lower'],
-        "bbmid": bb_series['mid']
+        "rsi": rsi_data,
+        "rsi_signal": rsi_signal,
+        "rsi_smooth": rsi_smooth,
+        "rsi_bb_upper": bb_series['upper'],
+        "rsi_bb_lower": bb_series['lower'],
+        "rsi_bb_mid": bb_series['mid']
     })
 
 # ---------------------------------------------
