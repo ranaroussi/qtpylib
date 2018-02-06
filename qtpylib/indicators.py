@@ -637,4 +637,11 @@ PandasObject.rolling_weighted_mean = rolling_weighted_mean
 
 PandasObject.sma = sma
 PandasObject.wma = wma
+PandasObject.ema = wma
 PandasObject.hma = hma
+
+PandasObject.zlsma = zlsma
+PandasObject.zlwma = zlema
+PandasObject.zlema = zlema
+PandasObject.zlhma = zlhma
+PandasObject.zlma = zlma
