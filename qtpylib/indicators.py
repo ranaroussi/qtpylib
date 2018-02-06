@@ -303,10 +303,11 @@ def rolling_weighted_mean(series, window=200, min_periods=None):
 
 # ---------------------------------------------
 
-def hull_moving_average(series, window=200):
-    wma = (2 * rolling_weighted_mean(series, window=window / 2)) - \
-        rolling_weighted_mean(series, window=window)
-    return rolling_weighted_mean(wma, window=np.sqrt(window))
+def hull_moving_average(series, window=200, min_periods=None):
+    min_periods = window if min_periods is None else min_periods
+    ma = (2 * rolling_weighted_mean(series, window / 2, min_periods)) - \
+        rolling_weighted_mean(series, window, min_periods)
+    return rolling_weighted_mean(ma, np.sqrt(window), min_periods)
 
 
 # ---------------------------------------------
@@ -323,8 +324,8 @@ def wma(series, window=200, min_periods=None):
 
 # ---------------------------------------------
 
-def hma(series, window=200):
-    return hull_moving_average(series, window=window)
+def hma(series, window=200, min_periods=None):
+    return hull_moving_average(series, window=window, min_periods=min_periods)
 
 
 # ---------------------------------------------
@@ -419,8 +420,8 @@ def macd(series, fast=3, slow=10, smooth=16):
 # ---------------------------------------------
 
 def bollinger_bands(series, window=20, stds=2):
-    sma = rolling_mean(series, window=window)
-    std = rolling_std(series, window=window)
+    sma = rolling_mean(series, window=window, min_periods=1)
+    std = rolling_std(series, window=window, min_periods=1)
     upper = sma + std * stds
     lower = sma - std * stds
 
@@ -558,30 +559,32 @@ def stoch(df, window=14, d=3, k=3, fast=False):
 # ---------------------------------------------
 
 
-def zlma(series, window=20, kind="ema"):
+def zlma(series, window=20, min_periods=None, kind="ema"):
     """
     John Ehlers' Zero lag (exponential) moving average
     https://en.wikipedia.org/wiki/Zero_lag_exponential_moving_average
     """
+    min_periods = window if min_periods is None else min_periods
+
     lag = (window - 1) // 2
     series = 2 * series - series.shift(lag)
     if kind in ['ewm', 'ema']:
-        return ema(series, lag)
+        return wma(series, lag, min_periods)
     elif kind == "hma":
-        return hma(series, lag)
-    return sma(series, lag)
+        return hma(series, lag, min_periods)
+    return sma(series, lag, min_periods)
 
 
-def zlema(series, window):
-    return zlma(series, window, kind="ema")
+def zlema(series, window, min_periods=None):
+    return zlma(series, window, min_periods, kind="ema")
 
 
-def zlsma(series, window):
-    return zlma(series, window, kind="sma")
+def zlsma(series, window, min_periods=None):
+    return zlma(series, window, min_periods, kind="sma")
 
 
-def zlhma(series, window):
-    return zlma(series, window, kind="hma")
+def zlhma(series, window, min_periods=None):
+    return zlma(series, window, min_periods, kind="hma")
 
 # ---------------------------------------------
 
