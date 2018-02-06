@@ -22,17 +22,17 @@
 __version__ = '1.5.77'
 __author__ = 'Ran Aroussi'
 
-from . import *
+import os
+import sys
 
 # make indicators available as pandas extentions
 import qtpylib.indicators as indicators
 
-import os
-import sys
+from . import *
 
 path = {
-    "library": os.path.dirname( os.path.realpath(__file__) ),
-    "caller": os.path.dirname( os.path.realpath(sys.argv[0]) )
+    "library": os.path.dirname(os.path.realpath(__file__)),
+    "caller": os.path.dirname(os.path.realpath(sys.argv[0]))
 }
 
 __all__ = [
