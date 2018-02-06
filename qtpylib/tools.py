@@ -810,7 +810,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False, sync_last
     # sort by index (datetime)
     data.sort_index(inplace=True)
 
-    return data
+    return data[~data.index.duplicated(keep='last')]
 
 
 # =============================================
