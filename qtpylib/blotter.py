@@ -26,13 +26,15 @@ import logging
 import os
 import pandas as pd
 import pickle
-import pymysql
 import subprocess
 import sys
 import tempfile
 import time
 import zmq
 import glob
+
+import pymysql
+from pymysql.constants.CLIENT import MULTI_STATEMENTS
 
 from numpy import (
     isnan as npisnan,
@@ -1134,6 +1136,7 @@ class Blotter():
             return
 
         return pymysql.connect(
+            client_flag = MULTI_STATEMENTS,
             host   = str(self.args['dbhost']),
             port   = int(self.args['dbport']),
             user   = str(self.args['dbuser']),
