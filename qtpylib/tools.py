@@ -766,7 +766,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
             if sync_last_timestamp:
                 last_row = data[data['symbol'] == sym][-1:]
                 # last_row.index = pd.to_datetime(data.index[-1:], utc=True)
-                last_row.index = data.index[-1:]
+                last_row.index = data.index[-1:].copy()
                 if "last" not in data.columns:
                     last_row["open"] = last_row["close"]
                     last_row["high"] = last_row["close"]
