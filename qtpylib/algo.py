@@ -323,6 +323,7 @@ class Algo(Broker):
             )
             history = history[history.index >= self.backtest_start]
 
+
         elif not self.blotter_args["dbskip"] and (self.backtest or self.preload):
 
             start = self.backtest_start if self.backtest else tools.backdate(
@@ -841,7 +842,7 @@ class Algo(Broker):
     # ---------------------------------------
     def _add_signal_history(self, df, symbol):
         """ Initilize signal history """
-        if symbol not in self.signals.keys() or self.signals[symbol].empty:
+        if symbol not in self.signals.keys() or len(self.signals[symbol]) == 0:
             self.signals[symbol] = [nan] * len(df.index)
         else:
             self.signals[symbol].append(nan)
