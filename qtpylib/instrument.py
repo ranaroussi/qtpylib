@@ -97,7 +97,7 @@ class Instrument(str):
             bars.loc[:, 'datetime'] = bars.index
             bars = bars.to_dict(orient='records')
             if lookback == 1:
-                bars = None if bars.empty else bars[0]
+                bars = None if not bars else bars[0]
 
         return bars
 
@@ -136,7 +136,7 @@ class Instrument(str):
             ticks.loc[:, 'datetime'] = ticks.index
             ticks = ticks.to_dict(orient='records')
             if lookback == 1:
-                ticks = None if ticks.empty else ticks[0]
+                ticks = None if not ticks else ticks[0]
 
         return ticks
 
