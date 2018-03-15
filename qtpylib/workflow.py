@@ -201,8 +201,7 @@ def get_data_google_intraday(symbol, *args, **kwargs):
     df['timestamp'] = df[df['offset'].str[0] == "a"][
         'offset'].str[1:].astype(int)
     df.loc[df[df['timestamp'].isnull() == False].index, 'offset'] = 0
-    df['timestamp'] = df['timestamp'].ffill() + df['offset'].astype(int) * 60
-
+    df['timestamp'] = df['timestamp'].ffill() + pd.to_numeric(df['offset'], errors='coerce') * 60
     # convert to datetime
     df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s')
 
