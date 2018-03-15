@@ -121,10 +121,10 @@ def create_continuous_contract(df, resolution="1T"):
     # resample back to original
     if "K" in resolution or "V" in resolution or "S" in resolution:
         flags = flags.resample('S').last().ffill(
-        ).loc[df.index.unique()].ffill()
+        ).reindex(df.index.unique()).ffill()
     else:
         flags = flags.resample('T').last().ffill(
-        ).loc[df.index.unique()].ffill()
+        ).reindex(df.index.unique()).ffill()
     flags['datetime'] = flags.index
 
     # build contract
