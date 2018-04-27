@@ -366,7 +366,7 @@ def rolling_vwap(bars, window=200, min_periods=None):
                                       min_periods=min_periods).sum()
     right = volume.rolling(window=window, min_periods=min_periods).sum()
 
-    return pd.Series(index=bars.index, data=(left / right))
+    return pd.Series(index=bars.index, data=(left / right)).replace([np.inf, -np.inf], float('NaN')).ffill()
 
 
 # ---------------------------------------------
