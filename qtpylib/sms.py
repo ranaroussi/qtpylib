@@ -4,7 +4,7 @@
 # QTPyLib: Quantitative Trading Python Library
 # https://github.com/ranaroussi/qtpylib
 #
-# Copyright 2016 Ran Aroussi
+# Copyright 2016-2018 Ran Aroussi
 #
 # Licensed under the GNU Lesser General Public License, v3.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,11 +19,12 @@
 # limitations under the License.
 #
 
+import sys
+import configparser
+
 from nexmo import Client as nexmoClient
 from twilio.rest import Client as twilioClient
-import sys
 
-import configparser
 from qtpylib import (
     path, tools
 )
@@ -37,23 +38,23 @@ if sys.version_info < (3, 4):
 # ---------------------------------------------
 # sms service / credentials
 # ---------------------------------------------
-SMS_SERVICE     = None
+SMS_SERVICE = None
 SMS_CREDENTIALS = None
 
 sms_ini = configparser.ConfigParser()
 sms_ini.read(path['caller'] + '/sms.ini')
-if len(sms_ini.sections()) > 0:
-    SMS_SERVICE = sms_ini.sections()[0].lower().strip()
-    SMS_CREDENTIALS = sms_ini[sms_ini.sections()[0]]
+sms_data = sms_ini.sections()
+if sms_data:
+    SMS_SERVICE = sms_data[0].lower().strip()
+    SMS_CREDENTIALS = sms_ini[sms_data[0]]
 
 
 # ---------------------------------------------
 
 def send_text(msg, numbers):
-    global SMS_SERVICE
 
     numbers = _ready_to_send(numbers)
-    if numbers == False:
+    if not numbers:
         return
 
     if SMS_SERVICE == "nexmo":
@@ -74,7 +75,7 @@ def send_text(msg, numbers):
 def _send_trade(trade, numbers, timezone="UTC"):
 
     numbers = _ready_to_send(numbers)
-    if numbers == False:
+    if not numbers:
         return
 
     # decimals to round:
@@ -99,8 +100,9 @@ def _send_trade(trade, numbers, timezone="UTC"):
         qty = str(abs(trade['quantity'])) + "x "
 
     if trade['action'] == "ENTRY":
-        target = round(trade['target'], decimals) if trade['target'] > 0 else '-'
-        stop   = round(trade['stop'], decimals) if trade['stop'] > 0 else '-'
+        target = round(trade['target'],
+                       decimals) if trade['target'] > 0 else '-'
+        stop = round(trade['stop'], decimals) if trade['stop'] > 0 else '-'
 
         try:
             trade['entry_time'] = tools.datetime_to_timezone(
@@ -109,14 +111,17 @@ def _send_trade(trade, numbers, timezone="UTC"):
         except:
             pass
 
-        msg += trade['direction'] + " " + arrow + " " + qty + " " + trade['symbol']
+        msg += trade['direction'] + " " + arrow + \
+            " " + qty + " " + trade['symbol']
         msg += " @ " + str(round(trade['entry_price'], decimals))
         msg += " " + order_type + "\n"
         msg += "TP " + str(target) + " / SL " + str(stop) + "\n"
 
     elif trade['action'] == "EXIT":
-        exit_type = trade['exit_reason'].replace("TARGET", "TGT"
-                                                 ).replace("STOP", "STP").replace("SIGNAL", order_type)
+        exit_type = trade['exit_reason'
+                          ].replace("TARGET", "TGT"
+                                    ).replace("STOP", "STP"
+                                              ).replace("SIGNAL", order_type)
         pnl_char = "+" if trade['realized_pnl'] > 0 else ""
 
         try:
@@ -126,7 +131,8 @@ def _send_trade(trade, numbers, timezone="UTC"):
         except:
             pass
 
-        msg += trade['direction'] + " " + arrow + " " + qty + " " + trade['symbol']
+        msg += trade['direction'] + " " + arrow + \
+            " " + qty + " " + trade['symbol']
         msg += " @ " + str(round(trade['exit_price'], decimals))
         msg += " " + exit_type + "\n"
         msg += "PL " + pnl_char + str(round(trade['realized_pnl'], decimals))
@@ -142,17 +148,19 @@ def _send_trade(trade, numbers, timezone="UTC"):
 # ---------------------------------------------
 
 def _ready_to_send(numbers):
-    global SMS_SERVICE
 
     # get credentials
     if SMS_SERVICE is None:
+        return False
+
+    if numbers is None:
         return False
 
     # return
     if not isinstance(numbers, list):
         numbers = [numbers]
 
-    if len(numbers) == 0:
+    if not numbers:
         return False
 
     return numbers
@@ -161,7 +169,6 @@ def _ready_to_send(numbers):
 # ---------------------------------------------
 
 def _send_nexmo(msg, numbers):
-    global SMS_CREDENTIALS
 
     nexmo_key = SMS_CREDENTIALS['key'].strip().split(
         ' ')[0] if "key" in SMS_CREDENTIALS else None
@@ -173,7 +180,7 @@ def _send_nexmo(msg, numbers):
         ' ')[0] if "from" in SMS_CREDENTIALS else "QTPyLib"
 
     if nexmo_key is None or nexmo_secret is None or nexmo_from is None:
-        return
+        return 0
 
     # send message
     msg = {'type': 'unicode', 'from': nexmo_from, 'to': '', 'text': msg}
@@ -195,7 +202,6 @@ def _send_nexmo(msg, numbers):
 # ---------------------------------------------
 
 def _send_twilio(msg, numbers):
-    global SMS_CREDENTIALS
 
     twilio_sid = SMS_CREDENTIALS['sid'].strip().split(
         ' ')[0] if "sid" in SMS_CREDENTIALS else None
@@ -207,7 +213,7 @@ def _send_twilio(msg, numbers):
         ' ')[0] if "from" in SMS_CREDENTIALS else "QTPyLib"
 
     if twilio_sid is None or twilio_token is None or twilio_from is None:
-        return
+        return 0
 
     # send message
     sent = 0

@@ -13,3 +13,4 @@ QTPyLib.egg-info
 Icon
 /sql-aggregate.txt
 /tests
+.vscode

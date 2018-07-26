@@ -4,7 +4,7 @@
 # QTPyLib: Quantitative Trading Python Library
 # https://github.com/ranaroussi/qtpylib
 #
-# Copyright 2016 Ran Aroussi
+# Copyright 2016-2018 Ran Aroussi
 #
 # Licensed under the GNU Lesser General Public License, v3.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,23 +21,22 @@
 
 import argparse
 import inspect
-import pandas as pd
-from numpy import nan
 import sys
 import logging
 import os
 
 from datetime import datetime
+from abc import ABCMeta, abstractmethod
+
+import pandas as pd
+from numpy import nan
 
 from qtpylib.broker import Broker
-from qtpylib.instrument import Instrument
 from qtpylib.workflow import validate_columns as validate_csv_columns
 from qtpylib.blotter import prepare_history
 from qtpylib import (
     tools, sms, asynctools
 )
-
-from abc import ABCMeta, abstractmethod
 
 # =============================================
 # check min, python version
@@ -65,7 +64,8 @@ class Algo(Broker):
         instruments : list
             List of IB contract tuples. Default is empty list
         resolution : str
-            Desired bar resolution (using pandas resolution: 1T, 1H, etc). Use K for tick bars. Default is 1T (1min)
+            Desired bar resolution (using pandas resolution: 1T, 1H, etc).
+            Use K for tick bars. Default is 1T (1min)
         tick_window : int
             Length of tick lookback window to keep. Defaults to 1
         bar_window : int
@@ -73,7 +73,8 @@ class Algo(Broker):
         timezone : str
             Convert IB timestamps to this timezone (eg. US/Central). Defaults to UTC
         preload : str
-            Preload history when starting algo (using pandas resolution: 1H, 1D, etc). Use K for tick bars.
+            Preload history when starting algo (using pandas resolution: 1H, 1D, etc).
+            Use K for tick bars.
         continuous : bool
             Tells preloader to construct continuous Futures contracts (default is True)
         blotter : str
@@ -89,7 +90,7 @@ class Algo(Broker):
         end: str
             Backtest end date (YYYY-MM-DD [HH:MM:SS[.MS]). Default is None
         data : str
-            Path to the directory with QTPyLib-compatible CSV files (for Backtesting using CSV files)
+            Path to the directory with QTPyLib-compatible CSV files (Backtesting)
         output: str
             Path to save the recorded data (default: None)
         ibport: int
@@ -102,11 +103,11 @@ class Algo(Broker):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, instruments=[], resolution="1T",
-        tick_window=1, bar_window=100, timezone="UTC", preload=None,
-        continuous=True, blotter=None, sms=[], log=None, backtest=False,
-        start=None, end=None, data=None, output=None,
-        ibclient=998, ibport=4001, ibserver="localhost", **kwargs):
+    def __init__(self, instruments, resolution="1T",
+                 tick_window=1, bar_window=100, timezone="UTC", preload=None,
+                 continuous=True, blotter=None, sms=None, log=None, backtest=False,
+                 start=None, end=None, data=None, output=None,
+                 ibclient=998, ibport=4001, ibserver="localhost", **kwargs):
 
         # detect algo name
         self.name = str(self.__class__).split('.')[-1].split("'")[0]
@@ -120,45 +121,45 @@ class Algo(Broker):
 
         # override args with any (non-default) command-line args
         self.args = {arg: val for arg, val in locals().items(
-            ) if arg not in ('__class__', 'self', 'kwargs')}
+        ) if arg not in ('__class__', 'self', 'kwargs')}
         self.args.update(kwargs)
         self.args.update(self.load_cli_args())
 
         # assign algo params
-        self.bars           = pd.DataFrame()
-        self.ticks          = pd.DataFrame()
-        self.quotes         = {}
-        self.books          = {}
-        self.tick_count     = 0
+        self.bars = pd.DataFrame()
+        self.ticks = pd.DataFrame()
+        self.quotes = {}
+        self.books = {}
+        self.tick_count = 0
         self.tick_bar_count = 0
-        self.bar_count      = 0
-        self.bar_hashes     = {}
+        self.bar_count = 0
+        self.bar_hashes = {}
 
-        self.tick_window    = tick_window if tick_window > 0 else 1
+        self.tick_window = tick_window if tick_window > 0 else 1
         if "V" in resolution:
             self.tick_window = 1000
-        self.bar_window     = bar_window if bar_window > 0 else 100
-        self.resolution     = resolution.upper().replace("MIN", "T")
-        self.timezone       = timezone
-        self.preload        = preload
-        self.continuous     = continuous
+        self.bar_window = bar_window if bar_window > 0 else 100
+        self.resolution = resolution.upper().replace("MIN", "T")
+        self.timezone = timezone
+        self.preload = preload
+        self.continuous = continuous
 
-        self.backtest       = self.args["backtest"]
+        self.backtest = self.args["backtest"]
         self.backtest_start = self.args["start"]
-        self.backtest_end   = self.args["end"]
-        self.backtest_csv   = self.args["data"]
+        self.backtest_end = self.args["end"]
+        self.backtest_csv = self.args["data"]
 
         # -----------------------------------
-        self.sms_numbers    = self.args["sms"]
-        self.trade_log_dir  = self.args["log"]
-        self.blotter_name   = self.args["blotter"]
-        self.record_output  = self.args["output"]
+        self.sms_numbers = self.args["sms"]
+        self.trade_log_dir = self.args["log"]
+        self.blotter_name = self.args["blotter"]
+        self.record_output = self.args["output"]
 
         # -----------------------------------
         # initiate broker/order manager
         super().__init__(instruments,
-            **{arg: val for arg, val in self.args.items() if arg in (
-                'ibport', 'ibclient', 'ibhost')})
+                         **{arg: val for arg, val in self.args.items() if arg in (
+                             'ibport', 'ibclient', 'ibhost')})
 
         # -----------------------------------
         # signal collector
@@ -182,24 +183,27 @@ class Algo(Broker):
         # sanity checks for backtesting mode
         if self.backtest:
             if self.record_output is None:
-                self.log_algo.error("Must provide an output file for Backtest mode")
+                self.log_algo.error(
+                    "Must provide an output file for Backtest mode")
                 sys.exit(0)
             if self.backtest_start is None:
-                self.log_algo.error("Must provide start date for Backtest mode")
+                self.log_algo.error(
+                    "Must provide start date for Backtest mode")
                 sys.exit(0)
             if self.backtest_end is None:
                 self.backtest_end = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
             if self.backtest_csv is not None:
                 if not os.path.exists(self.backtest_csv):
-                    self.log_algo.error("CSV directory cannot be found (%s)" % self.backtest_csv)
+                    self.log_algo.error(
+                        "CSV directory cannot be found (%s)", self.backtest_csv)
                     sys.exit(0)
                 elif self.backtest_csv.endswith("/"):
                     self.backtest_csv = self.backtest_csv[:-1]
 
         else:
             self.backtest_start = None
-            self.backtest_end   = None
-            self.backtest_csv   = None
+            self.backtest_end = None
+            self.backtest_csv = None
 
         # be aware of thread count
         self.threads = asynctools.multitasking.getPool(__name__)['threads']
@@ -207,21 +211,24 @@ class Algo(Broker):
     # ---------------------------------------
     def add_stale_tick(self):
         ticks = self.ticks.copy()
-        if len(self.ticks.index) > 0:
-            last_tick_sec = float(tools.datetime64_to_datetime(
-                ticks.index.values[-1]).strftime('%M.%S'))
+        if self.ticks.empty:
+            return
 
-            for sym in list(self.ticks["symbol"].unique()):
-                tick = ticks[ticks['symbol'] == sym][-5:].to_dict(orient='records')[-1]
-                tick['timestamp'] = datetime.utcnow()
+        last_tick_sec = float(tools.datetime64_to_datetime(
+            ticks.index.values[-1]).strftime('%M.%S'))
 
-                if last_tick_sec != float(tick['timestamp'].strftime("%M.%S")):
-                    tick = pd.DataFrame(index=[0], data=tick)
-                    tick.set_index('timestamp', inplace=True)
-                    tick = tools.set_timezone(tick, tz=self.timezone)
-                    tick.loc[:, 'lastsize'] = 0 # no real size
+        for sym in list(self.ticks["symbol"].unique()):
+            tick = ticks[ticks['symbol'] ==
+                         sym][-5:].to_dict(orient='records')[-1]
+            tick['timestamp'] = datetime.utcnow()
 
-                    self._tick_handler(tick, stale_tick=True)
+            if last_tick_sec != float(tick['timestamp'].strftime("%M.%S")):
+                tick = pd.DataFrame(index=[0], data=tick)
+                tick.set_index('timestamp', inplace=True)
+                tick = tools.set_timezone(tick, tz=self.timezone)
+                tick.loc[:, 'lastsize'] = 0  # no real size
+
+                self._tick_handler(tick, stale_tick=True)
 
     # ---------------------------------------
     def load_cli_args(self):
@@ -232,7 +239,7 @@ class Algo(Broker):
             a dict of any non-default args passed on the command-line.
         """
         parser = argparse.ArgumentParser(description='QTPyLib Algo',
-                            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+                                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
         parser.add_argument('--ibport', default=self.args["ibport"],
                             help='IB TWS/GW Port', type=int)
@@ -263,8 +270,9 @@ class Algo(Broker):
 
         # only return non-default cmd line args
         # (meaning only those actually given)
-        cmd_args, unknown = parser.parse_known_args()
-        args = {arg: val for arg, val in vars(cmd_args).items() if val != parser.get_default(arg)}
+        cmd_args, _ = parser.parse_known_args()
+        args = {arg: val for arg, val in vars(
+            cmd_args).items() if val != parser.get_default(arg)}
         return args
 
     # ---------------------------------------
@@ -285,44 +293,50 @@ class Algo(Broker):
             for symbol in self.symbols:
                 file = "%s/%s.%s.csv" % (self.backtest_csv, symbol, kind)
                 if not os.path.exists(file):
-                    self.log_algo.error("Can't load data for %s (%s doesn't exist)" % (symbol, file))
+                    self.log_algo.error(
+                        "Can't load data for %s (%s doesn't exist)", symbol, file)
                     sys.exit(0)
                 try:
                     df = pd.read_csv(file)
 
-                    if "expiry" not in df.columns or not validate_csv_columns(df, kind, raise_errors=False):
-                        self.log_algo.error("%s Doesn't appear to be a QTPyLib-compatible format" % file)
+                    if "expiry" not in df.columns or \
+                            not validate_csv_columns(df, kind, raise_errors=False):
+                        self.log_algo.error(
+                            "%s Doesn't appear to be a QTPyLib-compatible format", file)
                         sys.exit(0)
                     if df['symbol'].values[-1] != symbol:
-                        self.log_algo.error("%s Doesn't content data for %s" % (file, symbol))
+                        self.log_algo.error(
+                            "%s Doesn't content data for %s", file, symbol)
                         sys.exit(0)
                     dfs.append(df)
 
                 except:
-                    self.log_algo.error("Error reading data for %s (%s)" % (symbol, file))
+                    self.log_algo.error(
+                        "Error reading data for %s (%s)", symbol, file)
                     sys.exit(0)
 
             history = prepare_history(
-                data       = pd.concat(dfs),
-                resolution = self.resolution,
-                tz         = self.timezone,
-                continuous = self.continuous
+                data=pd.concat(dfs),
+                resolution=self.resolution,
+                tz=self.timezone,
+                continuous=self.continuous
             )
             history = history[history.index >= self.backtest_start]
 
 
         elif not self.blotter_args["dbskip"] and (self.backtest or self.preload):
 
-            start = self.backtest_start if self.backtest else tools.backdate(self.preload)
+            start = self.backtest_start if self.backtest else tools.backdate(
+                self.preload)
             end = self.backtest_end if self.backtest else None
 
             history = self.blotter.history(
-                symbols    = self.symbols,
-                start      = start,
-                end        = end,
-                resolution = self.resolution,
-                tz         = self.timezone,
-                continuous = self.continuous
+                symbols=self.symbols,
+                start=start,
+                end=end,
+                resolution=self.resolution,
+                tz=self.timezone,
+                continuous=self.continuous
             )
 
             # history needs backfilling?
@@ -332,29 +346,30 @@ class Algo(Broker):
                 self.blotter.ibConn = self.ibConn
 
                 # call the back fill
-                self.blotter.backfill(data=history, resolution=self.resolution, start=start, end=end)
+                self.blotter.backfill(
+                    data=history, resolution=self.resolution, start=start, end=end)
 
                 # re-get history from db
                 history = self.blotter.history(
-                    symbols    = self.symbols,
-                    start      = start,
-                    end        = end,
-                    resolution = self.resolution,
-                    tz         = self.timezone,
-                    continuous = self.continuous
+                    symbols=self.symbols,
+                    start=start,
+                    end=end,
+                    resolution=self.resolution,
+                    tz=self.timezone,
+                    continuous=self.continuous
                 )
 
                 # take our ibConn back :)
                 self.blotter.ibConn = None
-
 
         if self.backtest:
             # initiate strategy
             self.on_start()
 
             # drip history
-            self.blotter.drip(history,
-                self._tick_handler if self.resolution[-1] in ("K", "V") else self._bar_handler)
+            drip_handler = self._tick_handler if self.resolution[-1] in (
+                "K", "V") else self._bar_handler
+            self.blotter.drip(history, drip_handler)
 
         else:
             # place history self.bars
@@ -368,12 +383,12 @@ class Algo(Broker):
 
             # listen for RT data
             self.blotter.stream(
-                symbols       = self.symbols,
-                tz            = self.timezone,
-                quote_handler = self._quote_handler,
-                tick_handler  = self._tick_handler,
-                bar_handler   = self._bar_handler,
-                book_handler  = self._book_handler
+                symbols=self.symbols,
+                tz=self.timezone,
+                quote_handler=self._quote_handler,
+                tick_handler=self._tick_handler,
+                bar_handler=self._bar_handler,
+                book_handler=self._book_handler
             )
 
     # ---------------------------------------
@@ -470,29 +485,6 @@ class Algo(Broker):
         pass
 
     # ---------------------------------------
-    def get_instrument(self, symbol):
-        """
-        A string subclass that provides easy access to misc
-        symbol-related methods and information using shorthand.
-        Refer to the `Instruments API <#instrument-api>`_
-        for available methods and properties
-
-        Call from within your strategy:
-        ``instrument = self.get_instrument("SYMBOL")``
-
-        :Parameters:
-
-            symbol : string
-                instrument symbol
-
-        """
-        instrument = Instrument(self._getsymbol_(symbol))
-        instrument._set_parent(self)
-        instrument._set_windows(ticks=self.tick_window, bars=self.bar_window)
-
-        return instrument
-
-    # ---------------------------------------
     def get_history(self, symbols, start, end=None, resolution="1T", tz="UTC"):
         """Get historical market data.
         Connects to Blotter and gets historical data from storage
@@ -539,7 +531,8 @@ class Algo(Broker):
             expiry : int
                 Cancel this order if not filled after *n* seconds (default 60 seconds)
             order_type : string
-                Type of order: Market (default), LIMIT (default when limit_price is passed), MODIFY (required passing or orderId)
+                Type of order: Market (default), LIMIT (default when limit_price is passed),
+                MODIFY (required passing or orderId)
             orderId : int
                 If modifying an order, the order id of the modified order
             target : float
@@ -559,20 +552,23 @@ class Algo(Broker):
             tif: str
                 time in force (DAY, GTC, IOC, GTD). default is ``DAY``
         """
-        self.log_algo.debug('ORDER: %s %4d %s %s', signal, quantity, symbol, kwargs)
+        self.log_algo.debug('ORDER: %s %4d %s %s', signal,
+                            quantity, symbol, kwargs)
         if signal.upper() == "EXIT" or signal.upper() == "FLATTEN":
             position = self.get_positions(symbol)
             if position['position'] == 0:
                 return
 
-            kwargs['symbol']    = symbol
-            kwargs['quantity']  = abs(position['position'])
+            kwargs['symbol'] = symbol
+            kwargs['quantity'] = abs(position['position'])
             kwargs['direction'] = "BUY" if position['position'] < 0 else "SELL"
 
             # print("EXIT", kwargs)
 
-            try: self.record(position=0)
-            except: pass
+            try:
+                self.record(position=0)
+            except:
+                pass
 
             if not self.backtest:
                 self._create_order(**kwargs)
@@ -581,15 +577,16 @@ class Algo(Broker):
             if quantity == 0:
                 return
 
-            kwargs['symbol']    = symbol
-            kwargs['quantity']  = abs(quantity)
+            kwargs['symbol'] = symbol
+            kwargs['quantity'] = abs(quantity)
             kwargs['direction'] = signal.upper()
 
             # print(signal.upper(), kwargs)
 
             # record
             try:
-                quantity = -quantity if kwargs['direction'] == "BUY" else quantity
+                quantity = - \
+                    quantity if kwargs['direction'] == "BUY" else quantity
                 self.record(position=quantity)
             except:
                 pass
@@ -623,9 +620,10 @@ class Algo(Broker):
 
         """
         if self.record_output:
-            try: self.datastore.record(self.record_ts, *args, **kwargs)
-            except: pass
-
+            try:
+                self.datastore.record(self.record_ts, *args, **kwargs)
+            except:
+                pass
 
     # ---------------------------------------
     def sms(self, text):
@@ -641,11 +639,12 @@ class Algo(Broker):
                 The body of the SMS message to send
 
         """
-        logging.info("SMS: " + str(text))
+        logging.info("SMS: %s", str(text))
         sms.send_text(self.name + ': ' + str(text), self.sms_numbers)
 
     # ---------------------------------------
-    def _caller(self, caller):
+    @staticmethod
+    def _caller(caller):
         stack = [x[3] for x in inspect.stack()][1:-1]
         return caller in stack
 
@@ -701,7 +700,10 @@ class Algo(Broker):
 
         # tick symbol
         symbol = tick['symbol'].values[0]
-        self_ticks = self.ticks.copy() # work on copy
+        self.last_price[symbol] = float(tick['last'].values[0])
+
+        # work on copy
+        self_ticks = self.ticks.copy()
 
         # initial value
         if self.record_ts is None:
@@ -709,25 +711,33 @@ class Algo(Broker):
 
         if self.resolution[-1] not in ("S", "K", "V"):
             if self.threads == 0:
-                self.ticks = self._update_window(self.ticks, tick, window=self.tick_window)
+                self.ticks = self._update_window(
+                    self.ticks, tick, window=self.tick_window)
             else:
-                self_ticks = self._update_window(self_ticks, tick, window=self.tick_window)
-                self.ticks = self._thread_safe_merge(symbol, self.ticks, self_ticks) # assign back
+                self_ticks = self._update_window(
+                    self_ticks, tick, window=self.tick_window)
+                self.ticks = self._thread_safe_merge(
+                    symbol, self.ticks, self_ticks)  # assign back
         else:
             self.ticks = self._update_window(self.ticks, tick)
             # bars = tools.resample(self.ticks, self.resolution)
-            bars = tools.resample(self.ticks, self.resolution, tz=self.timezone)
+            bars = tools.resample(
+                self.ticks, self.resolution, tz=self.timezone)
 
             if len(bars.index) > self.tick_bar_count > 0 or stale_tick:
                 self.record_ts = tick.index[0]
                 self._base_bar_handler(bars[bars['symbol'] == symbol][-1:])
 
-                window = int("".join([s for s in self.resolution if s.isdigit()]))
+                window = int(
+                    "".join([s for s in self.resolution if s.isdigit()]))
                 if self.threads == 0:
-                    self.ticks = self._get_window_per_symbol(self.ticks, window)
+                    self.ticks = self._get_window_per_symbol(
+                        self.ticks, window)
                 else:
-                    self_ticks = self._get_window_per_symbol(self_ticks, window)
-                    self.ticks = self._thread_safe_merge(symbol, self.ticks, self_ticks) # assign back
+                    self_ticks = self._get_window_per_symbol(
+                        self_ticks, window)
+                    self.ticks = self._thread_safe_merge(
+                        symbol, self.ticks, self_ticks)  # assign back
 
             self.tick_bar_count = len(bars.index)
 
@@ -742,7 +752,7 @@ class Algo(Broker):
         """ non threaded bar handler (called by threaded _tick_handler) """
         # bar symbol
         symbol = bar['symbol'].values[0]
-        self_bars = self.bars.copy() # work on copy
+        self_bars = self.bars.copy()  # work on copy
 
         is_tick_or_volume_bar = False
         handle_bar = True
@@ -758,18 +768,18 @@ class Algo(Broker):
             # just add a bar (used by tick bar bandler)
             if self.threads == 0:
                 self.bars = self._update_window(self.bars, bar,
-                    window=self.bar_window)
+                                                window=self.bar_window)
             else:
                 self_bars = self._update_window(self_bars, bar,
-                    window=self.bar_window)
+                                                window=self.bar_window)
         else:
             # add the bar and resample to resolution
             if self.threads == 0:
                 self.bars = self._update_window(self.bars, bar,
-                    window=self.bar_window, resolution=self.resolution)
+                                                window=self.bar_window, resolution=self.resolution)
             else:
                 self_bars = self._update_window(self_bars, bar,
-                    window=self.bar_window, resolution=self.resolution)
+                                                window=self.bar_window, resolution=self.resolution)
 
         # assign new data to self.bars if threaded
         if self.threads > 0:

@@ -4,7 +4,7 @@
 # QTPyLib: Quantitative Trading Python Library
 # https://github.com/ranaroussi/qtpylib
 #
-# Copyright 2016 Ran Aroussi
+# Copyright 2016-2018 Ran Aroussi
 #
 # Licensed under the GNU Lesser General Public License, v3.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,26 +19,30 @@
 # limitations under the License.
 #
 
-import numpy as np
-import pandas as pd
-import pymysql
-import requests
 import logging
 import time
 import sys
-
 from io import StringIO
+
+import numpy as np
+import requests
+
+import pymysql
+from pymysql.constants.CLIENT import MULTI_STATEMENTS
+
+import pandas as pd
 from pandas_datareader import data as web
 
-from qtpylib import tools
+from ezibpy import ezIBpy
+from ezibpy.utils import contract_expiry_from_symbol
 
+from qtpylib import tools
 from qtpylib.blotter import (
     load_blotter_args, get_symbol_id,
     mysql_insert_tick, mysql_insert_bar
 )
 
-from ezibpy import ezIBpy
-from ezibpy.utils import contract_expiry_from_symbol
+_IB_HISTORY_DOWNLOADED = False
 
 # =============================================
 # check min, python version
@@ -53,7 +57,8 @@ tools.createLogger(__name__)
 # data retreival methods
 # =============================================
 
-def get_data_yahoo(symbols, start, end=None, *args, **kwargs):
+
+def get_data_yahoo(symbols, start, end=None, **kwargs):
     """
     Downloads and auto-adjusts daily data from Yahoo finance
 
@@ -79,7 +84,7 @@ def get_data_yahoo(symbols, start, end=None, *args, **kwargs):
         symbols = [symbols]
 
     # get the data
-    data = web.get_data_yahoo(symbols, start, end)
+    data = web.get_data_yahoo(symbols, start, end, **kwargs)
 
     # parse the data
     ohlc = []
@@ -95,10 +100,10 @@ def get_data_yahoo(symbols, start, end=None, *args, **kwargs):
         ohlc.index.names = ['date']
 
         # auto-adjust prices
-        ratio = ohlc["close"]/ohlc["adj_close"]
-        ohlc["adj_open"] = ohlc["open"]/ratio
-        ohlc["adj_high"] = ohlc["high"]/ratio
-        ohlc["adj_low"]  = ohlc["low"]/ratio
+        ratio = ohlc["close"] / ohlc["adj_close"]
+        ohlc["adj_open"] = ohlc["open"] / ratio
+        ohlc["adj_high"] = ohlc["high"] / ratio
+        ohlc["adj_low"] = ohlc["low"] / ratio
 
         ohlc.drop(["open", "high", "low", "close"], axis=1, inplace=True)
         ohlc.rename(columns={
@@ -109,7 +114,8 @@ def get_data_yahoo(symbols, start, end=None, *args, **kwargs):
         }, inplace=True)
 
         # round
-        decimals = pd.Series([2, 2, 2, 2], index=['open', 'high', 'low', 'close'])
+        decimals = pd.Series([2, 2, 2, 2], index=[
+                             'open', 'high', 'low', 'close'])
         ohlc = ohlc.round(decimals)
 
         # re-order columns
@@ -125,7 +131,7 @@ def get_data_yahoo(symbols, start, end=None, *args, **kwargs):
 
 # ---------------------------------------------
 
-def get_data_yahoo_intraday(symbol, *args, **kwargs):
+def get_data_yahoo_intraday(symbol):
     """
     Import intraday data (1M) from Yahoo finance (2 weeks max)
 
@@ -169,7 +175,8 @@ def get_data_yahoo_intraday(symbol, *args, **kwargs):
 
 # ---------------------------------------------
 
-def get_data_google_intraday(symbol, *args, **kwargs):
+
+def get_data_google_intraday(symbol, **kwargs):
     """
     Import intraday data (1M) from Google finance (3 weeks max)
 
@@ -200,8 +207,10 @@ def get_data_google_intraday(symbol, *args, **kwargs):
     # adjust offset
     df['timestamp'] = df[df['offset'].str[0] == "a"][
         'offset'].str[1:].astype(int)
-    df.loc[df[df['timestamp'].isnull() == False].index, 'offset'] = 0
-    df['timestamp'] = df['timestamp'].ffill() + pd.to_numeric(df['offset'], errors='coerce') * 60
+    df.loc[~df[df['timestamp'].isnull()].index, 'offset'] = 0
+    df['timestamp'] = df['timestamp'].ffill() + pd.to_numeric(
+        df['offset'], errors='coerce') * 60
+
     # convert to datetime
     df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s')
 
@@ -217,14 +226,14 @@ def get_data_google_intraday(symbol, *args, **kwargs):
     return df[["symbol", "open", "high", "low", "close", "volume"]]
 
 # ---------------------------------------------
-_ib_history_downloaded = False
+
 
 def ibCallback(caller, msg, **kwargs):
-    global _ib_history_downloaded
     if caller == "handleHistoricalData":
         if kwargs["completed"]:
-            _ib_history_downloaded = True
+            _IB_HISTORY_DOWNLOADED = True
         # print(kwargs)
+
 
 def get_data_ib(instrument, start, resolution="1 min", blotter=None, output_path=None):
     """
@@ -238,7 +247,7 @@ def get_data_ib(instrument, start, resolution="1 min", blotter=None, output_path
 
     :Optional:
         resolution : str
-            1 sec, 5 secs, 15 secs, 30 secs, 1 min (default), 2 mins, 3 mins, 5 mins, 15 mins, 30 mins, 1 hour, 1 day
+            1/5/15/30 secs, 1/2/3/5/15/30 min (default 1min), 1 hour, 1 day
         blotter : str
             Store MySQL server used by this Blotter (default is "auto detect")
         output_path : str
@@ -248,8 +257,6 @@ def get_data_ib(instrument, start, resolution="1 min", blotter=None, output_path
         data : pd.DataFrame
             Pandas DataFrame in a QTPyLib-compatible format and timezone
     """
-    global _ib_history_downloaded
-
     # load blotter settings
     blotter_args = load_blotter_args(
         blotter, logger=logging.getLogger(__name__))
@@ -268,9 +275,11 @@ def get_data_ib(instrument, start, resolution="1 min", blotter=None, output_path
     contract = ibConn.createContract(instrument)
 
     ibConn.requestHistoricalData(contracts=[contract],
-                                 data="TRADES", resolution=resolution, lookback=tools.ib_duration_str(start), rth=False)
+                                 data="TRADES", resolution=resolution,
+                                 lookback=tools.ib_duration_str(start),
+                                 rth=False)
 
-    while not _ib_history_downloaded:
+    while not _IB_HISTORY_DOWNLOADED:
         time.sleep(.1)
 
     ibConn.disconnect()
@@ -284,7 +293,7 @@ def get_data_ib(instrument, start, resolution="1 min", blotter=None, output_path
 # data preparation methods
 # =============================================
 
-_bars_colsmap = {
+_BARS_COLSMAP = {
     'open': 'open',
     'high': 'high',
     'low': 'low',
@@ -301,7 +310,7 @@ _bars_colsmap = {
     'opt_vega': 'opt_vega',
     'opt_theta': 'opt_theta'
 }
-_ticks_colsmap = {
+_TICKS_COLSMAP = {
     'bid': 'bid',
     'bidsize': 'bidsize',
     'ask': 'ask',
@@ -322,46 +331,50 @@ _ticks_colsmap = {
 
 # ---------------------------------------------
 
-def validate_columns(df, kind="BAR", raise_errors=True):
-    global _bars_colsmap, _ticks_colsmap
 
+def validate_columns(df, kind="BAR", raise_errors=True):
     # validate columns
     if "asset_class" not in df.columns:
-        raise ValueError('Column asset_class not found')
+        if raise_errors:
+            raise ValueError('Column asset_class not found')
         return False
 
     is_option = "OPT" in list(df['asset_class'].unique())
 
-    colsmap = _ticks_colsmap if kind == "TICK" else _bars_colsmap
+    colsmap = _TICKS_COLSMAP if kind == "TICK" else _BARS_COLSMAP
 
     for el in colsmap:
         col = colsmap[el]
         if col not in df.columns:
             if "opt_" in col and is_option:
-                raise ValueError('Column %s not found' % el)
+                if raise_errors:
+                    raise ValueError('Column %s not found' % el)
                 return False
             elif "opt_" not in col and not is_option:
-                raise ValueError('Column %s not found' % el)
+                if raise_errors:
+                    raise ValueError('Column %s not found' % el)
                 return False
     return True
 
 # ---------------------------------------------
 
-def prepare_data(instrument, data, output_path=None, index=None, colsmap=None, kind="BAR"):
+
+def prepare_data(instrument, df, output_path=None, index=None, colsmap=None, kind="BAR"):
     """
     Converts given DataFrame to a QTPyLib-compatible format and timezone
 
     :Parameters:
         instrument : mixed
             IB contract tuple / string (same as that given to strategy)
-        data : pd.DataFrame
+        df : pd.DataFrame
             Pandas DataDrame with that instrument's market data
         output_path : str
             Path to the location where the resulting CSV should be saved (default: ``None``)
         index : pd.Series
             Pandas Series that will be used for df's index (default is to use df.index)
         colsmap : dict
-            Dict for mapping df's columns to those used by QTPyLib (default assumes same naming convention as QTPyLib's)
+            Dict for mapping df's columns to those used by QTPyLib
+            (default assumes same naming convention as QTPyLib's)
         kind : str
             Is this ``BAR`` or ``TICK`` data
 
@@ -370,10 +383,8 @@ def prepare_data(instrument, data, output_path=None, index=None, colsmap=None, k
             Pandas DataFrame in a QTPyLib-compatible format and timezone
     """
 
-    global _bars_colsmap, _ticks_colsmap
-
     # work on copy
-    df = data.copy()
+    df = df.copy()
 
     # ezibpy's csv?
     if set(df.columns) == set(['datetime', 'C', 'H', 'L', 'O', 'OI', 'V', 'WAP']):
@@ -397,7 +408,7 @@ def prepare_data(instrument, data, output_path=None, index=None, colsmap=None, k
     if not isinstance(colsmap, dict):
         colsmap = {}
 
-    _colsmap = _ticks_colsmap if kind == "TICK" else _bars_colsmap
+    _colsmap = _TICKS_COLSMAP if kind == "TICK" else _BARS_COLSMAP
     for el in _colsmap:
         if el not in colsmap:
             colsmap[el] = _colsmap[el]
@@ -429,7 +440,8 @@ def prepare_data(instrument, data, output_path=None, index=None, colsmap=None, k
         df = tools.force_options_columns(df)
 
     # remove all other columns
-    known_cols = list(colsmap.values()) + ['symbol','symbol_group','asset_class','expiry']
+    known_cols = list(colsmap.values()) + \
+        ['symbol', 'symbol_group', 'asset_class', 'expiry']
     for col in df.columns:
         if col not in known_cols:
             df.drop(col, axis=1, inplace=True)
@@ -455,6 +467,7 @@ def prepare_data(instrument, data, output_path=None, index=None, colsmap=None, k
 
 # ---------------------------------------------
 
+
 def store_data(df, blotter=None, kind="BAR"):
     """
     Store QTPyLib-compatible csv files in Blotter's MySQL.
@@ -477,26 +490,26 @@ def store_data(df, blotter=None, kind="BAR"):
         raise ValueError('Invalid Column list')
 
     # load blotter settings
-    blotter_args = load_blotter_args(blotter, logger=logging.getLogger(__name__))
+    blotter_args = load_blotter_args(
+        blotter, logger=logging.getLogger(__name__))
 
     # blotter not running
     if blotter_args is None:
         raise Exception("Cannot connect to running Blotter.")
-        return False
 
     # cannot continue
     if blotter_args['dbskip']:
         raise Exception("Cannot continue. Blotter running with --dbskip")
-        return False
 
     # connect to mysql using blotter's settings
     dbconn = pymysql.connect(
-        host   = str(blotter_args['dbhost']),
-        port   = int(blotter_args['dbport']),
-        user   = str(blotter_args['dbuser']),
-        passwd = str(blotter_args['dbpass']),
-        db     = str(blotter_args['dbname']),
-        autocommit = True
+        client_flag=MULTI_STATEMENTS,
+        host=str(blotter_args['dbhost']),
+        port=int(blotter_args['dbport']),
+        user=str(blotter_args['dbuser']),
+        passwd=str(blotter_args['dbpass']),
+        db=str(blotter_args['dbname']),
+        autocommit=True
     )
     dbcurr = dbconn.cursor()
 

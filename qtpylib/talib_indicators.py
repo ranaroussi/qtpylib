@@ -4,7 +4,7 @@
 # QTPyLib: Quantitative Trading Python Library
 # https://github.com/ranaroussi/qtpylib
 #
-# Copyright 2016 Ran Aroussi
+# Copyright 2016-2018 Ran Aroussi
 #
 # Licensed under the GNU Lesser General Public License, v3.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,6 +19,9 @@
 # limitations under the License.
 #
 
+import sys
+from pandas import Series, DataFrame
+
 TALIB_MISSING = False
 
 try:
@@ -26,10 +29,7 @@ try:
 except ImportError:
     TALIB_MISSING = True
     raise ImportError("TA-Lib is not installed on this system!")
-    pass
 
-from pandas import Series, DataFrame
-import sys
 
 # =============================================
 # check min, python version
@@ -58,7 +58,8 @@ def _extract_series(data):
             values = data['close'].values
 
     if values is None:
-        raise ValueError("data must be Pandas Series or DataFrame with a 'last' or 'close' column")
+        raise ValueError(
+            "data must be Pandas Series or DataFrame with a 'last' or 'close' column")
 
     return values
 
@@ -68,8 +69,8 @@ def _extract_series(data):
 def _extract_ohlc(data):
     if isinstance(data, DataFrame):
         if "open" in data.columns and "high" in data.columns \
-            and "low" in data.columns and "close" in data.columns \
-            and "volume" in data.columns:
+                and "low" in data.columns and "close" in data.columns \
+                and "volume" in data.columns:
             return data[['open', 'high', 'low', 'close', 'volume']].T.values
 
     raise ValueError("data must be Pandas with OLHC columns")
@@ -134,13 +135,13 @@ def MIDPOINT(data, **kwargs):
 
 def MIDPRICE(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, phigh, plow, _, _ = _extract_ohlc(data)
     return talib.MIDPRICE(phigh, plow, **kwargs)
 
 
 def SAR(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, phigh, plow, _, _ = _extract_ohlc(data)
     return talib.SAR(phigh, plow, **kwargs)
 
 
@@ -152,7 +153,7 @@ def SAREXT(data, **kwargs):
 
 def SMA(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, phigh, plow, _, _ = _extract_ohlc(data)
     return talib.SMA(phigh, plow, **kwargs)
 
 
@@ -185,13 +186,13 @@ def WMA(data, **kwargs):
 # ---------------------------------------------
 def ADX(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.ADX(phigh, plow, pclose, **kwargs)
 
 
 def ADXR(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.ADXR(phigh, plow, pclose, **kwargs)
 
 
@@ -203,25 +204,25 @@ def APO(data, **kwargs):
 
 def AROON(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, phigh, plow, _, _ = _extract_ohlc(data)
     return talib.AROON(phigh, plow, **kwargs)
 
 
 def AROONOSC(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, phigh, plow, _, _ = _extract_ohlc(data)
     return talib.AROONOSC(phigh, plow, **kwargs)
 
 
 def BOP(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.BOP(popen, phigh, plow, pclose, **kwargs)
 
 
 def CCI(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CCI(phigh, plow, pclose, **kwargs)
 
 
@@ -233,7 +234,7 @@ def CMO(data, **kwargs):
 
 def DX(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.DX(phigh, plow, pclose, **kwargs)
 
 
@@ -263,13 +264,13 @@ def MFI(data, **kwargs):
 
 def MINUS_DI(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.MINUS_DI(phigh, plow, pclose, **kwargs)
 
 
 def MINUS_DM(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, phigh, plow, _, _ = _extract_ohlc(data)
     return talib.MINUS_DM(phigh, plow, **kwargs)
 
 
@@ -281,13 +282,13 @@ def MOM(data, **kwargs):
 
 def PLUS_DI(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.PLUS_DI(phigh, plow, pclose, **kwargs)
 
 
 def PLUS_DM(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, phigh, plow, _, _ = _extract_ohlc(data)
     return talib.PLUS_DM(phigh, plow, **kwargs)
 
 
@@ -329,13 +330,13 @@ def RSI(data, **kwargs):
 
 def STOCH(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.STOCH(phigh, plow, pclose, **kwargs)
 
 
 def STOCHF(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.STOCHF(phigh, plow, pclose, **kwargs)
 
 
@@ -353,13 +354,13 @@ def TRIX(data, **kwargs):
 
 def ULTOSC(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.ULTOSC(phigh, plow, pclose, **kwargs)
 
 
 def WILLR(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.WILLR(phigh, plow, pclose, **kwargs)
 
 
@@ -380,7 +381,7 @@ def ADOSC(data, **kwargs):
 
 def OBV(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, _, _, _, pvolume = _extract_ohlc(data)
     return talib.OBV(pvolume, **kwargs)
 
 
@@ -422,25 +423,25 @@ def HT_TRENDMODE(data, **kwargs):
 # ---------------------------------------------
 def AVGPRICE(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.AVGPRICE(popen, phigh, plow, pclose, **kwargs)
 
 
 def MEDPRICE(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, phigh, plow, _, _ = _extract_ohlc(data)
     return talib.MEDPRICE(phigh, plow, **kwargs)
 
 
 def TYPPRICE(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.TYPPRICE(popen, phigh, plow, pclose, **kwargs)
 
 
 def WCLPRICE(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.WCLPRICE(phigh, plow, pclose, **kwargs)
 
 
@@ -449,19 +450,19 @@ def WCLPRICE(data, **kwargs):
 # ---------------------------------------------
 def ATR(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.ATR(phigh, plow, pclose, **kwargs)
 
 
 def NATR(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.NATR(phigh, plow, pclose, **kwargs)
 
 
 def TRANGE(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.TRANGE(phigh, plow, pclose, **kwargs)
 
 
@@ -470,367 +471,367 @@ def TRANGE(data, **kwargs):
 # ---------------------------------------------
 def CDL2CROWS(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDL2CROWS(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDL3BLACKCROWS(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDL3BLACKCROWS(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDL3INSIDE(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDL3INSIDE(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDL3LINESTRIKE(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDL3LINESTRIKE(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDL3OUTSIDE(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDL3OUTSIDE(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDL3STARSINSOUTH(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDL3STARSINSOUTH(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDL3WHITESOLDIERS(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDL3WHITESOLDIERS(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLABANDONEDBABY(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLABANDONEDBABY(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLADVANCEBLOCK(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLADVANCEBLOCK(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLBELTHOLD(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLBELTHOLD(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLBREAKAWAY(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLBREAKAWAY(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLCLOSINGMARUBOZU(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLCLOSINGMARUBOZU(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLCONCEALBABYSWALL(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLCONCEALBABYSWALL(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLCOUNTERATTACK(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLCOUNTERATTACK(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLDARKCLOUDCOVER(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLDARKCLOUDCOVER(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLDOJI(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLDOJI(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLDOJISTAR(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLDOJISTAR(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLDRAGONFLYDOJI(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLDRAGONFLYDOJI(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLENGULFING(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLENGULFING(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLEVENINGDOJISTAR(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLEVENINGDOJISTRAR(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLEVENINGSTAR(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLEVENINGSTAR(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLGAPSIDESIDEWHITE(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLGAPSIDESIDEWHITEITE(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLGRAVESTONEDOJI(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLGRAVESTONEDOJII(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLHAMMER(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLHAMMER(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLHANGINGMAN(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLHANGINGMAN(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLHARAMI(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLHARAMI(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLHARAMICROSS(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLHARAMICROSS(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLHIGHWAVE(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLHIGHWAVE(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLHIKKAKE(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLHIKKAKE(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLHIKKAKEMOD(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLHIKKAKEMOD(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLHOMINGPIGEON(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLHOMINGPIGEON(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLIDENTICAL3CROWS(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLIDENTICAL3CROWS(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLINNECK(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLINNECK(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLINVERTEDHAMMER(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLINVERTEDHAMMER(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLKICKING(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLKICKING(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLKICKINGBYLENGTH(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLKICKINGBYLENGTH(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLLADDERBOTTOM(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLLADDERBOTTOM(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLLONGLEGGEDDOJI(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLLONGLEGGEDDOJI(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLLONGLINE(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLLONGLINE(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLMARUBOZU(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLMARUBOZU(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLMATCHINGLOW(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLMATCHINGLOW(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLMATHOLD(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLMATHOLD(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLMORNINGDOJISTAR(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLMORNINGDOJISTAR(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLMORNINGSTAR(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLMORNINGSTAR(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLONNECK(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLONNECK(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLPIERCING(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLPIERCING(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLRICKSHAWMAN(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLRICKSHAWMAN(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLRISEFALL3METHODS(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLRISEFALL3METHODS(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLSEPARATINGLINES(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLSEPARATINGLINES(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLSHOOTINGSTAR(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLSHOOTINGSTAR(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLSHORTLINE(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLSHORTLINE(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLSPINNINGTOP(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLSPINNINGTOP(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLSTALLEDPATTERN(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLSTALLEDPATTERN(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLSTICKSANDWICH(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLSTICKSANDWICH(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLTAKURI(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLTAKURI(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLTASUKIGAP(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLTASUKIGAP(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLTHRUSTING(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLTHRUSTING(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLTRISTAR(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLTRISTAR(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLUNIQUE3RIVER(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLUNIQUE3RIVER(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLUPSIDEGAP2CROWS(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLUPSIDEGAP2CROWS(popen, phigh, plow, pclose, **kwargs)
 
 
 def CDLXSIDEGAP3METHODS(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    popen, phigh, plow, pclose, _ = _extract_ohlc(data)
     return talib.CDLXSIDEGAP3METHODS(popen, phigh, plow, pclose, **kwargs)
 
 
@@ -839,13 +840,13 @@ def CDLXSIDEGAP3METHODS(data, **kwargs):
 # ---------------------------------------------
 def BETA(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, phigh, plow, _, _ = _extract_ohlc(data)
     return talib.BETA(phigh, plow, **kwargs)
 
 
 def CORREL(data, **kwargs):
     _check_talib_presence()
-    popen, phigh, plow, pclose, pvolume = _extract_ohlc(data)
+    _, phigh, plow, _, _ = _extract_ohlc(data)
     return talib.CORREL(phigh, plow, **kwargs)
 
 

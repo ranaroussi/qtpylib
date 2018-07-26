@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+*July 26, 2018*
+
+1.5.78
+-----------
+- Fixed compatibility with the ezIBpy v1.12.57
+- Pushed develop branch to master
+
 *January 12, 2018*
 
 1.5.77

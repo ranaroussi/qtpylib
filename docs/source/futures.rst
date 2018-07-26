@@ -115,7 +115,6 @@ if it's older than 24 hours.
         'currency': 'USD',
         'description': 'E-mini NASDAQ 100 Futures',
         'exchange': 'GLOBEX',
-        'has_options': True,
         'intraday_initial': 2250.0,
         'intraday_maintenance': 1800.0,
         'overnight_initial': 4500.0,

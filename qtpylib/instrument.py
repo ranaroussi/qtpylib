@@ -4,7 +4,7 @@
 # QTPyLib: Quantitative Trading Python Library
 # https://github.com/ranaroussi/qtpylib
 #
-# Copyright 2016 Ran Aroussi
+# Copyright 2016-2018 Ran Aroussi
 #
 # Licensed under the GNU Lesser General Public License, v3.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,10 +19,11 @@
 # limitations under the License.
 #
 
-from qtpylib import futures
 import math
-from pandas import concat as pd_concat
 import sys
+
+from pandas import concat as pd_concat
+from qtpylib import futures
 
 # =============================================
 # check min, python version
@@ -35,6 +36,10 @@ class Instrument(str):
     """A string subclass that provides easy access to misc
     symbol-related methods and information.
     """
+
+    parent = None
+    tick_window = None
+    bar_window = None
 
     # ---------------------------------------
     def _set_parent(self, parent):
@@ -54,7 +59,8 @@ class Instrument(str):
             # this produce a "IndexingError using Boolean Indexing" (on rare occasions)
             return df[(df['symbol'] == symbol) | (df['symbol_group'] == symbol)].copy()
         except:
-            df = pd_concat([df[df['symbol'] == symbol], df[df['symbol_group'] == symbol]])
+            df = pd_concat([df[df['symbol'] == symbol],
+                            df[df['symbol_group'] == symbol]])
             df.loc[:, '_idx_'] = df.index
             return df.drop_duplicates(subset=['_idx_'], keep='last').drop('_idx_', axis=1)
 
@@ -82,7 +88,7 @@ class Instrument(str):
         # if lookback is not None:
         #     bars = bars[-lookback:]
 
-        if len(bars.index) > 0 and bars['asset_class'].values[-1] not in ("OPT", "FOP"):
+        if not bars.empty > 0 and bars['asset_class'].values[-1] not in ("OPT", "FOP"):
             bars.drop(bars.columns[
                 bars.columns.str.startswith('opt_')].tolist(),
                 inplace=True, axis=1)
@@ -91,7 +97,7 @@ class Instrument(str):
             bars.loc[:, 'datetime'] = bars.index
             bars = bars.to_dict(orient='records')
             if lookback == 1:
-                bars = bars[0] if len(bars) > 0 else None
+                bars = None if not bars else bars[0]
 
         return bars
 
@@ -121,7 +127,7 @@ class Instrument(str):
         # if lookback is not None:
         #     ticks = ticks[-lookback:]
 
-        if len(ticks.index) > 0 and ticks['asset_class'].values[-1] not in ("OPT", "FOP"):
+        if not ticks.empty and ticks['asset_class'].values[-1] not in ("OPT", "FOP"):
             ticks.drop(ticks.columns[
                 ticks.columns.str.startswith('opt_')].tolist(),
                 inplace=True, axis=1)
@@ -130,7 +136,7 @@ class Instrument(str):
             ticks.loc[:, 'datetime'] = ticks.index
             ticks = ticks.to_dict(orient='records')
             if lookback == 1:
-                ticks = ticks[0] if len(ticks) > 0 else None
+                ticks = None if not ticks else ticks[0]
 
         return ticks
 
@@ -155,6 +161,7 @@ class Instrument(str):
         """
         if self in self.parent.quotes.keys():
             return self.parent.quotes[self]
+        return None
 
     # ---------------------------------------
     def get_orderbook(self):
@@ -190,7 +197,8 @@ class Instrument(str):
             expiry : int
                 Cancel this order if not filled after *n* seconds (default 60 seconds)
             order_type : string
-                Type of order: Market (default), LIMIT (default when limit_price is passed), MODIFY (required passing or orderId)
+                Type of order: Market (default), LIMIT (default when limit_price is passed),
+                MODIFY (required passing or orderId)
             orderId : int
                 If modifying an order, the order id of the modified order
             target : float
@@ -448,7 +456,7 @@ class Instrument(str):
             order : object
                 IB Order object of instrument
         """
-        return self.parent.active_order(self, order_type="STOP")
+        return self.parent.active_order(self, order_type=order_type)
 
     # ---------------------------------------
     def get_trades(self):
@@ -505,11 +513,13 @@ class Instrument(str):
                 the required quantity of the modified order
         """
         return self.parent.modify_order_group(self, orderId=orderId,
-            entry=entry, target=target, stop=stop, quantity=quantity)
+                                              entry=entry, target=target,
+                                              stop=stop, quantity=quantity)
 
     # ---------------------------------------
     def move_stoploss(self, stoploss):
-        """Modify stop order. Auto-discover **orderId** and **quantity** and invokes ``self.modify_order(...)``.
+        """Modify stop order.
+        Auto-discover **orderId** and **quantity** and invokes ``self.modify_order(...)``.
 
         :Parameters:
             stoploss : float
@@ -520,7 +530,7 @@ class Instrument(str):
 
         if stopOrder is not None and "orderId" in stopOrder.keys():
             self.modify_order(orderId=stopOrder['orderId'],
-                quantity=stopOrder['quantity'], limit_price=stoploss)
+                              quantity=stopOrder['quantity'], limit_price=stoploss)
 
     # ---------------------------------------
     def get_margin_requirement(self):
@@ -528,7 +538,8 @@ class Instrument(str):
 
         :Retruns:
             margin : dict
-                margin requirements for instrument (all values are ``None`` for non-futures instruments)
+                margin requirements for instrument
+                (all values are ``None`` for non-futures instruments)
         """
         contract = self.get_contract()
 
@@ -546,7 +557,6 @@ class Instrument(str):
             "overnight_initial": None,
             "overnight_maintenance": None,
             "currency": None,
-            "has_options": None
         }
 
     # ---------------------------------------
@@ -567,7 +577,8 @@ class Instrument(str):
         req_margin = self.get_margin_requirement()
         if req_margin[timeframe] is not None:
             if 'AvailableFunds' in self.parent.account:
-                return int(math.floor(self.parent.account['AvailableFunds'] / req_margin[timeframe]))
+                return int(math.floor(self.parent.account['AvailableFunds'
+                                                          ] / req_margin[timeframe]))
 
         return None
 
@@ -576,12 +587,8 @@ class Instrument(str):
         return self.get_max_contracts_allowed(overnight=overnight)
 
     # ---------------------------------------
-    def get_ticksize(self, fallback=None):
+    def get_ticksize(self):
         """ Get instrument ticksize
-
-        :Parameters:
-            fallback : flaot
-                fallback ticksize (deprecated and ignored)
 
         :Retruns:
             ticksize : int
