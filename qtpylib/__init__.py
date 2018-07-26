@@ -19,7 +19,7 @@
 # limitations under the License.
 #
 
-__version__ = '1.5.77'
+__version__ = '1.5.78'
 __author__ = 'Ran Aroussi'
 
 import os
