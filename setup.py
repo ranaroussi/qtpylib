@@ -46,7 +46,7 @@ setup(
     keywords='qtpylib qtpy algotrading algo trading interactive brokers tws ibgw ibpy ezibpy',
     packages=find_packages(exclude=['contrib', 'docs', 'tests', 'demo', 'demos', 'examples']),
     install_requires=[
-        'python-dateutil>=2.5.3','ezibpy>=1.12.56',
+        'python-dateutil>=2.5.3','ezibpy>=1.12.58',
         'flask>=0.11.1','numpy>=1.11.1','pandas>=0.18.1','pymysql>=0.7.6',
         'pytz>=2016.6.1','requests>=2.10.0','pyzmq>=15.2.1',
         'nexmo>=1.2.0','twilio>=5.4.0','ibpy2>=0.8.0',
