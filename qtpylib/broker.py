@@ -269,7 +269,9 @@ class Broker():
         elif caller == "handleOrders":
             if not hasattr(self, "orders"):
                 return
-            # print("handleOrders" , msg)
+
+            if msg.typeName == ezibpy.utils.dataTypes["MSG_TYPE_OPEN_ORDER_END"]:
+                return
 
             # order canceled? do some cleanup
             if hasattr(msg, 'status') and "CANCELLED" in msg.status.upper():
