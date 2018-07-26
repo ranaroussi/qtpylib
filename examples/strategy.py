@@ -88,7 +88,6 @@ class TestStrategy(Algo):
                     stoploss = tick['last'] + 0.5
 
                 instrument.order(direction, 1,
-                                 ticksize=0.25,
                                  limit_price=tick['last'],
                                  target=target,
                                  initial_stop=stoploss,
