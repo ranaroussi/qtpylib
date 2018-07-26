@@ -82,7 +82,7 @@ def multi_shift(df, window):
     dfs = [df.shift(i) for i in np.arange(window)]
     for ix, df_item in enumerate(dfs[1:]):
         dfs[ix + 1].columns = [str(col) for col in df_item.columns + str(ix + 1)]
-    return pd.concat(dfs, 1).apply(list, 1)
+    return pd.concat(dfs, 1) #.apply(list, 1)
 
 # ---------------------------------------------
 
