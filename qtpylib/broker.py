@@ -927,7 +927,7 @@ class Broker():
             active_trades.loc[:, 'closed'] = False
 
         # combine dataframes
-        df = pd.concat([trades, active_trades]).reset_index()
+        df = pd.concat([trades, active_trades], sort=True).reset_index()
 
         # set last price
         if not df.empty:

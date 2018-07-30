@@ -82,7 +82,7 @@ def multi_shift(df, window):
     dfs = [df.shift(i) for i in np.arange(window)]
     for ix, df_item in enumerate(dfs[1:]):
         dfs[ix + 1].columns = [str(col) for col in df_item.columns + str(ix + 1)]
-    return pd.concat(dfs, 1) #.apply(list, 1)
+    return pd.concat(dfs, 1, sort=True) #.apply(list, 1)
 
 # ---------------------------------------------
 
@@ -703,7 +703,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
 
                 combined.append(symdata)
 
-            data = pd.concat(combined)
+            data = pd.concat(combined, sort=True)
 
     elif "V" in resolution:
         if periods > 1:
@@ -724,7 +724,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
 
                 combined.append(symdata)
 
-            data = pd.concat(combined)
+            data = pd.concat(combined, sort=True)
 
     # continue...
     else:
@@ -774,7 +774,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
                     last_row["close"] = last_row["close"]
                     last_row["volume"] = 0
 
-                data = pd.concat([data, last_row]).sort_index()
+                data = pd.concat([data, last_row], sort=True).sort_index()
                 data.loc[:, '_idx_'] = data.index
                 data = data.drop_duplicates(
                     subset=['_idx_', 'symbol',
@@ -844,7 +844,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
 
             combined.append(symdata)
 
-        data = pd.concat(combined)
+        data = pd.concat(combined, sort=True)
         data['volume'] = data['volume'].astype(int)
 
     return __finalize(data, tz)
@@ -891,7 +891,7 @@ class DataStore():
             self.recorded = row
         else:
             self.recorded.merge(row)
-            self.recorded = pd.concat([self.recorded, row])
+            self.recorded = pd.concat([self.recorded, row], sort=True)
 
         # merge rows (play nice with multi-symbol portfolios)
         meta_data = self.recorded.groupby(["symbol"])[
@@ -909,7 +909,7 @@ class DataStore():
 
             combined.append(symdata)
 
-        self.recorded = pd.concat(combined)
+        self.recorded = pd.concat(combined, sort=True)
 
         # cleanup: remove non-option data if not working with options
         opt_cols = df.columns[df.columns.str.startswith('opt_')].tolist()

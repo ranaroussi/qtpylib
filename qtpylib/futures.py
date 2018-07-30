@@ -65,7 +65,7 @@ def create_continuous_contract(df, resolution="1T"):
                 return m1  # didn't rolled over yet
             roll_date = m_highest[m_highest].index[-1]
 
-        return pd.concat([m1[m1.index <= roll_date], m2[m2.index > roll_date]])
+        return pd.concat([m1[m1.index <= roll_date], m2[m2.index > roll_date]], sort=True)
 
     def _continuous_contract_flags(daily_df):
         # grab expirations
@@ -330,7 +330,7 @@ def get_ib_futures(symbol=None, exchange=None, ttl=86400):
         r = requests.get(
             'https://www.interactivebrokers.ca/en/index.php?f=marginCA&p=fut')
         html = r.text.replace('<tbody>', '').replace('</tbody>', '')
-        df = pd.concat(pd.read_html(html))
+        df = pd.concat(pd.read_html(html), sort=True)
         df.columns = ['exchange', 'symbol', 'description', 'class',
                       'intraday_initial', 'intraday_maintenance',
                       'overnight_initial', 'overnight_maintenance', 'currency']

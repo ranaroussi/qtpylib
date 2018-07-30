@@ -913,7 +913,7 @@ class Blotter():
                 bad_ids.append(list(malformed['id'].values))
 
         # combine all lists
-        data = pd.concat(dfs)
+        data = pd.concat(dfs, sort=True)
 
         # flatten bad ids
         bad_ids = sum(bad_ids, [])
@@ -1514,7 +1514,7 @@ def prepare_history(data, resolution="1T", tz="UTC", continuous=True):
             all_dfs.append(continuous)
 
         # make one df again
-        data = pd.concat(all_dfs)
+        data = pd.concat(all_dfs, sort=True)
 
     data = tools.resample(data, resolution, tz)
     return data

@@ -537,11 +537,11 @@ def stoch(df, window=14, d=3, k=3, fast=False):
     http://excelta.blogspot.co.il/2013/09/stochastic-oscillator-technical.html
     """
     highs_ma = pd.concat([df['high'].shift(i)
-                          for i in np.arange(window)], 1).apply(list, 1)
+                          for i in np.arange(window)], 1, sort=True).apply(list, 1)
     highs_ma = highs_ma.T.max().T
 
     lows_ma = pd.concat([df['low'].shift(i)
-                         for i in np.arange(window)], 1).apply(list, 1)
+                         for i in np.arange(window)], 1, sort=True).apply(list, 1)
     lows_ma = lows_ma.T.min().T
 
     fast_k = ((df['close'] - lows_ma) / (highs_ma - lows_ma)) * 100

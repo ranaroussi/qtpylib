@@ -60,7 +60,7 @@ class Instrument(str):
             return df[(df['symbol'] == symbol) | (df['symbol_group'] == symbol)].copy()
         except:
             df = pd_concat([df[df['symbol'] == symbol],
-                            df[df['symbol_group'] == symbol]])
+                            df[df['symbol_group'] == symbol]], sort=True)
             df.loc[:, '_idx_'] = df.index
             return df.drop_duplicates(subset=['_idx_'], keep='last').drop('_idx_', axis=1)
 

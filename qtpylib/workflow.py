@@ -126,7 +126,7 @@ def get_data_yahoo(symbols, start, end=None, **kwargs):
         # add to collection
         dfs.append(ohlc)
 
-    return pd.concat(dfs).sort_index()
+    return pd.concat(dfs, sort=True).sort_index()
 
 
 # ---------------------------------------------
