@@ -316,7 +316,7 @@ class Algo(Broker):
                     sys.exit(0)
 
             history = prepare_history(
-                data=pd.concat(dfs),
+                data=pd.concat(dfs, sort=True),
                 resolution=self.resolution,
                 tz=self.timezone,
                 continuous=self.continuous
@@ -672,14 +672,14 @@ class Algo(Broker):
         dfs = []
         for sym in list(df["symbol"].unique()):
             dfs.append(df[df['symbol'] == sym][-window:])
-        return pd.concat(dfs).sort_index()
+        return pd.concat(dfs, sort=True).sort_index()
 
     # ---------------------------------------
     @staticmethod
     def _thread_safe_merge(symbol, basedata, newdata):
         data = newdata
         if "symbol" in basedata.columns:
-            data = pd.concat([basedata[basedata['symbol'] != symbol], data])
+            data = pd.concat([basedata[basedata['symbol'] != symbol], data], sort=True)
 
         data.loc[:, '_idx_'] = data.index
         data = data.drop_duplicates(
