@@ -699,7 +699,10 @@ class Algo(Broker):
         self._cancel_expired_pending_orders()
 
         # tick symbol
-        symbol = tick['symbol'].values[0]
+        symbol = tick['symbol'].values
+        if len(symbol) == 0:
+            return
+        symbol = symbol[0]
         self.last_price[symbol] = float(tick['last'].values[0])
 
         # work on copy
@@ -745,13 +748,21 @@ class Algo(Broker):
             self.record(bars[-1:])
 
         if not stale_tick:
-            self.on_tick(self.get_instrument(tick))
+            if self.ticks[(self.ticks['symbol'] == symbol) | (
+                self.ticks['symbol_group'] == symbol)].empty:
+                return
+            tick_instrument = self.get_instrument(tick)
+            if tick_instrument:
+                self.on_tick(tick_instrument)
 
     # ---------------------------------------
     def _base_bar_handler(self, bar):
         """ non threaded bar handler (called by threaded _tick_handler) """
         # bar symbol
-        symbol = bar['symbol'].values[0]
+        symbol = bar['symbol'].values
+        if len(symbol) == 0:
+            return
+        symbol = symbol[0]
         self_bars = self.bars.copy()  # work on copy
 
         is_tick_or_volume_bar = False
@@ -796,11 +807,16 @@ class Algo(Broker):
         self.bar_hashes[symbol] = this_bar_hash
 
         if newbar and handle_bar:
-            self.record_ts = bar.index[0]
-            self.on_bar(self.get_instrument(symbol))
+            if self.bars[(self.bars['symbol'] == symbol) | (
+                self.bars['symbol_group'] == symbol)].empty:
+                return
 
-            # if self.resolution[-1] not in ("S", "K", "V"):
-            self.record(bar)
+            bar_instrument = self.get_instrument(symbol)
+            if bar_instrument:
+                self.record_ts = bar.index[0]
+                self.on_bar(bar_instrument)
+                # if self.resolution[-1] not in ("S", "K", "V"):
+                self.record(bar)
 
     # ---------------------------------------
     @asynctools.multitasking.task
