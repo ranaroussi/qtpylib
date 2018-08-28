@@ -31,7 +31,6 @@ import sys
 import requests
 from bs4 import BeautifulSoup as bs
 from dateutil.parser import parse as parse_date
-from io import StringIO
 
 from qtpylib import tools
 
@@ -159,36 +158,34 @@ def get_active_contract(symbol, url=None, n=1):
         return [cells[0].text.strip(), '', cells[7].text.strip().replace(',', '')]
 
     def get_contracts(url):
-
         html = requests.get(url, timeout=5)
         html = bs(html.text, 'html.parser')
 
-        data = html.find(
-            'table', attrs={'id': 'settlementsFuturesProductTable'})
+        """ CME switched to using ajax """
+        prodDataUrl = html.text.split('component.baseUrl = "')[1].split(';')[
+            0].replace('" + ', '').replace(' + "', '')
 
-        rows = data.findAll('tr')
-        text = '\n'.join(map(lambda row: ",".join(read_cells(row)), rows[2:]))
+        # get data
+        url = 'https://www.cmegroup.com%s?tradeDate=%s' % (
+            prodDataUrl, datetime.datetime.now().strftime('%m/%d/%Y'))
+        data = requests.get(url, timeout=5).json()
 
-        # Convert to DataFrame
-        df = pd.read_csv(StringIO(text), names=['_', 'expiry', 'volume'],
-                         index_col=['_'], parse_dates=['_'])
-        df.index = df.index.str.replace('JLY', 'JUL')
-        for index, row in df.iterrows():
-            try:
-                df.loc[index, 'expiry'] = parse_date(
-                    "01-" + index).strftime('%Y%m')
-            except:
-                pass
+        if len(data['settlements']) == 1:
+            url = 'https://www.cmegroup.com%s?tradeDate=%s' % (
+                prodDataUrl, parse_date(data['updateTime']).strftime('%m/%d/%Y'))
+            data = requests.get(url, timeout=5).json()
+
+        df = pd.DataFrame(data['settlements'])[:-1][['month', 'volume']]
+        df.columns = ['expiry', 'volume']
+        df.volume = pd.to_numeric(df.volume.str.replace(',', ''))
+        df.expiry = df.expiry.str.replace('JLY', 'JUL').apply(
+            lambda ds: parse_date(ds).strftime('%Y%m'))
 
         # remove duplidates
         try:
-            df = df.reset_index().drop_duplicates(
-                subset=['_', 'volume'], keep='last')
+            df = df.reset_index().drop_duplicates(keep='last')
         except:
-            df = df.reset_index().drop_duplicates(
-                subset=['_', 'volume'], take_last=True)
-
-        df.drop('_', axis=1, inplace=True)
+            df = df.reset_index().drop_duplicates(take_last=True)
 
         return df[:13].dropna()
 
@@ -262,7 +259,7 @@ def get_contract_ticksize(symbol, fallback=0.01, ttl=84600):
     symdf = pd.DataFrame(
         index=[0], data={'symbol': symbol, 'ticksize': ticksize})
     if os.path.exists(cache_file):
-        df = df[df['symbol'] != symbol].append(symdf[['symbol', 'ticksize']])
+        df = df[df['symbol'] != symbol].append(symdf[['symbol', 'ticksize']], sort=True)
     else:
         df = symdf
 
