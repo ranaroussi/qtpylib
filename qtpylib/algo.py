@@ -308,7 +308,7 @@ class Algo(Broker):
                         self.log_algo.error(
                             "%s Doesn't content data for %s", file, symbol)
                         sys.exit(0)
-                    dfs.append(df)
+                    dfs.append(df, sort=True)
 
                 except:
                     self.log_algo.error(
@@ -829,7 +829,7 @@ class Algo(Broker):
         if df is None:
             df = data
         else:
-            df = df.append(data)
+            df = df.append(data, sort=True)
 
         # resample
         if resolution is not None:
