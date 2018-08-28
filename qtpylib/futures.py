@@ -64,7 +64,8 @@ def create_continuous_contract(df, resolution="1T"):
                 return m1  # didn't rolled over yet
             roll_date = m_highest[m_highest].index[-1]
 
-        return pd.concat([m1[m1.index <= roll_date], m2[m2.index > roll_date]], sort=True)
+        return pd.concat([m1[m1.index <= roll_date], m2[m2.index > roll_date]
+                          ], sort=True)
 
     def _continuous_contract_flags(daily_df):
         # grab expirations
@@ -96,8 +97,10 @@ def create_continuous_contract(df, resolution="1T"):
 
         # single row df won't resample
         if len(flags.index) <= 1:
-            flags = pd.DataFrame(index=pd.date_range(start=flags[0:1].index[0],
-                                                     periods=24, freq="1H"), data=flags[['symbol', 'expiry', 'gap']]).ffill()
+            flags = pd.DataFrame(
+                index=pd.date_range(start=flags[0:1].index[0],
+                                    periods=24, freq="1H"), data=flags[
+                                        ['symbol', 'expiry', 'gap']]).ffill()
 
         flags['expiry'] = pd.to_datetime(flags['expiry'], utc=True)
         return flags[['symbol', 'expiry', 'gap']]
@@ -202,73 +205,18 @@ def get_active_contract(symbol, url=None, n=1):
 
         # based on volume
         if len(c[c.volume > 100].index):
-            return c.sort_values(by=['volume', 'expiry'], ascending=False)[:n]['expiry'].values[0]
+            return c.sort_values(by=['volume', 'expiry'], ascending=False)[:n][
+                'expiry'].values[0]
         else:
             # based on date
             return c[:1]['expiry'].values[0]
     except:
         if tools.after_third_friday():
-            return (datetime.datetime.now() + (datetime.timedelta(365 / 12) * 2)).strftime('%Y%m')
+            return (datetime.datetime.now() + (datetime.timedelta(365 / 12) * 2)
+                    ).strftime('%Y%m')
         else:
-            return (datetime.datetime.now() + datetime.timedelta(365 / 12)).strftime('%Y%m')
-
-
-# -------------------------------------------
-def get_contract_ticksize(symbol, fallback=0.01, ttl=84600):
-
-    logging.warning(
-        "DEPRECATED! Use instrument.get_ticksize() or instrument.ticksize instead.")
-
-    cache_file = tempfile.gettempdir() + "/ticksizes.pkl"
-    used_fallback = False
-
-    if os.path.exists(cache_file):
-        df = pd.read_pickle(cache_file)
-        if (int(time.time()) - int(os.path.getmtime(cache_file))) < ttl:
-            filtered = df[df['symbol'] == symbol]
-            if len(filtered.index) > 0:
-                return float(filtered['ticksize'].values[0])
-
-    # continue...
-
-    try:
-        url = _get_futures_url(symbol, 'contract_specifications')
-    except:
-        return fallback
-
-    html = requests.get(url, timeout=5)
-    html = bs(html.text.lower(), 'html.parser')
-
-    html = bs(requests.get(url).text.lower(), 'html.parser')
-    try:
-        ticksize_text = html.text.split('minimum price fluctuation')[1].strip()
-        if ticksize_text.find("$") > 1:
-            ticksize_text = ticksize_text.split('$')[0]
-        else:
-            ticksize_text = ticksize_text.split(' ')[0]
-        if "1/" in ticksize_text:
-            ticksize_text = ticksize_text.split("1/")[1].split(" ")[0]
-            ticksize = 1 / float(re.compile(r'[^\d.]+').sub('', ticksize_text))
-        else:
-            ticksize = float(re.compile(r'[^\d.]+').sub('', ticksize_text))
-
-    except:
-        ticksize = fallback
-        used_fallback = True
-
-    symdf = pd.DataFrame(
-        index=[0], data={'symbol': symbol, 'ticksize': ticksize})
-    if os.path.exists(cache_file):
-        df = df[df['symbol'] != symbol].append(symdf[['symbol', 'ticksize']], sort=True)
-    else:
-        df = symdf
-
-    # save if fallback wasn't used
-    if not used_fallback:
-        df.to_pickle(cache_file)
-        tools.chmod(cache_file)
-
-    return float(ticksize)
+            return (datetime.datetime.now() + datetime.timedelta(365 / 12)
+                    ).strftime('%Y%m')
 
 
 # -------------------------------------------
@@ -278,7 +226,8 @@ def make_tuple(symbol, expiry=None, exchange=None):
 
     contract = get_ib_futures(symbol, exchange)
     if contract is not None:
-        return (contract['symbol'], "FUT", contract['exchange'], contract['currency'], expiry, 0.0, "")
+        return (contract['symbol'], "FUT", contract['exchange'], contract[
+            'currency'], expiry, 0.0, "")
     return None
 
 # -------------------------------------------
