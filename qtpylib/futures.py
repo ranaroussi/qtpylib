@@ -273,10 +273,14 @@ def get_ib_futures(symbol=None, exchange=None, ttl=86400):
 
     # else...
     try:
-        r = requests.get(
+        dfs = pd.read_html(
             'https://www.interactivebrokers.ca/en/index.php?f=marginCA&p=fut')
-        html = r.text.replace('<tbody>', '').replace('</tbody>', '')
-        df = pd.concat(pd.read_html(html), sort=True)
+
+        df = pd.concat(dfs, sort=False)
+        df = df.drop_duplicates(
+            subset=['Exchange', 'IB Underlying'], keep='first')
+        df.reset_index(drop=True, inplace=True)
+
         df.columns = ['exchange', 'symbol', 'description', 'class',
                       'intraday_initial', 'intraday_maintenance',
                       'overnight_initial', 'overnight_maintenance', 'currency']
@@ -289,11 +293,17 @@ def get_ib_futures(symbol=None, exchange=None, ttl=86400):
             df['overnight_initial'], errors='coerce')
         df['overnight_maintenance'] = pd.to_numeric(
             df['overnight_maintenance'], errors='coerce')
+
         df['currency'].fillna("USD", inplace=True)
+
+        df['overnight_maintenance'].fillna(
+            df['overnight_initial'], inplace=True)
+        df['intraday_initial'].fillna(df['overnight_initial'], inplace=True)
+        df['intraday_maintenance'].fillna(df['intraday_initial'], inplace=True)
 
     except:
         # fallback - download specs from qtpylib.io
-        df = pd.read_csv('http://qtpylib.io/resources/futures_spec.csv.gz')
+        df = pd.read_csv('https://qtpylib.io/resources/futures_spec.csv.gz')
 
     # output
     df.to_pickle(cache_file)
