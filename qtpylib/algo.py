@@ -105,8 +105,8 @@ class Algo(Broker):
 
     def __init__(self, instruments, resolution="1T",
                  tick_window=1, bar_window=100, timezone="UTC", preload=None,
-                 continuous=True, blotter=None, sms=None, log=None, backtest=False,
-                 start=None, end=None, data=None, output=None,
+                 continuous=True, blotter=None, sms=None, log=None,
+                 backtest=False, start=None, end=None, data=None, output=None,
                  ibclient=998, ibport=4001, ibserver="localhost", **kwargs):
 
         # detect algo name
@@ -748,7 +748,7 @@ class Algo(Broker):
 
         if not stale_tick:
             if self.ticks[(self.ticks['symbol'] == symbol) | (
-                self.ticks['symbol_group'] == symbol)].empty:
+                    self.ticks['symbol_group'] == symbol)].empty:
                 return
             tick_instrument = self.get_instrument(tick)
             if tick_instrument:
@@ -807,7 +807,7 @@ class Algo(Broker):
 
         if newbar and handle_bar:
             if self.bars[(self.bars['symbol'] == symbol) | (
-                self.bars['symbol_group'] == symbol)].empty:
+                    self.bars['symbol_group'] == symbol)].empty:
                 return
 
             bar_instrument = self.get_instrument(symbol)
