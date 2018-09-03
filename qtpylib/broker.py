@@ -111,7 +111,7 @@ class Broker():
                 contractString = self.ibConn.contractString(instrument)
                 instrument_tuples_dict[contractString] = instrument
                 self.ibConn.createContract(instrument)
-            except:
+            except Exception as e:
                 pass
 
         self.instruments = instrument_tuples_dict
@@ -237,7 +237,7 @@ class Broker():
         try:
             self.dbcurr.close()
             self.dbconn.close()
-        except:
+        except Exception as e:
             pass
 
     # ---------------------------------------
@@ -279,16 +279,16 @@ class Broker():
                     symbol = self.orders.recent[msg.orderId]['symbol']
                     try:
                         del self.orders.pending_ttls[msg.orderId]
-                    except:
+                    except Exception as e:
                         pass
                     try:
                         del self.orders.recent[msg.orderId]
-                    except:
+                    except Exception as e:
                         pass
                     try:
                         if self.orders.pending[symbol]['orderId'] == msg.orderId:
                             del self.orders.pending[symbol]
-                    except:
+                    except Exception as e:
                         pass
                 return
 
@@ -303,10 +303,10 @@ class Broker():
             try:
                 try:
                     quantity = self.orders.history[symbol][orderId]['quantity']
-                except:
+                except Exception as e:
                     quantity = self.orders.history[symbol][order['parentId']]['quantity']
                     # ^^ for child orders auto-created by ezibpy
-            except:
+            except Exception as e:
                 quantity = 1
 
             # update pending order to the time actually submitted
@@ -418,7 +418,7 @@ class Broker():
                             (days, hours, minutes, seconds))
                 self.active_trades[tradeId]['duration'] = duration.replace(
                     "0d ", "").replace("0h ", "").replace("0m ", "")
-            except:
+            except Exception as e:
                 pass
 
             trade = self.active_trades[tradeId]
@@ -483,13 +483,13 @@ class Broker():
             try:
                 trade['entry_time'] = trade['entry_time'].strftime(
                     "%Y-%m-%d %H:%M:%S.%f")
-            except:
+            except Exception as e:
                 pass
 
             try:
                 trade['exit_time'] = trade['exit_time'].strftime(
                     "%Y-%m-%d %H:%M:%S.%f")
-            except:
+            except Exception as e:
                 pass
 
             # all strings
@@ -511,7 +511,7 @@ class Broker():
             # commit
             try:
                 self.dbconn.commit()
-            except:
+            except Exception as e:
                 pass
 
         if self.trade_log_dir:
@@ -664,7 +664,7 @@ class Broker():
         # append market price at the time of order
         try:
             self.orders.recent[orderId]['price'] = self.last_price[symbol]
-        except:
+        except Exception as e:
             self.orders.recent[orderId]['price'] = 0
 
         # add orderId / ttl to (auto-adds to history)
@@ -943,7 +943,7 @@ class Broker():
 
             try:
                 df.loc[:, 'last'] = self.last_price[symbol]
-            except:
+            except Exception as e:
                 df.loc[:, 'last'] = 0
 
             # calc unrealized pnl

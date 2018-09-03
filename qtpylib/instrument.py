@@ -58,7 +58,7 @@ class Instrument(str):
         try:
             # this produce a "IndexingError using Boolean Indexing" (on rare occasions)
             return df[(df['symbol'] == symbol) | (df['symbol_group'] == symbol)].copy()
-        except:
+        except Exception as e:
             df = pd_concat([df[df['symbol'] == symbol],
                             df[df['symbol_group'] == symbol]], sort=True)
             df.loc[:, '_idx_'] = df.index
@@ -411,7 +411,7 @@ class Instrument(str):
             if attr is not None:
                 attr = attr.replace("quantity", "position")
             return pos[attr]
-        except:
+        except Exception as e:
             return pos
 
     # ---------------------------------------

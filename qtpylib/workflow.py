@@ -534,7 +534,7 @@ def store_data(df, blotter=None, kind="BAR"):
 
         try:
             dbconn.commit()
-        except:
+        except Exception as e:
             return False
 
     return True

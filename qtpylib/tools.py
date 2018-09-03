@@ -165,7 +165,7 @@ def create_ib_tuple(instrument):
                               spec['exchange'].upper(), spec['currency'].upper(),
                               int(expiry), 0.0, "")
 
-            except:
+            except Exception as e:
                 raise ValueError("Un-parsable contract tuple")
 
     # tuples without strike/right
@@ -184,7 +184,7 @@ def create_ib_tuple(instrument):
 
         try:
             instrument_list[4] = int(instrument_list[4])
-        except:
+        except Exception as e:
             pass
 
         instrument_list[5] = 0. if isinstance(instrument_list[5], str) \
@@ -296,11 +296,11 @@ def chmod(f):
     """ change mod to writeable """
     try:
         os.chmod(f, S_IWRITE)  # windows (cover all)
-    except:
+    except Exception as e:
         pass
     try:
         os.chmod(f, 0o777)  # *nix
-    except:
+    except Exception as e:
         pass
 
 
@@ -381,7 +381,7 @@ def backdate(res, date=None, as_datetime=False, fmt='%Y-%m-%d'):
     else:
         try:
             date = parse_date(date)
-        except:
+        except Exception as e:
             pass
 
     new_date = date
@@ -459,7 +459,7 @@ def get_timezone(as_timedelta=False):
     """ utility to get the machine's timezone """
     try:
         offset_hour = -(time.altzone if time.daylight else time.timezone)
-    except:
+    except Exception as e:
         offset_hour = -(datetime.datetime.now() -
                         datetime.datetime.utcnow()).seconds
 
@@ -507,13 +507,13 @@ def set_timezone(data, tz=None, from_local=False):
         try:
             try:
                 data.index = data.index.tz_convert(tz)
-            except:
+            except Exception as e:
                 if from_local:
                     data.index = data.index.tz_localize(
                         get_timezone()).tz_convert(tz)
                 else:
                     data.index = data.index.tz_localize('UTC').tz_convert(tz)
-        except:
+        except Exception as e:
             pass
 
     # not pandas...
@@ -523,9 +523,9 @@ def set_timezone(data, tz=None, from_local=False):
         try:
             try:
                 data = data.astimezone(tz)
-            except:
+            except Exception as e:
                 data = timezone('UTC').localize(data).astimezone(timezone(tz))
-        except:
+        except Exception as e:
             pass
 
     return data
@@ -582,13 +582,13 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
         # figure out timezone
         try:
             tz = data.index.tz if tz is None else tz
-        except:
+        except Exception as e:
             pass
 
         if str(tz) != 'None':
             try:
                 data.index = data.index.tz_convert(tz)
-            except:
+            except Exception as e:
                 data.index = data.index.tz_localize('UTC').tz_convert(tz)
 
         # sort by index (datetime)
@@ -614,7 +614,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
                        'opt_delta', 'opt_gamma', 'opt_theta', 'opt_vega']].copy()
             price_col = 'last'
             size_col = 'lastsize'
-        except:
+        except Exception as e:
             df = data[['close', 'volume', 'opt_underlying', 'opt_price',
                        'opt_dividend', 'opt_volume', 'opt_iv', 'opt_oi',
                        'opt_delta', 'opt_gamma', 'opt_theta', 'opt_vega']].copy()

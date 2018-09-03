@@ -66,7 +66,7 @@ class multitasking():
 
         try:
             threads = int(threads)
-        except:
+        except Exception as e:
             threads = 1
 
         # 1 thread is no threads
@@ -121,7 +121,7 @@ class multitasking():
             while running > 0:
                 running = len(
                     [t.join(1) for t in cls.__TASKS__ if t is not None and t.isAlive()])
-        except:
+        except Exception as e:
             pass
         return True
 

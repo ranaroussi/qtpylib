@@ -47,7 +47,7 @@ app.json_encoder = datetimeJSONEncoder
 def _jinja2_strftime(date, fmt='%Y-%m-%d %H:%M:%S%z'):
     try:
         date = parse_date(date)
-    except:
+    except Exception as e:
         pass
     native = date.replace(tzinfo=None)
     return native.strftime(fmt)

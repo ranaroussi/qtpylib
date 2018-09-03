@@ -260,7 +260,7 @@ def rolling_std(series, window=200, min_periods=None):
     else:
         try:
             return series.rolling(window=window, min_periods=min_periods).std()
-        except:
+        except Exception as e:
             return pd.Series(series).rolling(window=window, min_periods=min_periods).std()
 
 # ---------------------------------------------
@@ -273,7 +273,7 @@ def rolling_mean(series, window=200, min_periods=None):
     else:
         try:
             return series.rolling(window=window, min_periods=min_periods).mean()
-        except:
+        except Exception as e:
             return pd.Series(series).rolling(window=window, min_periods=min_periods).mean()
 
 # ---------------------------------------------
@@ -283,7 +283,7 @@ def rolling_min(series, window=14, min_periods=None):
     min_periods = window if min_periods is None else min_periods
     try:
         return series.rolling(window=window, min_periods=min_periods).min()
-    except:
+    except Exception as e:
         return pd.Series(series).rolling(window=window, min_periods=min_periods).min()
 
 
@@ -293,7 +293,7 @@ def rolling_max(series, window=14, min_periods=None):
     min_periods = window if min_periods is None else min_periods
     try:
         return series.rolling(window=window, min_periods=min_periods).min()
-    except:
+    except Exception as e:
         return pd.Series(series).rolling(window=window, min_periods=min_periods).min()
 
 
@@ -303,7 +303,7 @@ def rolling_weighted_mean(series, window=200, min_periods=None):
     min_periods = window if min_periods is None else min_periods
     try:
         return series.ewm(span=window, min_periods=min_periods).mean()
-    except:
+    except Exception as e:
         return pd.ewma(series, span=window, min_periods=min_periods)
 
 
@@ -460,7 +460,7 @@ def returns(series):
     try:
         res = (series / series.shift(1) -
                1).replace([np.inf, -np.inf], float('NaN'))
-    except:
+    except Exception as e:
         res = nans(len(series))
 
     return pd.Series(index=series.index, data=res)
@@ -472,7 +472,7 @@ def log_returns(series):
     try:
         res = np.log(series / series.shift(1)
                     ).replace([np.inf, -np.inf], float('NaN'))
-    except:
+    except Exception as e:
         res = nans(len(series))
 
     return pd.Series(index=series.index, data=res)
@@ -485,7 +485,7 @@ def implied_volatility(series, window=252):
         logret = np.log(series / series.shift(1)
                        ).replace([np.inf, -np.inf], float('NaN'))
         res = numpy_rolling_std(logret, window) * np.sqrt(window)
-    except:
+    except Exception as e:
         res = nans(len(series))
 
     return pd.Series(index=series.index, data=res)

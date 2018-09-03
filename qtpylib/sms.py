@@ -60,13 +60,13 @@ def send_text(msg, numbers):
     if SMS_SERVICE == "nexmo":
         try:
             _send_nexmo(msg, numbers)
-        except:
+        except Exception as e:
             pass
 
     elif SMS_SERVICE == "twilio":
         try:
             _send_twilio(msg, numbers)
-        except:
+        except Exception as e:
             pass
 
 
@@ -108,7 +108,7 @@ def _send_trade(trade, numbers, timezone="UTC"):
             trade['entry_time'] = tools.datetime_to_timezone(
                 trade['entry_time'], timezone)
             msg += trade['entry_time'].strftime('%H:%M:%S%z') + "\n"
-        except:
+        except Exception as e:
             pass
 
         msg += trade['direction'] + " " + arrow + \
@@ -128,7 +128,7 @@ def _send_trade(trade, numbers, timezone="UTC"):
             trade['exit_time'] = tools.datetime_to_timezone(
                 trade['entry_time'], timezone)
             msg += trade['exit_time'].strftime('%H:%M:%S%z') + "\n"
-        except:
+        except Exception as e:
             pass
 
         msg += trade['direction'] + " " + arrow + \

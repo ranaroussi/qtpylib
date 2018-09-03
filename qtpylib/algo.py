@@ -310,7 +310,7 @@ class Algo(Broker):
                         sys.exit(0)
                     dfs.append(df, sort=True)
 
-                except:
+                except Exception as e:
                     self.log_algo.error(
                         "Error reading data for %s (%s)", symbol, file)
                     sys.exit(0)
@@ -322,7 +322,6 @@ class Algo(Broker):
                 continuous=self.continuous
             )
             history = history[history.index >= self.backtest_start]
-
 
         elif not self.blotter_args["dbskip"] and (self.backtest or self.preload):
 
@@ -567,7 +566,7 @@ class Algo(Broker):
 
             try:
                 self.record(position=0)
-            except:
+            except Exception as e:
                 pass
 
             if not self.backtest:
@@ -588,7 +587,7 @@ class Algo(Broker):
                 quantity = - \
                     quantity if kwargs['direction'] == "BUY" else quantity
                 self.record(position=quantity)
-            except:
+            except Exception as e:
                 pass
 
             if not self.backtest:
@@ -622,7 +621,7 @@ class Algo(Broker):
         if self.record_output:
             try:
                 self.datastore.record(self.record_ts, *args, **kwargs)
-            except:
+            except Exception as e:
                 pass
 
     # ---------------------------------------
@@ -690,7 +689,7 @@ class Algo(Broker):
 
         try:
             return data.dropna(subset=['open', 'high', 'low', 'close', 'volume'])
-        except:
+        except Exception as e:
             return data
 
     # ---------------------------------------
@@ -835,7 +834,7 @@ class Algo(Broker):
         if resolution is not None:
             try:
                 tz = str(df.index.tz)
-            except:
+            except Exception as e:
                 tz = None
             df = tools.resample(df, resolution=resolution, tz=tz)
 

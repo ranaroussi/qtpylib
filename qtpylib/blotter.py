@@ -216,7 +216,7 @@ class Blotter():
         try:
             self.dbcurr.close()
             self.dbconn.close()
-        except:
+        except Exception as e:
             pass
 
         if terminate:
@@ -238,7 +238,7 @@ class Blotter():
             stdout_list = process.communicate()[0].decode('utf-8').split("\n")
             stdout_list = list(filter(None, stdout_list))
             return len(stdout_list) > 0
-        except:
+        except Exception as e:
             return False
 
     # -------------------------------------------
@@ -359,7 +359,7 @@ class Blotter():
             try:
                 self.ibConn.cancelHistoricalData(
                     self.ibConn.contracts[msg.reqId])
-            except:
+            except Exception as e:
                 pass
 
         else:
@@ -506,7 +506,7 @@ class Blotter():
             else:
                 self.broadcast(quote, "QUOTE")
 
-        except:
+        except Exception as e:
             pass
 
     # -------------------------------------------
@@ -580,7 +580,7 @@ class Blotter():
             tick["kind"] = "QUOTE"
             self.broadcast(tick, "QUOTE")
 
-        # except:
+        # except Exception as e:
             # pass
 
     # -------------------------------------------
@@ -614,7 +614,7 @@ class Blotter():
 
         try:
             timestamp = parse_date(timestamp)
-        except:
+        except Exception as e:
             pass
 
         # placeholders
@@ -675,7 +675,7 @@ class Blotter():
         # print(kind, string2send)
         try:
             self.socket.send_string(string2send)
-        except:
+        except Exception as e:
             pass
 
     # -------------------------------------------
@@ -706,18 +706,18 @@ class Blotter():
         if kind == "TICK":
             try:
                 mysql_insert_tick(data, symbol_id, dbcurr)
-            except:
+            except Exception as e:
                 pass
         elif kind == "BAR":
             try:
                 mysql_insert_bar(data, symbol_id, dbcurr)
-            except:
+            except Exception as e:
                 pass
 
         # commit
         try:
             dbconn.commit()
-        except:
+        except Exception as e:
             pass
 
         # disconect from mysql
@@ -927,7 +927,7 @@ class Blotter():
                                 " WHERE id IN (%s)" % (",".join(bad_ids)))
             try:
                 self.dbconn.commit()
-            except:
+            except Exception as e:
                 self.dbconn.rollback()
 
         # return
@@ -948,14 +948,14 @@ class Blotter():
         try:
             start = start.strftime(
                 ibDataTypes["DATE_TIME_FORMAT_LONG_MILLISECS"])
-        except:
+        except Exception as e:
             pass
 
         if end is not None:
             try:
                 end = end.strftime(
                     ibDataTypes["DATE_TIME_FORMAT_LONG_MILLISECS"])
-            except:
+            except Exception as e:
                 pass
 
         # connect to mysql
@@ -1047,7 +1047,7 @@ class Blotter():
 
                     try:
                         data["datetime"] = parse_date(data["timestamp"])
-                    except:
+                    except Exception as e:
                         pass
 
                     df = pd.DataFrame(index=[0], data=data)
@@ -1057,7 +1057,7 @@ class Blotter():
 
                     try:
                         df.index = df.index.tz_convert(tz)
-                    except:
+                    except Exception as e:
                         df.index = df.index.tz_localize('UTC').tz_convert(tz)
 
                     # add options columns
@@ -1247,7 +1247,7 @@ class Blotter():
             self.dbconn = self.get_mysql_connection()
             self.dbcurr = self.dbconn.cursor()
 
-        except:
+        except Exception as e:
             self.dbconn.rollback()
             self.log_blotter.error("Cannot create database schema")
             self._remove_cached_args()
@@ -1387,7 +1387,7 @@ def get_symbol_id(symbol, dbconn, dbcurr, ibConn=None):
                 dbcurr.execute(sql)
                 try:
                     dbconn.commit()
-                except:
+                except Exception as e:
                     return False
                 return int(row[0])
 
@@ -1401,7 +1401,7 @@ def get_symbol_id(symbol, dbconn, dbcurr, ibConn=None):
                              asset_class, expiry, expiry))
         try:
             dbconn.commit()
-        except:
+        except Exception as e:
             return False
 
         return dbcurr.lastrowid
@@ -1441,7 +1441,7 @@ def mysql_insert_tick(data, symbol_id, dbcurr):
                                         float(data["opt_theta"]), float(
                                             data["opt_vega"]),
                                         ))
-        except:
+        except Exception as e:
             pass
 
 
@@ -1481,7 +1481,7 @@ def mysql_insert_bar(data, symbol_id, dbcurr):
                                         float(greeks["opt_theta"]), float(
                                             greeks["opt_vega"]),
                                         ))
-        except:
+        except Exception as e:
             pass
 
 # -------------------------------------------
