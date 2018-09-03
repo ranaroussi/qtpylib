@@ -531,7 +531,7 @@ class Broker():
 
             if os.path.exists(trade_log_path):
                 trades = pd.read_csv(trade_log_path, header=0)
-                trades = trades.append(trade_df, ignore_index=True)
+                trades = trades.append(trade_df, ignore_index=True, sort=True)
                 trades.drop_duplicates(['entry_time', 'symbol', 'strategy'],
                                        keep="last", inplace=True)
                 trades.to_csv(trade_log_path, header=True, index=False)
