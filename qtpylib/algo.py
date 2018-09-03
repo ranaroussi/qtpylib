@@ -73,7 +73,7 @@ class Algo(Broker):
         timezone : str
             Convert IB timestamps to this timezone (eg. US/Central). Defaults to UTC
         preload : str
-            Preload history when starting algo (using pandas resolution: 1H, 1D, etc).
+            Preload history when starting algo (using Pandas resolution: 1H, 1D, etc).
             Use K for tick bars.
         continuous : bool
             Tells preloader to construct continuous Futures contracts (default is True)
