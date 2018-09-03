@@ -263,7 +263,7 @@ Requirements
 Legal Stuff
 ===========
 
-QTPyLib is distributed under the **GNU Lesser General Public License v3.0**. See the `LICENSE.txt <./LICENSE.txt>`_ file in the release for details.
+QTPyLib is licensed under the **Apache License, Version 2.0**. A copy of which is included in LICENSE.txt.
 QTPyLib is not a product of Interactive Brokers, nor is it affiliated with Interactive Brokers.
 
 
