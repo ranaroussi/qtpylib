@@ -71,14 +71,16 @@ class Algo(Broker):
         bar_window : int
             Length of bar lookback window to keep. Defaults to 100
         timezone : str
-            Convert IB timestamps to this timezone (eg. US/Central). Defaults to UTC
+            Convert IB timestamps to this timezone (eg. US/Central).
+            Defaults to UTC
         preload : str
-            Preload history when starting algo (using Pandas resolution: 1H, 1D, etc).
+            Preload history when starting algo (Pandas resolution: 1H, 1D, etc)
             Use K for tick bars.
         continuous : bool
-            Tells preloader to construct continuous Futures contracts (default is True)
+            Tells preloader to construct continuous Futures contracts
+            (default is True)
         blotter : str
-            Log trades to MySQL server used by this Blotter (default is "auto detect")
+            Log trades to this Blotter's MySQL (default is "auto detect")
         sms: set
             List of numbers to text orders (default: None)
         log: str
@@ -90,7 +92,7 @@ class Algo(Broker):
         end: str
             Backtest end date (YYYY-MM-DD [HH:MM:SS[.MS]). Default is None
         data : str
-            Path to the directory with QTPyLib-compatible CSV files (Backtesting)
+            Path to the directory with QTPyLib-compatible CSV files (Backtest)
         output: str
             Path to save the recorded data (default: None)
         ibport: int
@@ -157,9 +159,9 @@ class Algo(Broker):
 
         # -----------------------------------
         # initiate broker/order manager
-        super().__init__(instruments,
-                         **{arg: val for arg, val in self.args.items() if arg in (
-                             'ibport', 'ibclient', 'ibhost')})
+        super().__init__(instruments, **{
+            arg: val for arg, val in self.args.items() if arg in (
+                'ibport', 'ibclient', 'ibhost')})
 
         # -----------------------------------
         # signal collector
@@ -191,11 +193,13 @@ class Algo(Broker):
                     "Must provide start date for Backtest mode")
                 sys.exit(0)
             if self.backtest_end is None:
-                self.backtest_end = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+                self.backtest_end = datetime.now().strftime(
+                    '%Y-%m-%d %H:%M:%S.%f')
             if self.backtest_csv is not None:
                 if not os.path.exists(self.backtest_csv):
                     self.log_algo.error(
-                        "CSV directory cannot be found (%s)", self.backtest_csv)
+                        "CSV directory cannot be found (%s)",
+                        self.backtest_csv)
                     sys.exit(0)
                 elif self.backtest_csv.endswith("/"):
                     self.backtest_csv = self.backtest_csv[:-1]
@@ -238,8 +242,9 @@ class Algo(Broker):
         :Retruns: dict
             a dict of any non-default args passed on the command-line.
         """
-        parser = argparse.ArgumentParser(description='QTPyLib Algo',
-                                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        parser = argparse.ArgumentParser(
+            description='QTPyLib Algo',
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
         parser.add_argument('--ibport', default=self.args["ibport"],
                             help='IB TWS/GW Port', type=int)
@@ -265,7 +270,7 @@ class Algo(Broker):
         parser.add_argument('--blotter',
                             help='Log trades to this Blotter\'s MySQL')
         parser.add_argument('--continuous', default=self.args["continuous"],
-                            help='Construct continuous Futures contracts (flag)',
+                            help='Use continuous Futures contracts (flag)',
                             action='store_true')
 
         # only return non-default cmd line args
@@ -294,15 +299,17 @@ class Algo(Broker):
                 file = "%s/%s.%s.csv" % (self.backtest_csv, symbol, kind)
                 if not os.path.exists(file):
                     self.log_algo.error(
-                        "Can't load data for %s (%s doesn't exist)", symbol, file)
+                        "Can't load data for %s (%s doesn't exist)",
+                        symbol, file)
                     sys.exit(0)
                 try:
                     df = pd.read_csv(file)
 
                     if "expiry" not in df.columns or \
-                            not validate_csv_columns(df, kind, raise_errors=False):
+                            not validate_csv_columns(df, kind,
+                                                     raise_errors=False):
                         self.log_algo.error(
-                            "%s Doesn't appear to be a QTPyLib-compatible format", file)
+                            "%s isn't a QTPyLib-compatible format", file)
                         sys.exit(0)
                     if df['symbol'].values[-1] != symbol:
                         self.log_algo.error(
@@ -323,7 +330,8 @@ class Algo(Broker):
             )
             history = history[history.index >= self.backtest_start]
 
-        elif not self.blotter_args["dbskip"] and (self.backtest or self.preload):
+        elif not self.blotter_args["dbskip"] and (
+                self.backtest or self.preload):
 
             start = self.backtest_start if self.backtest else tools.backdate(
                 self.preload)
@@ -345,8 +353,9 @@ class Algo(Broker):
                 self.blotter.ibConn = self.ibConn
 
                 # call the back fill
-                self.blotter.backfill(
-                    data=history, resolution=self.resolution, start=start, end=end)
+                self.blotter.backfill(data=history,
+                                      resolution=self.resolution,
+                                      start=start, end=end)
 
                 # re-get history from db
                 history = self.blotter.history(
@@ -454,7 +463,7 @@ class Algo(Broker):
     def on_orderbook(self, instrument):
         """
         Invoked on every change to the orderbook for the selected instrument.
-        This is where you'll write your strategy logic for orderbook changes events.
+        This is where you'll write your strategy logic for orderbook events.
 
         :Parameters:
 
@@ -492,11 +501,13 @@ class Algo(Broker):
             symbols : list
                 List of symbols to fetch history for
             start : datetime / string
-                History time period start date (datetime or YYYY-MM-DD[ HH:MM[:SS]] string)
+                History time period start date
+                datetime or YYYY-MM-DD[ HH:MM[:SS]] string)
 
         :Optional:
             end : datetime / string
-                History time period end date (datetime or YYYY-MM-DD[ HH:MM[:SS]] string)
+                History time period end date
+                (datetime or YYYY-MM-DD[ HH:MM[:SS]] string)
             resolution : string
                 History resoluton (Pandas resample, defaults to 1T/1min)
             tz : string
@@ -528,9 +539,11 @@ class Algo(Broker):
             limit_price : float
                 In case of a LIMIT order, this is the LIMIT PRICE
             expiry : int
-                Cancel this order if not filled after *n* seconds (default 60 seconds)
+                Cancel this order if not filled after *n* seconds
+                (default 60 seconds)
             order_type : string
-                Type of order: Market (default), LIMIT (default when limit_price is passed),
+                Type of order: Market (default),
+                LIMIT (default when limit_price is passed),
                 MODIFY (required passing or orderId)
             orderId : int
                 If modifying an order, the order id of the modified order
@@ -539,7 +552,8 @@ class Algo(Broker):
             initial_stop : float
                 price to set hard stop
             stop_limit: bool
-                Flag to indicate if the stop should be STOP or STOP LIMIT (default False=STOP)
+                Flag to indicate if the stop should be STOP or STOP LIMIT
+                (default False=STOP)
             trail_stop_at : float
                 price at which to start trailing the stop
             trail_stop_by : float
@@ -678,7 +692,8 @@ class Algo(Broker):
     def _thread_safe_merge(symbol, basedata, newdata):
         data = newdata
         if "symbol" in basedata.columns:
-            data = pd.concat([basedata[basedata['symbol'] != symbol], data], sort=True)
+            data = pd.concat(
+                [basedata[basedata['symbol'] != symbol], data], sort=True)
 
         data.loc[:, '_idx_'] = data.index
         data = data.drop_duplicates(
@@ -688,7 +703,8 @@ class Algo(Broker):
         data = data.sort_index()
 
         try:
-            return data.dropna(subset=['open', 'high', 'low', 'close', 'volume'])
+            return data.dropna(subset=[
+                'open', 'high', 'low', 'close', 'volume'])
         except Exception as e:
             return data
 
@@ -786,10 +802,12 @@ class Algo(Broker):
             # add the bar and resample to resolution
             if self.threads == 0:
                 self.bars = self._update_window(self.bars, bar,
-                                                window=self.bar_window, resolution=self.resolution)
+                                                window=self.bar_window,
+                                                resolution=self.resolution)
             else:
                 self_bars = self._update_window(self_bars, bar,
-                                                window=self.bar_window, resolution=self.resolution)
+                                                window=self.bar_window,
+                                                resolution=self.resolution)
 
         # assign new data to self.bars if threaded
         if self.threads > 0:

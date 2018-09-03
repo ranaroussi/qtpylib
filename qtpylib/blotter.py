@@ -142,7 +142,6 @@ class Blotter():
         self._raw_bars = pd.DataFrame(columns=['last', 'volume'])
         self._raw_bars.index.names = ['datetime']
         self._raw_bars.index = pd.to_datetime(self._raw_bars.index, utc=True)
-        # self._raw_bars.index = self._raw_bars.index.tz_convert(settings['timezone'])
         self._raw_bars = {"~": self._raw_bars}
 
         # global objects
@@ -176,7 +175,7 @@ class Blotter():
         # read cached args to detect duplicate blotters
         self.duplicate_run = False
         self.cahced_args = {}
-        self.args_cache_file = tempfile.gettempdir() + "/" + self.name + ".qtpylib"
+        self.args_cache_file = "%s/%s.qtpylib" % (tempfile.gettempdir(), self.name)
         if os.path.exists(self.args_cache_file):
             self.cahced_args = self._read_cached_args()
 
@@ -272,8 +271,9 @@ class Blotter():
 
     # -------------------------------------------
     def load_cli_args(self):
-        parser = argparse.ArgumentParser(description='QTPyLib Blotter',
-                                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        parser = argparse.ArgumentParser(
+            description='QTPyLib Blotter',
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
         parser.add_argument('--symbols', default=self.args['symbols'],
                             help='IB contracts CSV database', required=False)
@@ -286,7 +286,8 @@ class Blotter():
         parser.add_argument('--zmqport', default=self.args['zmqport'],
                             help='ZeroMQ Port to use', required=False)
         parser.add_argument('--orderbook', action='store_true',
-                            help='Get Order Book (Market Depth) data', required=False)
+                            help='Get Order Book (Market Depth) data',
+                            required=False)
         parser.add_argument('--dbhost', default=self.args['dbhost'],
                             help='MySQL server hostname', required=False)
         parser.add_argument('--dbport', default=self.args['dbport'],
@@ -297,8 +298,9 @@ class Blotter():
                             help='MySQL server username', required=False)
         parser.add_argument('--dbpass', default=self.args['dbpass'],
                             help='MySQL server password', required=False)
-        parser.add_argument('--dbskip', default=self.args['dbskip'], required=False,
-                            help='Skip MySQL logging (flag)', action='store_true')
+        parser.add_argument('--dbskip', default=self.args['dbskip'],
+                            required=False, help='Skip MySQL logging (flag)',
+                            action='store_true')
 
         # only return non-default cmd line args
         # (meaning only those actually given)
@@ -336,11 +338,11 @@ class Blotter():
                     msg.errorCode in ibDataTypes["DISCONNECT_ERROR_CODES"]:
                 return
 
-            # if 1100 <= msg.errorCode or 0 < 2200:  # errorCode can be None...
-            if 1100 <= msg.errorCode < 2200 or msg.errorCode == 0:  # errorCode can be None...
+            # errorCode can be None...
+            if 1100 <= msg.errorCode < 2200 or msg.errorCode == 0:
                 self.log_blotter.warning(
                     '[IB #%d] %s', msg.errorCode, msg.errorMsg)
-            elif msg.errorCode not in (502, 504):  # 502, 504 = connection error
+            elif msg.errorCode not in (502, 504):  # connection error
                 self.log_blotter.error(
                     '[IB #%d] %s', msg.errorCode, msg.errorMsg)
 
