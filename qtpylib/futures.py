@@ -166,7 +166,7 @@ def get_active_contract(symbol, url=None, n=1):
 
         """ CME switched to using ajax """
         prodDataUrl = html.text.split('component.baseUrl = "')[1].split(';')[
-            0].replace('" + ', '').replace(' + "', '')
+            0].replace('" + ', '').replace(' + "', '').strip('"')
 
         # get data
         url = 'https://www.cmegroup.com%s?tradeDate=%s' % (
