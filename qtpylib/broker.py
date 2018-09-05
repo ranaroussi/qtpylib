@@ -560,6 +560,14 @@ class Broker():
                       limit_price=0, expiry=0, orderId=0, target=0, initial_stop=0,
                       trail_stop_at=0, trail_stop_by=0, stop_limit=False, **kwargs):
 
+        # fix prices to comply with contract's min-tick
+        ticksize = self.get_contract_details(symbol)['m_minTick']
+        limit_price = tools.round_to_fraction(limit_price, ticksize)
+        target = tools.round_to_fraction(target, ticksize)
+        initial_stop = tools.round_to_fraction(initial_stop, ticksize)
+        trail_stop_at = tools.round_to_fraction(trail_stop_at, ticksize)
+        trail_stop_by = tools.round_to_fraction(trail_stop_by, ticksize)
+
         self.log_broker.debug('CREATE ORDER: %s %4d %s %s', direction,
                               quantity, symbol, dict(locals(), **kwargs))
 
