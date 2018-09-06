@@ -223,7 +223,10 @@ Now, point your browser to http://localhost:5000 and use the password generated 
 
 -----
 
+
 .. note::
+
+    You can find other examples in the qtpylib/examples directory.
     Please refer to the `Full Documentation <http://www.qtpylib.io/>`_ to learn
     how to enable SMS notifications, use the bundled Indicators, and more.
 
@@ -264,14 +267,14 @@ Legal Stuff
 ===========
 
 QTPyLib is licensed under the **Apache License, Version 2.0**. A copy of which is included in LICENSE.txt.
+
 QTPyLib is not a product of Interactive Brokers, nor is it affiliated with Interactive Brokers.
 
 
-You can find other examples in the qtpylib/examples directory.
 
 P.S.
 ----
 
 I'm very interested in your experience with QTPyLib. Please drop me an note with any feedback you have.
 
-**Ran Aroussi**
+**Ran**
