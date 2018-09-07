@@ -635,7 +635,7 @@ class Broker():
             orderId = order["entryOrderId"]
 
             # triggered trailing stop?
-            if (trail_stop_by != None) & (trail_stop_at != None):
+            if trail_stop_by != 0 and trail_stop_at != 0:
                 self.ibConn.createTriggerableTrailingStop(symbol, -order_quantity,
                                                           triggerPrice=trail_stop_at,
                                                           trailPercent=trail_stop_by,
@@ -666,9 +666,11 @@ class Broker():
         self.orders.recent[orderId] = self._get_locals(locals())
         self.orders.recent[orderId]['targetOrderId'] = 0
         self.orders.recent[orderId]['stopOrderId'] = 0
+
         if bracket:
             self.orders.recent[orderId]['targetOrderId'] = order["targetOrderId"]
             self.orders.recent[orderId]['stopOrderId'] = order["stopOrderId"]
+
         # append market price at the time of order
         try:
             self.orders.recent[orderId]['price'] = self.last_price[symbol]
@@ -678,6 +680,7 @@ class Broker():
         # add orderId / ttl to (auto-adds to history)
         expiry = expiry * 1000 if expiry > 0 else 60000  # 1min
         self._update_pending_order(symbol, orderId, expiry, order_quantity)
+
 
     # ---------------------------------------
     def _cancel_order(self, orderId):
