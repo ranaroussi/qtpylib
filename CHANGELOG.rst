@@ -1,11 +1,25 @@
 Release Notes
 =============
 
+*September 7, 2018*
+
+1.5.79
+-----------
+- Changed license to Apache License 2.0
+- Trailing stop compared against 0 instead of None
+- Fix prices to comply with contract's min-tick
+- Fixed IB futures margin fetcher
+- Fixed CME scraping and active contract parser
+- Avoid sending empty tick/bars to algo
+- Updated code to work with latest version of Pandas
+- Fixed compatibility with the ezIBpy v1.12.62
+- Misc fixed typos, bugfixes, and code improvements
+
 *July 26, 2018*
 
 1.5.78
 -----------
-- Fixed compatibility with the ezIBpy v1.12.57
+- Fixed compatibility with the ezIBpy v1.12.58
 - Pushed develop branch to master
 
 *January 12, 2018*
