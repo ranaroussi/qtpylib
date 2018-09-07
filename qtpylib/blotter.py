@@ -6,11 +6,11 @@
 #
 # Copyright 2016-2018 Ran Aroussi
 #
-# Licensed under the GNU Lesser General Public License, v3.0 (the "License");
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     https://www.gnu.org/licenses/lgpl-3.0.en.html
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -142,7 +142,6 @@ class Blotter():
         self._raw_bars = pd.DataFrame(columns=['last', 'volume'])
         self._raw_bars.index.names = ['datetime']
         self._raw_bars.index = pd.to_datetime(self._raw_bars.index, utc=True)
-        # self._raw_bars.index = self._raw_bars.index.tz_convert(settings['timezone'])
         self._raw_bars = {"~": self._raw_bars}
 
         # global objects
@@ -176,7 +175,7 @@ class Blotter():
         # read cached args to detect duplicate blotters
         self.duplicate_run = False
         self.cahced_args = {}
-        self.args_cache_file = tempfile.gettempdir() + "/" + self.name + ".qtpylib"
+        self.args_cache_file = "%s/%s.qtpylib" % (tempfile.gettempdir(), self.name)
         if os.path.exists(self.args_cache_file):
             self.cahced_args = self._read_cached_args()
 
@@ -216,7 +215,7 @@ class Blotter():
         try:
             self.dbcurr.close()
             self.dbconn.close()
-        except:
+        except Exception as e:
             pass
 
         if terminate:
@@ -238,7 +237,7 @@ class Blotter():
             stdout_list = process.communicate()[0].decode('utf-8').split("\n")
             stdout_list = list(filter(None, stdout_list))
             return len(stdout_list) > 0
-        except:
+        except Exception as e:
             return False
 
     # -------------------------------------------
@@ -272,8 +271,9 @@ class Blotter():
 
     # -------------------------------------------
     def load_cli_args(self):
-        parser = argparse.ArgumentParser(description='QTPyLib Blotter',
-                                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        parser = argparse.ArgumentParser(
+            description='QTPyLib Blotter',
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
         parser.add_argument('--symbols', default=self.args['symbols'],
                             help='IB contracts CSV database', required=False)
@@ -286,7 +286,8 @@ class Blotter():
         parser.add_argument('--zmqport', default=self.args['zmqport'],
                             help='ZeroMQ Port to use', required=False)
         parser.add_argument('--orderbook', action='store_true',
-                            help='Get Order Book (Market Depth) data', required=False)
+                            help='Get Order Book (Market Depth) data',
+                            required=False)
         parser.add_argument('--dbhost', default=self.args['dbhost'],
                             help='MySQL server hostname', required=False)
         parser.add_argument('--dbport', default=self.args['dbport'],
@@ -297,8 +298,9 @@ class Blotter():
                             help='MySQL server username', required=False)
         parser.add_argument('--dbpass', default=self.args['dbpass'],
                             help='MySQL server password', required=False)
-        parser.add_argument('--dbskip', default=self.args['dbskip'], required=False,
-                            help='Skip MySQL logging (flag)', action='store_true')
+        parser.add_argument('--dbskip', default=self.args['dbskip'],
+                            required=False, help='Skip MySQL logging (flag)',
+                            action='store_true')
 
         # only return non-default cmd line args
         # (meaning only those actually given)
@@ -336,11 +338,11 @@ class Blotter():
                     msg.errorCode in ibDataTypes["DISCONNECT_ERROR_CODES"]:
                 return
 
-            # if 1100 <= msg.errorCode or 0 < 2200:  # errorCode can be None...
-            if 1100 <= msg.errorCode < 2200 or msg.errorCode == 0:  # errorCode can be None...
+            # errorCode can be None...
+            if 1100 <= msg.errorCode < 2200 or msg.errorCode == 0:
                 self.log_blotter.warning(
                     '[IB #%d] %s', msg.errorCode, msg.errorMsg)
-            elif msg.errorCode not in (502, 504):  # 502, 504 = connection error
+            elif msg.errorCode not in (502, 504):  # connection error
                 self.log_blotter.error(
                     '[IB #%d] %s', msg.errorCode, msg.errorMsg)
 
@@ -359,7 +361,7 @@ class Blotter():
             try:
                 self.ibConn.cancelHistoricalData(
                     self.ibConn.contracts[msg.reqId])
-            except:
+            except Exception as e:
                 pass
 
         else:
@@ -506,7 +508,7 @@ class Blotter():
             else:
                 self.broadcast(quote, "QUOTE")
 
-        except:
+        except Exception as e:
             pass
 
     # -------------------------------------------
@@ -580,7 +582,7 @@ class Blotter():
             tick["kind"] = "QUOTE"
             self.broadcast(tick, "QUOTE")
 
-        # except:
+        # except Exception as e:
             # pass
 
     # -------------------------------------------
@@ -614,7 +616,7 @@ class Blotter():
 
         try:
             timestamp = parse_date(timestamp)
-        except:
+        except Exception as e:
             pass
 
         # placeholders
@@ -675,7 +677,7 @@ class Blotter():
         # print(kind, string2send)
         try:
             self.socket.send_string(string2send)
-        except:
+        except Exception as e:
             pass
 
     # -------------------------------------------
@@ -706,18 +708,18 @@ class Blotter():
         if kind == "TICK":
             try:
                 mysql_insert_tick(data, symbol_id, dbcurr)
-            except:
+            except Exception as e:
                 pass
         elif kind == "BAR":
             try:
                 mysql_insert_bar(data, symbol_id, dbcurr)
-            except:
+            except Exception as e:
                 pass
 
         # commit
         try:
             dbconn.commit()
-        except:
+        except Exception as e:
             pass
 
         # disconect from mysql
@@ -913,7 +915,7 @@ class Blotter():
                 bad_ids.append(list(malformed['id'].values))
 
         # combine all lists
-        data = pd.concat(dfs)
+        data = pd.concat(dfs, sort=True)
 
         # flatten bad ids
         bad_ids = sum(bad_ids, [])
@@ -927,7 +929,7 @@ class Blotter():
                                 " WHERE id IN (%s)" % (",".join(bad_ids)))
             try:
                 self.dbconn.commit()
-            except:
+            except Exception as e:
                 self.dbconn.rollback()
 
         # return
@@ -948,14 +950,14 @@ class Blotter():
         try:
             start = start.strftime(
                 ibDataTypes["DATE_TIME_FORMAT_LONG_MILLISECS"])
-        except:
+        except Exception as e:
             pass
 
         if end is not None:
             try:
                 end = end.strftime(
                     ibDataTypes["DATE_TIME_FORMAT_LONG_MILLISECS"])
-            except:
+            except Exception as e:
                 pass
 
         # connect to mysql
@@ -1047,7 +1049,7 @@ class Blotter():
 
                     try:
                         data["datetime"] = parse_date(data["timestamp"])
-                    except:
+                    except Exception as e:
                         pass
 
                     df = pd.DataFrame(index=[0], data=data)
@@ -1057,7 +1059,7 @@ class Blotter():
 
                     try:
                         df.index = df.index.tz_convert(tz)
-                    except:
+                    except Exception as e:
                         df.index = df.index.tz_localize('UTC').tz_convert(tz)
 
                     # add options columns
@@ -1247,7 +1249,7 @@ class Blotter():
             self.dbconn = self.get_mysql_connection()
             self.dbcurr = self.dbconn.cursor()
 
-        except:
+        except Exception as e:
             self.dbconn.rollback()
             self.log_blotter.error("Cannot create database schema")
             self._remove_cached_args()
@@ -1387,7 +1389,7 @@ def get_symbol_id(symbol, dbconn, dbcurr, ibConn=None):
                 dbcurr.execute(sql)
                 try:
                     dbconn.commit()
-                except:
+                except Exception as e:
                     return False
                 return int(row[0])
 
@@ -1401,7 +1403,7 @@ def get_symbol_id(symbol, dbconn, dbcurr, ibConn=None):
                              asset_class, expiry, expiry))
         try:
             dbconn.commit()
-        except:
+        except Exception as e:
             return False
 
         return dbcurr.lastrowid
@@ -1441,7 +1443,7 @@ def mysql_insert_tick(data, symbol_id, dbcurr):
                                         float(data["opt_theta"]), float(
                                             data["opt_vega"]),
                                         ))
-        except:
+        except Exception as e:
             pass
 
 
@@ -1481,7 +1483,7 @@ def mysql_insert_bar(data, symbol_id, dbcurr):
                                         float(greeks["opt_theta"]), float(
                                             greeks["opt_vega"]),
                                         ))
-        except:
+        except Exception as e:
             pass
 
 # -------------------------------------------
@@ -1514,7 +1516,7 @@ def prepare_history(data, resolution="1T", tz="UTC", continuous=True):
             all_dfs.append(continuous)
 
         # make one df again
-        data = pd.concat(all_dfs)
+        data = pd.concat(all_dfs, sort=True)
 
     data = tools.resample(data, resolution, tz)
     return data

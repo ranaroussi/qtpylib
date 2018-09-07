@@ -28,7 +28,7 @@ setup(
     author_email='ran@aroussi.com',
     license='LGPL',
     classifiers=[
-        'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
+        'License :: OSI Approved :: Apache Software License',
         'Development Status :: 4 - Beta',
 
         'Operating System :: OS Independent',
@@ -46,8 +46,8 @@ setup(
     keywords='qtpylib qtpy algotrading algo trading interactive brokers tws ibgw ibpy ezibpy',
     packages=find_packages(exclude=['contrib', 'docs', 'tests', 'demo', 'demos', 'examples']),
     install_requires=[
-        'python-dateutil>=2.5.3','ezibpy>=1.12.58',
-        'flask>=0.11.1','numpy>=1.11.1','pandas>=0.18.1','pymysql>=0.7.6',
+        'python-dateutil>=2.5.3','ezibpy>=1.12.62',
+        'flask>=0.11.1','numpy>=1.11.1','pandas>=0.22.0','pymysql>=0.7.6',
         'pytz>=2016.6.1','requests>=2.10.0','pyzmq>=15.2.1',
         'nexmo>=1.2.0','twilio>=5.4.0','ibpy2>=0.8.0',
     ],

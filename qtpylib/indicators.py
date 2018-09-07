@@ -6,11 +6,11 @@
 #
 # Copyright 2016-2018 Ran Aroussi
 #
-# Licensed under the GNU Lesser General Public License, v3.0 (the "License");
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     https://www.gnu.org/licenses/lgpl-3.0.en.html
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -260,7 +260,7 @@ def rolling_std(series, window=200, min_periods=None):
     else:
         try:
             return series.rolling(window=window, min_periods=min_periods).std()
-        except:
+        except Exception as e:
             return pd.Series(series).rolling(window=window, min_periods=min_periods).std()
 
 # ---------------------------------------------
@@ -273,7 +273,7 @@ def rolling_mean(series, window=200, min_periods=None):
     else:
         try:
             return series.rolling(window=window, min_periods=min_periods).mean()
-        except:
+        except Exception as e:
             return pd.Series(series).rolling(window=window, min_periods=min_periods).mean()
 
 # ---------------------------------------------
@@ -283,7 +283,7 @@ def rolling_min(series, window=14, min_periods=None):
     min_periods = window if min_periods is None else min_periods
     try:
         return series.rolling(window=window, min_periods=min_periods).min()
-    except:
+    except Exception as e:
         return pd.Series(series).rolling(window=window, min_periods=min_periods).min()
 
 
@@ -293,7 +293,7 @@ def rolling_max(series, window=14, min_periods=None):
     min_periods = window if min_periods is None else min_periods
     try:
         return series.rolling(window=window, min_periods=min_periods).min()
-    except:
+    except Exception as e:
         return pd.Series(series).rolling(window=window, min_periods=min_periods).min()
 
 
@@ -303,7 +303,7 @@ def rolling_weighted_mean(series, window=200, min_periods=None):
     min_periods = window if min_periods is None else min_periods
     try:
         return series.ewm(span=window, min_periods=min_periods).mean()
-    except:
+    except Exception as e:
         return pd.ewma(series, span=window, min_periods=min_periods)
 
 
@@ -460,7 +460,7 @@ def returns(series):
     try:
         res = (series / series.shift(1) -
                1).replace([np.inf, -np.inf], float('NaN'))
-    except:
+    except Exception as e:
         res = nans(len(series))
 
     return pd.Series(index=series.index, data=res)
@@ -472,7 +472,7 @@ def log_returns(series):
     try:
         res = np.log(series / series.shift(1)
                     ).replace([np.inf, -np.inf], float('NaN'))
-    except:
+    except Exception as e:
         res = nans(len(series))
 
     return pd.Series(index=series.index, data=res)
@@ -485,7 +485,7 @@ def implied_volatility(series, window=252):
         logret = np.log(series / series.shift(1)
                        ).replace([np.inf, -np.inf], float('NaN'))
         res = numpy_rolling_std(logret, window) * np.sqrt(window)
-    except:
+    except Exception as e:
         res = nans(len(series))
 
     return pd.Series(index=series.index, data=res)
@@ -537,11 +537,11 @@ def stoch(df, window=14, d=3, k=3, fast=False):
     http://excelta.blogspot.co.il/2013/09/stochastic-oscillator-technical.html
     """
     highs_ma = pd.concat([df['high'].shift(i)
-                          for i in np.arange(window)], 1).apply(list, 1)
+                          for i in np.arange(window)], 1, sort=True).apply(list, 1)
     highs_ma = highs_ma.T.max().T
 
     lows_ma = pd.concat([df['low'].shift(i)
-                         for i in np.arange(window)], 1).apply(list, 1)
+                         for i in np.arange(window)], 1, sort=True).apply(list, 1)
     lows_ma = lows_ma.T.min().T
 
     fast_k = ((df['close'] - lows_ma) / (highs_ma - lows_ma)) * 100

@@ -6,11 +6,11 @@
 #
 # Copyright 2016-2018 Ran Aroussi
 #
-# Licensed under the GNU Lesser General Public License, v3.0 (the "License");
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     https://www.gnu.org/licenses/lgpl-3.0.en.html
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -126,7 +126,7 @@ def get_data_yahoo(symbols, start, end=None, **kwargs):
         # add to collection
         dfs.append(ohlc)
 
-    return pd.concat(dfs).sort_index()
+    return pd.concat(dfs, sort=True).sort_index()
 
 
 # ---------------------------------------------
@@ -534,7 +534,7 @@ def store_data(df, blotter=None, kind="BAR"):
 
         try:
             dbconn.commit()
-        except:
+        except Exception as e:
             return False
 
     return True

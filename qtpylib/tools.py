@@ -6,11 +6,11 @@
 #
 # Copyright 2016-2018 Ran Aroussi
 #
-# Licensed under the GNU Lesser General Public License, v3.0 (the "License");
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     https://www.gnu.org/licenses/lgpl-3.0.en.html
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -82,7 +82,7 @@ def multi_shift(df, window):
     dfs = [df.shift(i) for i in np.arange(window)]
     for ix, df_item in enumerate(dfs[1:]):
         dfs[ix + 1].columns = [str(col) for col in df_item.columns + str(ix + 1)]
-    return pd.concat(dfs, 1) #.apply(list, 1)
+    return pd.concat(dfs, 1, sort=True) #.apply(list, 1)
 
 # ---------------------------------------------
 
@@ -165,7 +165,7 @@ def create_ib_tuple(instrument):
                               spec['exchange'].upper(), spec['currency'].upper(),
                               int(expiry), 0.0, "")
 
-            except:
+            except Exception as e:
                 raise ValueError("Un-parsable contract tuple")
 
     # tuples without strike/right
@@ -184,7 +184,7 @@ def create_ib_tuple(instrument):
 
         try:
             instrument_list[4] = int(instrument_list[4])
-        except:
+        except Exception as e:
             pass
 
         instrument_list[5] = 0. if isinstance(instrument_list[5], str) \
@@ -296,11 +296,11 @@ def chmod(f):
     """ change mod to writeable """
     try:
         os.chmod(f, S_IWRITE)  # windows (cover all)
-    except:
+    except Exception as e:
         pass
     try:
         os.chmod(f, 0o777)  # *nix
-    except:
+    except Exception as e:
         pass
 
 
@@ -363,6 +363,8 @@ def datetime64_to_datetime(dt):
 
 def round_to_fraction(val, res, decimals=None):
     """ round to closest resolution """
+    if val is None:
+        return 0.0
     if decimals is None and "." in str(res):
         decimals = len(str(res).split('.')[1])
 
@@ -381,7 +383,7 @@ def backdate(res, date=None, as_datetime=False, fmt='%Y-%m-%d'):
     else:
         try:
             date = parse_date(date)
-        except:
+        except Exception as e:
             pass
 
     new_date = date
@@ -459,7 +461,7 @@ def get_timezone(as_timedelta=False):
     """ utility to get the machine's timezone """
     try:
         offset_hour = -(time.altzone if time.daylight else time.timezone)
-    except:
+    except Exception as e:
         offset_hour = -(datetime.datetime.now() -
                         datetime.datetime.utcnow()).seconds
 
@@ -507,13 +509,13 @@ def set_timezone(data, tz=None, from_local=False):
         try:
             try:
                 data.index = data.index.tz_convert(tz)
-            except:
+            except Exception as e:
                 if from_local:
                     data.index = data.index.tz_localize(
                         get_timezone()).tz_convert(tz)
                 else:
                     data.index = data.index.tz_localize('UTC').tz_convert(tz)
-        except:
+        except Exception as e:
             pass
 
     # not pandas...
@@ -523,9 +525,9 @@ def set_timezone(data, tz=None, from_local=False):
         try:
             try:
                 data = data.astimezone(tz)
-            except:
+            except Exception as e:
                 data = timezone('UTC').localize(data).astimezone(timezone(tz))
-        except:
+        except Exception as e:
             pass
 
     return data
@@ -582,13 +584,13 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
         # figure out timezone
         try:
             tz = data.index.tz if tz is None else tz
-        except:
+        except Exception as e:
             pass
 
         if str(tz) != 'None':
             try:
                 data.index = data.index.tz_convert(tz)
-            except:
+            except Exception as e:
                 data.index = data.index.tz_localize('UTC').tz_convert(tz)
 
         # sort by index (datetime)
@@ -614,7 +616,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
                        'opt_delta', 'opt_gamma', 'opt_theta', 'opt_vega']].copy()
             price_col = 'last'
             size_col = 'lastsize'
-        except:
+        except Exception as e:
             df = data[['close', 'volume', 'opt_underlying', 'opt_price',
                        'opt_dividend', 'opt_volume', 'opt_iv', 'opt_oi',
                        'opt_delta', 'opt_gamma', 'opt_theta', 'opt_vega']].copy()
@@ -703,7 +705,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
 
                 combined.append(symdata)
 
-            data = pd.concat(combined)
+            data = pd.concat(combined, sort=True)
 
     elif "V" in resolution:
         if periods > 1:
@@ -724,7 +726,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
 
                 combined.append(symdata)
 
-            data = pd.concat(combined)
+            data = pd.concat(combined, sort=True)
 
     # continue...
     else:
@@ -774,7 +776,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
                     last_row["close"] = last_row["close"]
                     last_row["volume"] = 0
 
-                data = pd.concat([data, last_row]).sort_index()
+                data = pd.concat([data, last_row], sort=True).sort_index()
                 data.loc[:, '_idx_'] = data.index
                 data = data.drop_duplicates(
                     subset=['_idx_', 'symbol',
@@ -844,7 +846,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
 
             combined.append(symdata)
 
-        data = pd.concat(combined)
+        data = pd.concat(combined, sort=True)
         data['volume'] = data['volume'].astype(int)
 
     return __finalize(data, tz)
@@ -891,7 +893,7 @@ class DataStore():
             self.recorded = row
         else:
             self.recorded.merge(row)
-            self.recorded = pd.concat([self.recorded, row])
+            self.recorded = pd.concat([self.recorded, row], sort=True)
 
         # merge rows (play nice with multi-symbol portfolios)
         meta_data = self.recorded.groupby(["symbol"])[
@@ -909,7 +911,7 @@ class DataStore():
 
             combined.append(symdata)
 
-        self.recorded = pd.concat(combined)
+        self.recorded = pd.concat(combined, sort=True)
 
         # cleanup: remove non-option data if not working with options
         opt_cols = df.columns[df.columns.str.startswith('opt_')].tolist()

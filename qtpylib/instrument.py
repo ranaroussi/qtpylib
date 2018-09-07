@@ -6,11 +6,11 @@
 #
 # Copyright 2016-2018 Ran Aroussi
 #
-# Licensed under the GNU Lesser General Public License, v3.0 (the "License");
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     https://www.gnu.org/licenses/lgpl-3.0.en.html
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -58,9 +58,9 @@ class Instrument(str):
         try:
             # this produce a "IndexingError using Boolean Indexing" (on rare occasions)
             return df[(df['symbol'] == symbol) | (df['symbol_group'] == symbol)].copy()
-        except:
+        except Exception as e:
             df = pd_concat([df[df['symbol'] == symbol],
-                            df[df['symbol_group'] == symbol]])
+                            df[df['symbol_group'] == symbol]], sort=True)
             df.loc[:, '_idx_'] = df.index
             return df.drop_duplicates(subset=['_idx_'], keep='last').drop('_idx_', axis=1)
 
@@ -411,7 +411,7 @@ class Instrument(str):
             if attr is not None:
                 attr = attr.replace("quantity", "position")
             return pos[attr]
-        except:
+        except Exception as e:
             return pos
 
     # ---------------------------------------

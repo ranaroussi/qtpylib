@@ -5,15 +5,15 @@ QTPyLib supports both automatic trade notifications via SMS
 and  custom messages (for example, when you want to SMS yourself
 signals without entering a trade).
 
-To specify the recepients, add the ``--sms`` flag when running
+To specify the recipients, add the ``--sms`` flag when running
 your algo from the command line:
 
 .. code:: bash
 
     $ python strategy.py --sms +15551230987 +447781123456 ...
 
-Now, whenever your algo generates a trade or when you send custom SMS,
-these recepients will receive the notification to their phone.
+Now, whenever your algo generates a trade or when you send a custom SMS,
+these recipients will receive the notification to their phone.
 
 .. note::
     To enable this functionality, you need to have an account with either
@@ -27,10 +27,10 @@ Trade Notifications
 -------------------
 
 Trades notifications are **enabled by default** and will be sent
-whenever your algo makes a trade, as long as you specified recepients
+whenever your algo makes a trade, as long as you specified recipients
 when running the algo.
 
-Trade notifications looks like this (followed are made up prices):
+Trade notifications look like this (followed are made up prices):
 
 .. code::
 
