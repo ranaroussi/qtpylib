@@ -42,7 +42,7 @@ Writing your Blotter
 To get started writing your Blotter, you'll need to create
 a Blotter object sub-class and name it.
 
-Then, inililize your Blotter by passing your MySQL credentials
+Then, initialize your Blotter by passing your MySQL credentials
 and TWS/IBGW port and run it.
 
 .. code:: python
@@ -77,10 +77,10 @@ With IB TWS/GW running, run the Blotter from the command line:
     $ python blotter.py
 
 
-Initilizing via CLI
-~~~~~~~~~~~~~~~~~~~
+Initializing via CLI
+~~~~~~~~~~~~~~~~~~~~
 
-You can also override the initilized paramters (or ommit this
+You can also override the initilized parameters (or omit this
 part of the code altogether) and pass runtime parameters
 using the command line.
 
@@ -144,7 +144,7 @@ as your Blotter.
 This fill will store all the instruments that algos connecting to this
 Blotter will request data for. Your blotter will keep logging market
 data for these instruments even when you stop your algos so you have
-continious market data stored in your database for future research
+continuous market data stored in your database for future research
 and backtesting (expired product will be deleted automatically from
 this file).
 

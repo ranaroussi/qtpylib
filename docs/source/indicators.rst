@@ -2,7 +2,7 @@ Technical Indicators
 ====================
 
 Although you can import technical indicator libraries and use them in your strategies,
-QTPyLib does comes bundled with some common indicators that work as Pandas Objects.
+QTPyLib does come bundled with some common indicators that work as Pandas Objects.
 
 
 Built-In Indicators
@@ -376,12 +376,12 @@ Z-Score
 TA-Lib Integration
 ~~~~~~~~~~~~~~~~~~
 
-Starting with 1.3.91a, QTPyLib offers full integration with `TA-Lib <http://ta-lib.org>`_.
+QTPyLib also offers full integration with `TA-Lib <http://ta-lib.org>`_.
 
 All the TA-Lib methods are available via the ``talib_indicators`` modules and
-automatically extracts and prepares the relevant data your strategy's ``bars`` or ``ticks``.
+automatically extracts and prepare the relevant data your strategy's ``bars`` or ``ticks``.
 
-To use the TA-Lib integtation, you'll need to have TA-Lib installed on your system,
+To use the TA-Lib integration, you'll need to have TA-Lib installed on your system,
 and import the ``talib_indicators`` module into your strategies:
 
 

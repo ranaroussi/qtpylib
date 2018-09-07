@@ -1,7 +1,7 @@
 Data Workflow
 =============
 
-QTPyLib's new ``workflow`` module includes some handly methods for
+QTPyLib's new ``workflow`` module includes some handy methods for
 working with external data sources when backtesting.
 
 Working with External Data
@@ -38,11 +38,11 @@ so it can be used just like any other data captured by your ``Blotter``.
 
 .. note::
 
-    The first agrument in ``prepare_data()`` must be a **valid string as IB tuple**
+    The first argument in ``prepare_data()`` must be a **valid string as IB tuple**
     (just like the those specified in your strategy's ``instruments`` parameter).
     For a complete list of available methods and parameters for each
     method, please refer to the `Workflow API <./api.html#workflow-api>`_
-    for full list of available parameters for each method.
+    for a full list of available parameters for each method.
 
 
 Using CSV files when Backtesting

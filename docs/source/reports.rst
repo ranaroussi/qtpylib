@@ -9,7 +9,7 @@ etc to create your own application.
 .. note::
     Since QTPyLib relies on Interactive Brokers for pretty much
     everything, it's recommended that you create a second user
-    for your IB account and use it to login to TWS on your
+    for your IB account and use it to log in to TWS on your
     computer or Phone. There you can see the trades made by
     your algorithms, use the built-in charts, etc.
 
@@ -56,10 +56,10 @@ Point your browser to ``http://localhost:5000``, enter the password, and you sho
     :alt: QTPyLib Dashboard
 
 
-Initilizing via CLI
-~~~~~~~~~~~~~~~~~~~
+Initializing via CLI
+~~~~~~~~~~~~~~~~~~~~
 
-You can also override the initilized paramters (or ommit this
+You can also override the initialized parameters (or omit this
 part of the code altogether) and pass runtime parameters
 using the command line.
 
@@ -87,7 +87,7 @@ Then, run the Blotter by passing the parameters via the command line:
 Available Arguments
 ~~~~~~~~~~~~~~~~~~~
 
-Below are the parameters that can either be set via the ``Reports()`` initilizer
+Below are the parameters that can either be set via the ``Reports()`` initializer
 or via CLI:
 
 - ``--port`` HTTP port to use (default: ``5000``)
@@ -100,13 +100,13 @@ or via CLI:
 REST API
 --------
 
-With your web app running, a few REST API endpoints becomes accessible using:
+With your web app running, a few REST API endpoints become accessible using:
 
 .. code:: bash
 
     $ curl -i -X GET ENDPOINT
 
-Each endpoints returns an Array of JSON objects with the requested information.
+Each endpoint returns an Array of JSON objects with the requested information.
 
 Example Response (``/trades``)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
