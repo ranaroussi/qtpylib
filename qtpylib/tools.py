@@ -363,6 +363,8 @@ def datetime64_to_datetime(dt):
 
 def round_to_fraction(val, res, decimals=None):
     """ round to closest resolution """
+    if val is None:
+        return 0.0
     if decimals is None and "." in str(res):
         decimals = len(str(res).split('.')[1])
 
