@@ -14,7 +14,7 @@ algorithms subscribe to the Blotter's updates via pub/sub
 mechanism using ZeroMQ - a blazing fast Message Queue.
 
 .. note::
-    QTPyLib was designed with a **"One Blotter To Rule Them All"**
+    QTPyLib was created with a **"One Blotter To Rule Them All"**
     design in mind. All your algorithms can listen to a single
     Blotter running in the background without a problem and without
     consuming any unnecessary system resources.
