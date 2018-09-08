@@ -1,7 +1,7 @@
 Writing Your Algorithm
 ======================
 
-When creating your algorithm, there are two functions that handle
+When creating your algorithm, there are 4 functions that handle
 incoming market data from the running Blotter. These are
 ``on_quote()`` which is invoked on every quote change,
 ``on_tick()`` which is invoked on every tick captured,
@@ -10,7 +10,7 @@ incoming market data from the running Blotter. These are
 
 An `Instrument Object <./api_instrument.html>`_ is being passed to each method when called.
 
-If you need to set some parameters when your strategy starts,
+If you need to run some logic when your strategy starts,
 simply add an ``on_start()`` method to your strategy, and set
 your parameters there.
 
@@ -166,11 +166,11 @@ With your Blotter running in the background, run your algo from the command line
 
 .. code:: bash
 
-    $ python strategy.py --log ~/qtpy/
+    $ python strategy.py --log ~/qtpylib/
 
 
-By adding ``--log ~/qtpy/`` we ask that the resulting trade journal be saved
-in ``~/qtpy/STRATEGY_YYYYMMDD.csv`` for later analysis **in addition** to
+By adding ``--log ~/qtpylib/`` we ask that the resulting trade journal be saved
+in ``~/qtpylib/STRATEGY_YYYYMMDD.csv`` for later analysis **in addition** to
 being saved in the database.
 
 -----
@@ -222,7 +222,7 @@ Using Multiple Instruments
 Initializing Parameters
 -----------------------
 
-Sometimes you'd want to set some parameters when you initlize
+Sometimes you'd want to set some parameters when you initialize
 your Strategy. To do so, simply add an ``on_start()`` method
 to your strategy, and set your parameters there. It will be
 invoked once when you strategy starts.

@@ -108,7 +108,7 @@ Then, run the Blotter by passing the parameters via the command line:
 Available Arguments
 ~~~~~~~~~~~~~~~~~~~
 
-Below are all the parameters that can either be set via the ``Blotter()`` initilizer
+Below are all the parameters that can either be set via the ``Blotter()`` initializer
 or via CLI:
 
 - ``--symbols`` CSV database of IB contracts for market data fetching (default: ``./symbols.csv``)
@@ -124,7 +124,6 @@ or via CLI:
 - ``--dbpass`` MySQL server password (default: ``None``)
 - ``--dbskip`` [flag] Skip MySQL logging of market data (default: ``False``)
 - ``--orderbook`` [flag] Tells the blotter to fetch and stream order book data (default: ``False``)
-- ``--dbpass`` MySQL server password (default: ``None``)
 - ``--max_threads`` Maximum number of threads to use (default is 1)
 
 .. note::
