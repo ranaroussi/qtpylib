@@ -1309,8 +1309,6 @@ def load_blotter_args(blotter_name=None, logger=None):
     return args
 
 # -------------------------------------------
-
-
 def get_symbol_id(symbol, dbconn, dbcurr, ibConn=None):
     """
     Retrives symbol's ID from the Database or create it if it doesn't exist
@@ -1410,6 +1408,7 @@ def get_symbol_id(symbol, dbconn, dbcurr, ibConn=None):
 
 
 # -------------------------------------------
+@asynctools.multitasking.task
 def mysql_insert_tick(data, symbol_id, dbcurr):
 
     sql = """INSERT IGNORE INTO `ticks` (`datetime`, `symbol_id`,
@@ -1448,6 +1447,7 @@ def mysql_insert_tick(data, symbol_id, dbcurr):
 
 
 # -------------------------------------------
+@asynctools.multitasking.task
 def mysql_insert_bar(data, symbol_id, dbcurr):
     sql = """INSERT IGNORE INTO `bars`
         (`datetime`, `symbol_id`, `open`, `high`, `low`, `close`, `volume`)
@@ -1487,8 +1487,6 @@ def mysql_insert_bar(data, symbol_id, dbcurr):
             pass
 
 # -------------------------------------------
-
-
 def prepare_history(data, resolution="1T", tz="UTC", continuous=True):
 
     # setup dataframe
