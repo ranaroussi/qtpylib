@@ -64,6 +64,9 @@ class multitasking():
 
         cls.__POOL_NAME__ = name
 
+        if threads is None:
+            threads == cls.__CPU_CORES__
+
         try:
             threads = int(threads)
         except Exception as e:
@@ -74,7 +77,7 @@ class multitasking():
             threads = 0
 
         cls.__POOLS__[cls.__POOL_NAME__] = {
-            "pool": Semaphore(threads) if threads > 0 else None,
+            "pool": Semaphore(threads) if threads > 0 else 1,
             "engine": Process if "process" in engine.lower() else Thread,
             "name": name,
             "threads": threads
