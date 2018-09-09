@@ -32,12 +32,11 @@ QTPyLib, Pythonic Algorithmic Trading
 \
 
 QTPyLib (**Q**\ uantitative **T**\ rading **Py**\ thon **Lib**\ rary)
-is a simple, event-driven algorithmic trading system written in Python 3,
-that supports backtesting and live trading using
-`Interactive Brokers <https://www.interactivebrokers.com>`_
-for market data and order execution.
+is a simple, **event-driven algorithmic trading library** written in Python,
+that supports backtesting, as well as paper and live trading via
+`Interactive Brokers <https://www.interactivebrokers.com>`_.
 
-I originally developed QTPyLib because I wanted for a simple,
+I developed QTPyLib because I wanted for a simple,
 yet powerful, trading library that will let me focus on the
 trading logic itself and ignore everything else.
 
