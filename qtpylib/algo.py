@@ -372,6 +372,12 @@ class Algo(Broker):
                 # take our ibConn back :)
                 self.blotter.ibConn = None
 
+        # optimize pandas
+        if not history.empty:
+            history['symbol'] = history['symbol'].astype('category')
+            history['symbol_group'] = history['symbol_group'].astype('category')
+            history['asset_class'] = history['asset_class'].astype('category')
+
         if self.backtest:
             # initiate strategy
             self.on_start()
@@ -815,6 +821,12 @@ class Algo(Broker):
         # assign new data to self.bars if threaded
         if self.threads > 0:
             self.bars = self._thread_safe_merge(symbol, self.bars, self_bars)
+
+        # optimize pandas
+        if len(self.bars) == 1:
+            self.bars['symbol'] = self.bars['symbol'].astype('category')
+            self.bars['symbol_group'] = self.bars['symbol_group'].astype('category')
+            self.bars['asset_class'] = self.bars['asset_class'].astype('category')
 
         # new bar?
         hash_string = bar[:1]['symbol'].to_string().translate(
