@@ -49,8 +49,8 @@ tools.createLogger(__name__)
 
 # =============================================
 # set up threading pool
-__threads__ = tools.read_single_argv("--max_threads")
-__threads__ = int(__threads__) if tools.is_number(__threads__) else 1
+__threads__ = tools.read_single_argv("--threads")
+__threads__ = int(__threads__) if tools.is_number(__threads__) else None
 asynctools.multitasking.createPool(__name__, __threads__)
 
 # =============================================
