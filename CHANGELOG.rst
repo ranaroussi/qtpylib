@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+*September 11, 2018*
+
+1.5.8
+-----------
+- Fixed issues related to multi-instrument strategies
+- Misc fixed typos, bugfixes, and code improvements
+
+
 *September 7, 2018*
 
 1.5.79
