@@ -1412,7 +1412,6 @@ def get_symbol_id(symbol, dbconn, dbcurr, ibConn=None):
 
 
 # -------------------------------------------
-@asynctools.multitasking.task
 def mysql_insert_tick(data, symbol_id, dbcurr):
 
     sql = """INSERT IGNORE INTO `ticks` (`datetime`, `symbol_id`,
@@ -1451,7 +1450,6 @@ def mysql_insert_tick(data, symbol_id, dbcurr):
 
 
 # -------------------------------------------
-@asynctools.multitasking.task
 def mysql_insert_bar(data, symbol_id, dbcurr):
     sql = """INSERT IGNORE INTO `bars`
         (`datetime`, `symbol_id`, `open`, `high`, `low`, `close`, `volume`)
