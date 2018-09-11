@@ -849,19 +849,21 @@ class Algo(Broker):
             df = df.append(data, sort=True)
 
         # resample
-        if resolution is not None:
+        if resolution:
             try:
                 tz = str(df.index.tz)
             except Exception as e:
                 tz = None
             df = tools.resample(df, resolution=resolution, tz=tz)
 
-        # remove duplicates rows
-        df.loc[:, '_idx_'] = df.index
-        df.drop_duplicates(
-            subset=['_idx_', 'symbol', 'symbol_group', 'asset_class'],
-            keep='last', inplace=True)
-        df.drop('_idx_', axis=1, inplace=True)
+        else:
+            # remove duplicates rows
+            # (handled by resample if resolution is provided)
+            df.loc[:, '_idx_'] = df.index
+            df.drop_duplicates(
+                subset=['_idx_', 'symbol', 'symbol_group', 'asset_class'],
+                keep='last', inplace=True)
+            df.drop('_idx_', axis=1, inplace=True)
 
         # return
         if window is None:
