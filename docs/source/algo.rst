@@ -331,7 +331,7 @@ You can override any of the above parameters using run-time using command line a
 - ``--output`` Path to save the recorded data (default: ``None``)
 - ``--blotter`` Log trades to MySQL server used by this Blotter (default: ``auto-detect``)
 - ``--continuous`` Construct continuous Futures contracts (flag, default: ``True``)
-- ``--max_threads`` Maximum number of threads to use (default is 1)
+- ``--threads`` Maximum number of threads to use (default is # of CPU cores)
 
 **Example:**
 
@@ -341,7 +341,7 @@ You can override any of the above parameters using run-time using command line a
 
 .. note::
 
-    **It's recommended that you set the** ``max_threads`` **parameter based on your strategy's needs and your machine's capabilities!**
+    **It's recommended that you set the** ``threads`` **parameter based on your strategy's needs and your machine's capabilities!**
     As a general rule of thumb, strategies that are trading a handful of symbols probably don't need to tweak this parameter.
 
 ----
