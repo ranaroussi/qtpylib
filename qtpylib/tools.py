@@ -580,7 +580,6 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
              sync_last_timestamp=True):
 
     def __finalize(data, tz=None):
-
         # figure out timezone
         try:
             tz = data.index.tz if tz is None else tz
@@ -595,7 +594,16 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
 
         # sort by index (datetime)
         data.sort_index(inplace=True)
-        return data[~data.index.duplicated(keep='last')]
+
+        # drop duplicate rows per instrument
+        data.loc[:, '_idx_'] = data.index
+        data.drop_duplicates(
+            subset=['_idx_', 'symbol', 'symbol_group', 'asset_class'],
+            keep='last', inplace=True)
+        data.drop('_idx_', axis=1, inplace=True)
+
+        return data
+        # return data[~data.index.duplicated(keep='last')]
 
 
     def __resample_ticks(data, freq=1000, by='last'):
