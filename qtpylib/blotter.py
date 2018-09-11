@@ -175,7 +175,8 @@ class Blotter():
         # read cached args to detect duplicate blotters
         self.duplicate_run = False
         self.cahced_args = {}
-        self.args_cache_file = "%s/%s.qtpylib" % (tempfile.gettempdir(), self.name)
+        self.args_cache_file = "%s/%s.qtpylib" % (
+            tempfile.gettempdir(), self.name)
         if os.path.exists(self.args_cache_file):
             self.cahced_args = self._read_cached_args()
 
@@ -1224,7 +1225,8 @@ class Blotter():
         self.dbcurr.execute("SHOW TABLES")
         tables = [table[0] for table in self.dbcurr.fetchall()]
 
-        required = ["bars", "ticks", "symbols", "trades", "greeks", "_version_"]
+        required = ["bars", "ticks", "symbols",
+                    "trades", "greeks", "_version_"]
         if all(item in tables for item in required):
             self.dbcurr.execute("SELECT version FROM `_version_`")
             db_version = self.dbcurr.fetchone()
@@ -1309,6 +1311,8 @@ def load_blotter_args(blotter_name=None, logger=None):
     return args
 
 # -------------------------------------------
+
+
 def get_symbol_id(symbol, dbconn, dbcurr, ibConn=None):
     """
     Retrives symbol's ID from the Database or create it if it doesn't exist
@@ -1487,6 +1491,8 @@ def mysql_insert_bar(data, symbol_id, dbcurr):
             pass
 
 # -------------------------------------------
+
+
 def prepare_history(data, resolution="1T", tz="UTC", continuous=True):
 
     # setup dataframe
