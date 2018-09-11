@@ -127,6 +127,13 @@ class Algo(Broker):
         self.args.update(kwargs)
         self.args.update(self.load_cli_args())
 
+        # -----------------------------------
+        # initiate broker/order manager
+        super().__init__(instruments, **{
+            arg: val for arg, val in self.args.items() if arg in (
+                'ibport', 'ibclient', 'ibhost')})
+
+        # -----------------------------------
         # assign algo params
         self.bars = pd.DataFrame()
         self.ticks = pd.DataFrame()
@@ -146,6 +153,8 @@ class Algo(Broker):
         self.preload = preload
         self.continuous = continuous
 
+        # -----------------------------------
+        # backtest info
         self.backtest = self.args["backtest"]
         self.backtest_start = self.args["start"]
         self.backtest_end = self.args["end"]
@@ -156,12 +165,6 @@ class Algo(Broker):
         self.trade_log_dir = self.args["log"]
         self.blotter_name = self.args["blotter"]
         self.record_output = self.args["output"]
-
-        # -----------------------------------
-        # initiate broker/order manager
-        super().__init__(instruments, **{
-            arg: val for arg, val in self.args.items() if arg in (
-                'ibport', 'ibclient', 'ibhost')})
 
         # -----------------------------------
         # signal collector
@@ -177,7 +180,7 @@ class Algo(Broker):
 
         # ---------------------------------------
         # add stale ticks for more accurate time--based bars
-        if not self.backtest and self.resolution[-1] not in ("K", "V"):
+        if not self.backtest and self.resolution[-1] not in ("S", "K", "V"):
             self.bar_timer = asynctools.RecurringTask(
                 self.add_stale_tick, interval_sec=1, init_sec=1, daemon=True)
 
@@ -208,7 +211,6 @@ class Algo(Broker):
             self.backtest_start = None
             self.backtest_end = None
             self.backtest_csv = None
-
         # be aware of thread count
         self.threads = asynctools.multitasking.getPool(__name__)['threads']
 
@@ -293,7 +295,7 @@ class Algo(Broker):
 
         # get history from csv dir
         if self.backtest and self.backtest_csv:
-            kind = "TICK" if self.resolution[-1] in ("K", "V") else "BAR"
+            kind = "TICK" if self.resolution[-1] in ("S", "K", "V") else "BAR"
             dfs = []
             for symbol in self.symbols:
                 file = "%s/%s.%s.csv" % (self.backtest_csv, symbol, kind)
@@ -376,7 +378,7 @@ class Algo(Broker):
 
             # drip history
             drip_handler = self._tick_handler if self.resolution[-1] in (
-                "K", "V") else self._bar_handler
+                "S", "K", "V") else self._bar_handler
             self.blotter.drip(history, drip_handler)
 
         else:
@@ -687,6 +689,7 @@ class Algo(Broker):
             dfs.append(df[df['symbol'] == sym][-window:])
         return pd.concat(dfs, sort=True).sort_index()
 
+
     # ---------------------------------------
     @staticmethod
     def _thread_safe_merge(symbol, basedata, newdata):
@@ -783,7 +786,7 @@ class Algo(Broker):
         is_tick_or_volume_bar = False
         handle_bar = True
 
-        if self.resolution[-1] in ("K", "V"):
+        if self.resolution[-1] in ("S", "K", "V"):
             is_tick_or_volume_bar = True
             handle_bar = self._caller("_tick_handler")
 
@@ -827,7 +830,6 @@ class Algo(Broker):
             if self.bars[(self.bars['symbol'] == symbol) | (
                     self.bars['symbol_group'] == symbol)].empty:
                 return
-
             bar_instrument = self.get_instrument(symbol)
             if bar_instrument:
                 self.record_ts = bar.index[0]
@@ -850,10 +852,11 @@ class Algo(Broker):
 
         # resample
         if resolution:
-            try:
-                tz = str(df.index.tz)
-            except Exception as e:
-                tz = None
+            tz = str(df.index.tz)
+            # try:
+            #     tz = str(df.index.tz)
+            # except Exception as e:
+            #     tz = None
             df = tools.resample(df, resolution=resolution, tz=tz)
 
         else:
