@@ -65,7 +65,7 @@ class multitasking():
         cls.__POOL_NAME__ = name
 
         if threads is None:
-            threads == cls.__CPU_CORES__
+            threads = cls.__CPU_CORES__
 
         try:
             threads = int(threads)
