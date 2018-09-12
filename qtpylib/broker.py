@@ -328,7 +328,8 @@ class Broker():
             if order["status"] in ["OPENED", "SUBMITTED"]:
                 if orderId in self.orders.pending_ttls:
                     self._update_pending_order(symbol, orderId,
-                                               self.orders.pending_ttls[orderId], quantity)
+                                               self.orders.pending_ttls[orderId],
+                                               quantity)
 
             elif order["status"] == "FILLED":
                 self._update_order_history(
@@ -610,10 +611,9 @@ class Broker():
         # don't submit order if a pending one is waiting
         if symbol in self.orders.pending:
             self.log_broker.warning(
-                'Not submitting %s order, orders pending: %s', symbol, self.orders.pending)
+                'Not submitting %s order, orders pending: %s', symbol,
+                self.orders.pending)
             return
-
-        # @TODO - decide on quantity here
 
         # continue...
         order_quantity = abs(quantity)
