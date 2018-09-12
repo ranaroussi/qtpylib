@@ -44,21 +44,21 @@ To get ``conda`` to play nice with ``pip``, run this command before installing/u
 Requirements
 ~~~~~~~~~~~~
 
-* `Python <https://www.python.org>`_ _ >=3.4
+* `Python <https://www.python.org>`_ >=3.4
 * `Pandas <https://github.com/pydata/pandas>`_ (tested to work with >=0.18.1)
 * `Numpy <https://github.com/numpy/numpy>`_ (tested to work with >=1.11.1)
-* `ØMQ <https://github.com/zeromq/pyzmq>`_ (tested to with with >=15.2.1)
-* `PyMySQL <https://github.com/PyMySQL/PyMySQL>`_ (tested to with with >=0.7.6)
-* `pytz <http://pytz.sourceforge.net>`_ (tested to with with >=2016.6.1)
-* `dateutil <https://pypi.python.org/pypi/python-dateutil>`_ (tested to with with >=2.5.1)
-* `Nexmo <https://github.com/Nexmo/nexmo-python>`_ for SMS support (tested to with with >=1.2.0)
-* `Twilio <https://github.com/twilio/twilio-python>`_ for SMS support (tested to with with >=6.0.0)
+* `PyZMQ <https://github.com/zeromq/pyzmq>`_ (tested to work with >=15.2.1)
+* `PyMySQL <https://github.com/PyMySQL/PyMySQL>`_ (tested to work with >=0.7.6)
+* `pytz <http://pytz.sourceforge.net>`_ (tested to work with >=2016.6.1)
+* `dateutil <https://pypi.python.org/pypi/python-dateutil>`_ (tested to work with >=2.5.1)
+* `Nexmo-Python <https://github.com/Nexmo/nexmo-python>`_ for SMS support (tested to work with >=1.2.0)
+* `Twilio-Python <https://github.com/twilio/twilio-python>`_ for SMS support (tested to work with >=5.4.0)
 * `Flask <http://flask.pocoo.org>`_ for the Dashboard (tested to work with >=0.11)
-* `Requests <https://github.com/kennethreitz/requests>`_ (tested to with with >=2.10.0)
+* `Requests <https://github.com/kennethreitz/requests>`_ (tested to work with >=2.10.0)
 * `IbPy2 <https://github.com/blampe/IbPy>`_ (tested to work with >=0.8.0)
-* `ezIBpy <https://github.com/ranaroussi/ezibpy>`_ (IbPy wrapper, tested to with with >=1.12.58)
+* `ezIBpy <https://github.com/ranaroussi/ezibpy>`_ (IbPy wrapper, tested to work with >=1.12.63)
 * Latest Interactive Brokers’ `TWS <https://www.interactivebrokers.com/en/index.php?f=15875>`_ or `IB Gateway <https://www.interactivebrokers.com/en/index.php?f=16457>`_ installed and running on the machine
-* `MySQL Server <https://www.mysql.com/>`_  installed and running with a database for QTPyLib
+* `MySQL Server <https://www.mysql.com/>`_ installed and running with a database for QTPyLib
 
 -----
 
