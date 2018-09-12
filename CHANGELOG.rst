@@ -1,7 +1,7 @@
 Release Notes
 =============
 
-*September 11, 2018*
+*September 12, 2018*
 
 1.5.8
 -----------
