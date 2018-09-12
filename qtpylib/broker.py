@@ -695,7 +695,7 @@ class Broker():
         # add orderId / ttl to (auto-adds to history)
         expiry = expiry * 1000 if expiry > 0 else 60000  # 1min
         self._update_pending_order(symbol, orderId, expiry, order_quantity)
-
+        time.sleep(0.1)
 
     # ---------------------------------------
     def _cancel_order(self, orderId):
