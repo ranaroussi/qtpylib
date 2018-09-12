@@ -97,7 +97,22 @@ class Broker():
 
         self.ibConn = ezibpy.ezIBpy()
         self.ibConn.ibCallback = self.ibCallback
-        self.ibConnect()
+        # self.ibConnect()
+
+        connection_tries = 0
+        while not self.ibConn.connected:
+            self.ibConn.connect(clientId=self.ibclient,
+                                port=self.ibport, host=self.ibserver)
+            time.sleep(1)
+            if not self.ibConn.connected:
+                # print('*', end="", flush=True)
+                connection_tries += 1
+                if connection_tries > 10:
+                    self.log_broker.info(
+                        "Cannot connect to Interactive Brokers...")
+                    sys.exit(0)
+
+        self.log_broker.info("Connection established...")
 
         # -----------------------------------
         # create contracts
