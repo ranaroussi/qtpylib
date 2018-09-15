@@ -306,13 +306,13 @@ class Algo(Broker):
                     sys.exit(0)
                 try:
                     df = pd.read_csv(file)
-
-                    if "expiry" not in df.columns or \
-                            not validate_csv_columns(df, kind,
-                                                     raise_errors=False):
+                    if "expiry" not in df.columns:
+                        df[:, "expiry"] = None
+                    if not validate_csv_columns(df, kind, raise_errors=False):
                         self.log_algo.error(
                             "%s isn't a QTPyLib-compatible format", file)
                         sys.exit(0)
+
                     if df['symbol'].values[-1] != symbol:
                         self.log_algo.error(
                             "%s Doesn't content data for %s", file, symbol)
