@@ -795,10 +795,15 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
             # ----------------------------
 
             if "last" in data.columns:
+                tick_dict = {}
+                for col in data[data['symbol'] == sym].columns:
+                    if col in ticks_ohlc_dict.keys():
+                        tick_dict[col] = ticks_ohlc_dict[col]
+
                 ohlc = data[data['symbol'] == sym]['last'].resample(
                     resolution).ohlc()
                 symdata = data[data['symbol'] == sym].resample(
-                    resolution).apply(ticks_ohlc_dict).fillna(value=np.nan)
+                    resolution).apply(tick_dict).fillna(value=np.nan)
                 symdata.rename(
                     columns={'lastsize': 'volume'}, inplace=True)
 
@@ -808,9 +813,14 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
                 symdata['close'] = ohlc['close']
 
             else:
+                bar_dict = {}
+                for col in data[data['symbol'] == sym].columns:
+                    if col in bars_ohlc_dict.keys():
+                        bar_dict[col] = bars_ohlc_dict[col]
+
                 original_length = len(data[data['symbol'] == sym])
                 symdata = data[data['symbol'] == sym].resample(
-                    resolution).apply(bars_ohlc_dict).fillna(value=np.nan)
+                    resolution).apply(bar_dict).fillna(value=np.nan)
 
                 # deal with new rows caused by resample
                 if len(symdata) > original_length:
