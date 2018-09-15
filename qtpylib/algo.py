@@ -310,7 +310,8 @@ class Algo(Broker):
                 try:
                     df = pd.read_csv(file)
                     if "expiry" not in df.columns:
-                        df[:, "expiry"] = None
+                        df.loc[:, "expiry"] = nan
+
                     if not validate_csv_columns(df, kind, raise_errors=False):
                         self.log_algo.error(
                             "%s isn't a QTPyLib-compatible format", file)
@@ -320,6 +321,7 @@ class Algo(Broker):
                         self.log_algo.error(
                             "%s Doesn't content data for %s", file, symbol)
                         sys.exit(0)
+
                     dfs.append(df)
 
                 except Exception as e:
