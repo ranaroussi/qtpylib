@@ -211,6 +211,9 @@ def prepare_data(instrument, data, output_path=None,
             Pandas DataFrame in a QTPyLib-compatible format and timezone
     """
 
+    if not resample and kind == "BAR":
+        resample = "1T"
+
     # work on copy
     df = data.copy()
 
