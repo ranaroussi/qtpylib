@@ -217,6 +217,9 @@ def prepare_data(instrument, data, output_path=None,
     # work on copy
     df = data.copy()
 
+    # lower case columns
+    df.columns = map(str.lower, df.columns)
+
     # ezibpy's csv?
     if set(df.columns) == set(['datetime', 'C', 'H', 'L', 'O', 'OI', 'V', 'WAP']):
         df.rename(columns={
