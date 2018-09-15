@@ -317,7 +317,7 @@ class Algo(Broker):
                         self.log_algo.error(
                             "%s Doesn't content data for %s", file, symbol)
                         sys.exit(0)
-                    dfs.append(df, sort=True)
+                    dfs.append(df)
 
                 except Exception as e:
                     self.log_algo.error(
