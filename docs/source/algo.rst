@@ -373,7 +373,7 @@ With your Blotter running in the background, run your algo from the command line
 
 .. code:: bash
 
-    $ python strategy.py --backtest --start 2015-01-01 --end 2015-12-31 --data ~/mycsvdata/ -output ~/portfolio.pkl
+    $ python strategy.py --backtest --start 2015-01-01 --end 2015-12-31 --data ~/mycsvdata/ --output ~/portfolio.pkl
 
 The resulting back-tested portfolio will be saved in ``~/portfolio.pkl`` for later analysis.
 
