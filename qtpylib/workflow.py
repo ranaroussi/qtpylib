@@ -185,14 +185,15 @@ def validate_columns(df, kind="BAR", raise_errors=True):
 # ---------------------------------------------
 
 
-def prepare_data(instrument, df, output_path=None, index=None, colsmap=None, kind="BAR"):
+def prepare_data(instrument, data, output_path=None,
+                 index=None, colsmap=None, kind="BAR"):
     """
     Converts given DataFrame to a QTPyLib-compatible format and timezone
 
     :Parameters:
         instrument : mixed
             IB contract tuple / string (same as that given to strategy)
-        df : pd.DataFrame
+        data : pd.DataFrame
             Pandas DataDrame with that instrument's market data
         output_path : str
             Path to the location where the resulting CSV should be saved (default: ``None``)
@@ -210,7 +211,7 @@ def prepare_data(instrument, df, output_path=None, index=None, colsmap=None, kin
     """
 
     # work on copy
-    df = df.copy()
+    df = data.copy()
 
     # ezibpy's csv?
     if set(df.columns) == set(['datetime', 'C', 'H', 'L', 'O', 'OI', 'V', 'WAP']):
