@@ -83,11 +83,24 @@ class Broker():
         # initilize class logger
         self.log_broker = logging.getLogger(__name__)
 
-        # default params (overrided in algo)
-        self.timezone = "UTC"
-        self.last_price = {}
-        self.tick_window = 1000
-        self.bar_window = 100
+        # -----------------------------------
+        # assign default vals if not propogated from algo
+        if not hasattr(self, 'timezone'):
+            self.timezone = "UTC"
+        if not hasattr(self, 'tick_window'):
+            self.tick_window = 1000
+        if not hasattr(self, 'bar_window'):
+            self.bar_window = 100
+        if not hasattr(self, 'last_price'):
+            self.last_price = {}
+        if not hasattr(self, 'backtest'):
+            self.backtest = False
+        if not hasattr(self, 'sms_numbers'):
+            self.sms_numbers = []
+        if not hasattr(self, 'trade_log_dir'):
+            self.trade_log_dir = None
+        if not hasattr(self, 'blotter_name'):
+            self.blotter_name = None
 
         # -----------------------------------
         # connect to IB
@@ -159,20 +172,6 @@ class Broker():
         self.dbconn = None
 
         # -----------------------------------
-        # assign default vals if not propogated from algo
-        if not hasattr(self, 'backtest'):
-            self.backtest = False
-
-        if not hasattr(self, 'sms_numbers'):
-            self.sms_numbers = []
-
-        if not hasattr(self, 'trade_log_dir'):
-            self.trade_log_dir = None
-
-        if not hasattr(self, 'blotter_name'):
-            self.blotter_name = None
-
-        # -----------------------------------
         # load blotter settings
         self.blotter_args = load_blotter_args(
             self.blotter_name, logger=self.log_broker)
@@ -189,7 +188,6 @@ class Broker():
                 autocommit=True
             )
             self.dbcurr = self.dbconn.cursor()
-
         # -----------------------------------
         # do stuff on exit
         atexit.register(self._on_exit)

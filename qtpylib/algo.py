@@ -128,12 +128,6 @@ class Algo(Broker):
         self.args.update(self.load_cli_args())
 
         # -----------------------------------
-        # initiate broker/order manager
-        super().__init__(instruments, **{
-            arg: val for arg, val in self.args.items() if arg in (
-                'ibport', 'ibclient', 'ibhost')})
-
-        # -----------------------------------
         # assign algo params
         self.bars = pd.DataFrame()
         self.ticks = pd.DataFrame()
@@ -166,24 +160,6 @@ class Algo(Broker):
         self.blotter_name = self.args["blotter"]
         self.record_output = self.args["output"]
 
-        # -----------------------------------
-        # signal collector
-        self.signals = {}
-        for sym in self.symbols:
-            self.signals[sym] = pd.DataFrame()
-
-        # -----------------------------------
-        # initilize output file
-        self.record_ts = None
-        if self.record_output:
-            self.datastore = tools.DataStore(self.args["output"])
-
-        # ---------------------------------------
-        # add stale ticks for more accurate time--based bars
-        if not self.backtest and self.resolution[-1] not in ("S", "K", "V"):
-            self.bar_timer = asynctools.RecurringTask(
-                self.add_stale_tick, interval_sec=1, init_sec=1, daemon=True)
-
         # ---------------------------------------
         # sanity checks for backtesting mode
         if self.backtest:
@@ -211,8 +187,35 @@ class Algo(Broker):
             self.backtest_start = None
             self.backtest_end = None
             self.backtest_csv = None
+
+        # -----------------------------------
+        # initiate broker/order manager
+        super().__init__(instruments, **{
+            arg: val for arg, val in self.args.items() if arg in (
+                'ibport', 'ibclient', 'ibhost')})
+
+        # -----------------------------------
+        # signal collector
+        self.signals = {}
+        for sym in self.symbols:
+            self.signals[sym] = pd.DataFrame()
+
+        # -----------------------------------
+        # initilize output file
+        self.record_ts = None
+        if self.record_output:
+            self.datastore = tools.DataStore(self.args["output"])
+
+        # ---------------------------------------
+        # add stale ticks for more accurate time--based bars
+        if not self.backtest and self.resolution[-1] not in ("S", "K", "V"):
+            self.bar_timer = asynctools.RecurringTask(
+                self.add_stale_tick, interval_sec=1, init_sec=1, daemon=True)
+
+        # ---------------------------------------
         # be aware of thread count
         self.threads = asynctools.multitasking.getPool(__name__)['threads']
+
 
     # ---------------------------------------
     def add_stale_tick(self):
