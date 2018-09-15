@@ -279,14 +279,14 @@ def prepare_data(instrument, data, output_path=None,
     df = tools.set_timezone(df, "UTC")
     df.index.rename("datetime", inplace=True)
 
+    # resample
+    if resample:
+        df = tools.resample(df, resolution=resample, tz="UTC")
+
     # add expiry
     df.loc[:, 'expiry'] = np.nan
     if asset_class in ("FUT", "OPT", "FOP"):
         df.loc[:, 'expiry'] = contract_expiry_from_symbol(contract_string)
-
-    # resample
-    if resample:
-        df = tools.resample(df, resolution=resample, tz="UTC")
 
     # save csv
     if output_path is not None:
