@@ -23,13 +23,13 @@ so it can be used just like any other data captured by your ``Blotter``.
     # load the workflow module
     from qtpylib import workflow as wf
 
-    # load your existing market data as Pandas DataFrame.
-    # here, we'll download 1-min intraday data from Google
-    external_data = wf.get_data_google_inrtaday("AAPL")
+    # Load some data from Quandl
+    import quandl
+    aapl = quandl.get("WIKI/AAPL", authtoken="your token here")
 
     # convert the data into a QTPyLib-compatible
-    # data will be saved in ~/Desktop/AAPL.csv
-    df = wf.prepare_data("AAPL", data=external_data, output_path="~/Desktop/")
+    # data will be saved in ~/Desktop/AAPL.BAR.csv
+    df = wf.prepare_data("AAPL", data=aapl, output_path="~/Desktop/")
 
     # store converted bar data in MySQL
     # optional, requires a running Blotter
@@ -54,7 +54,7 @@ running your backtests, for example:
 
 .. code:: bash
 
-    $ python strategy.py --backtest --start 2015-01-01 --end 2015-12-31 --data ~/mycsvdata/ -output ~/portfolio.pkl
+    $ python strategy.py --backtest --start 2015-01-01 --end 2015-12-31 --data ~/mycsvdata/ --output ~/portfolio.pkl
 
 Please refer to `Back-Testing Using QTPyLib <./algo.html#back-testing-using-qtpylib>`_
 for more information about back-testing using QTPyLib.
