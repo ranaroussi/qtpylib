@@ -186,8 +186,7 @@ def validate_columns(df, kind="BAR", raise_errors=True):
 
 
 def prepare_data(instrument, data, output_path=None,
-                 index=None, colsmap=None, kind="BAR",
-                 resample=None):
+                 index=None, colsmap=None, kind="BAR", resample="1T"):
     """
     Converts given DataFrame to a QTPyLib-compatible format and timezone
 
@@ -205,14 +204,13 @@ def prepare_data(instrument, data, output_path=None,
             (default assumes same naming convention as QTPyLib's)
         kind : str
             Is this ``BAR`` or ``TICK`` data
+        resample : str
+            Pandas resolution (defaults to 1min/1T)
 
     :Returns:
         data : pd.DataFrame
             Pandas DataFrame in a QTPyLib-compatible format and timezone
     """
-
-    if not resample and kind == "BAR":
-        resample = "1T"
 
     # work on copy
     df = data.copy()
@@ -286,7 +284,7 @@ def prepare_data(instrument, data, output_path=None,
     df.index.rename("datetime", inplace=True)
 
     # resample
-    if resample:
+    if resample and kind == "BAR":
         df = tools.resample(df, resolution=resample, tz="UTC")
 
     # add expiry
