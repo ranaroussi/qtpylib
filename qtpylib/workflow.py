@@ -186,7 +186,8 @@ def validate_columns(df, kind="BAR", raise_errors=True):
 
 
 def prepare_data(instrument, data, output_path=None,
-                 index=None, colsmap=None, kind="BAR"):
+                 index=None, colsmap=None, kind="BAR",
+                 resample=None):
     """
     Converts given DataFrame to a QTPyLib-compatible format and timezone
 
@@ -282,6 +283,10 @@ def prepare_data(instrument, data, output_path=None,
     df.loc[:, 'expiry'] = np.nan
     if asset_class in ("FUT", "OPT", "FOP"):
         df.loc[:, 'expiry'] = contract_expiry_from_symbol(contract_string)
+
+    # resample
+    if resample:
+        df = tools.resample(df, resolution=resample, tz="UTC")
 
     # save csv
     if output_path is not None:
