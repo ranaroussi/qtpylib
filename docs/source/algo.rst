@@ -350,7 +350,7 @@ Back-Testing Using QTPyLib
 ---------------------------
 
 In addition to live/paper trading, QTPyLib can also be used for back-testing
-**without changing event one line of code**, simply by adding the
+**without changing a single line of code**, simply by adding the
 following arguments when running your algo.
 
 .. note::
