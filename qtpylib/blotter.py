@@ -1087,7 +1087,7 @@ class Blotter():
         try:
             for i in range(len(data)):
                 handler(data.iloc[i:i + 1])
-                time.sleep(.1)
+                time.sleep(.15)
 
             asynctools.multitasking.wait_for_tasks()
             print("\n\n>>> Backtesting Completed.")
