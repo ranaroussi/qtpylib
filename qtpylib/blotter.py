@@ -1518,7 +1518,10 @@ def prepare_history(data, resolution="1T", tz="UTC", continuous=True):
             all_dfs.append(continuous)
 
         # make one df again
-        data = pd.concat(all_dfs, sort=True)
+        # data = pd.concat(all_dfs, sort=True)
+        data['datetime'] = data.index
+        data.groupby([data.index, 'symbol'], as_index=False
+                     ).last().set_index('datetime').dropna()
 
     data = tools.resample(data, resolution, tz)
     return data
