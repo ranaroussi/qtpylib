@@ -22,16 +22,12 @@
 import logging
 import time
 import sys
-from io import StringIO
 
 import numpy as np
-import requests
+import pandas as pd
 
 import pymysql
 from pymysql.constants.CLIENT import MULTI_STATEMENTS
-
-import pandas as pd
-from pandas_datareader import data as web
 
 from ezibpy import ezIBpy
 from ezibpy.utils import contract_expiry_from_symbol
@@ -50,11 +46,12 @@ if sys.version_info < (3, 4):
     raise SystemError("QTPyLib requires Python version >= 3.4")
 
 # =============================================
-tools.createLogger(__name__)
+tools.createLogger(__name__)  # .setLevel(logging.DEBUG)
 # =============================================
 
 
 def ibCallback(caller, msg, **kwargs):
+    global _IB_HISTORY_DOWNLOADED
     if caller == "handleHistoricalData":
         if kwargs["completed"]:
             _IB_HISTORY_DOWNLOADED = True
@@ -83,6 +80,9 @@ def get_data_ib(instrument, start, resolution="1 min", blotter=None, output_path
         data : pd.DataFrame
             Pandas DataFrame in a QTPyLib-compatible format and timezone
     """
+    global _IB_HISTORY_DOWNLOADED
+    _IB_HISTORY_DOWNLOADED = False
+
     # load blotter settings
     blotter_args = load_blotter_args(
         blotter, logger=logging.getLogger(__name__))
@@ -92,8 +92,9 @@ def get_data_ib(instrument, start, resolution="1 min", blotter=None, output_path
     ibConn.ibCallback = ibCallback
 
     if not ibConn.connected:
-        ibConn.connect(clientId=0,
-                       port=int(blotter_args['ibport']), host=str(blotter_args['ibserver']))
+        ibConn.connect(clientId=997,
+                       port=int(blotter_args['ibport']),
+                       host=str(blotter_args['ibserver']))
 
     # generate a valid ib tuple
     instrument = tools.create_ib_tuple(instrument)
@@ -106,7 +107,7 @@ def get_data_ib(instrument, start, resolution="1 min", blotter=None, output_path
                                  rth=False)
 
     while not _IB_HISTORY_DOWNLOADED:
-        time.sleep(.1)
+        time.sleep(1)
 
     ibConn.disconnect()
 
@@ -159,6 +160,7 @@ _TICKS_COLSMAP = {
 
 
 def validate_columns(df, kind="BAR", raise_errors=True):
+    global _TICKS_COLSMAP, _BARS_COLSMAP
     # validate columns
     if "asset_class" not in df.columns:
         if raise_errors:
@@ -212,11 +214,10 @@ def prepare_data(instrument, data, output_path=None,
             Pandas DataFrame in a QTPyLib-compatible format and timezone
     """
 
+    global _TICKS_COLSMAP, _BARS_COLSMAP
+
     # work on copy
     df = data.copy()
-
-    # lower case columns
-    df.columns = map(str.lower, df.columns)
 
     # ezibpy's csv?
     if set(df.columns) == set(['datetime', 'C', 'H', 'L', 'O', 'OI', 'V', 'WAP']):
@@ -231,6 +232,9 @@ def prepare_data(instrument, data, output_path=None,
         df.index = pd.to_datetime(df['datetime'])
         df.index = df.index.tz_localize(tools.get_timezone()).tz_convert("UTC")
         index = None
+
+    # lower case columns
+    df.columns = map(str.lower, df.columns)
 
     # set index
     if index is None:
