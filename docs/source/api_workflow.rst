@@ -3,12 +3,6 @@ Workflow API
 
 .. autofunction:: qtpylib.workflow.get_data_ib(...)
 
-.. autofunction:: qtpylib.workflow.get_data_google_intraday(...)
-
-.. autofunction:: qtpylib.workflow.get_data_yahoo_intraday(...)
-
-.. autofunction:: qtpylib.workflow.get_data_yahoo(...)
-
 .. autofunction:: qtpylib.workflow.prepare_data(...)
 
 .. note::
@@ -25,7 +19,7 @@ Workflow API
 
         from qtpylib import workflow
 
-        newdf = workflow.prepare_data("AAPL", df,
+        newdf = workflow.prepare_data("AAPL", data=df,
             colsmap={'open':'O', 'high':'H', 'low':'L', 'close':'C', 'volume':'V'})
 
 

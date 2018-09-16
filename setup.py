@@ -20,7 +20,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='QTPyLib',
-    version='1.5.80',
+    version='1.5.81',
     description='Quantitative Trading Python Library',
     long_description=long_description,
     url='https://github.com/ranaroussi/qtpylib',
@@ -41,6 +41,7 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
     platforms = ['any'],
     keywords='qtpylib qtpy algotrading algo trading interactive brokers tws ibgw ibpy ezibpy',

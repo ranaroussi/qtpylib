@@ -29,7 +29,6 @@ from math import ceil
 # from decimal import *
 import decimal
 
-
 import numpy as np
 import pandas as pd
 
@@ -688,6 +687,20 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
     if data.empty:
         return __finalize(data, tz)
 
+    # ---------------------------------------------
+    # force same last timestamp to all symbols before resampling
+    if sync_last_timestamp:
+        data.loc[:, '_idx_'] = data.index
+        start_date = str(data.groupby(["symbol"])[
+                         ['_idx_']].min().max().values[-1]).replace('T', ' ')
+        end_date = str(data.groupby(["symbol"])[
+                       ['_idx_']].max().min().values[-1]).replace('T', ' ')
+        data = data[(data.index >= start_date) & (data.index <= end_date)
+                    ].drop_duplicates(subset=['_idx_', 'symbol',
+                                              'symbol_group', 'asset_class'],
+                                      keep='first')
+
+    # ---------------------------------------------
     # resample
     periods = int("".join([s for s in resolution if s.isdigit()]))
     meta_data = data.groupby(["symbol"])[
@@ -698,7 +711,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
         if periods > 1:
             for sym in meta_data.index.values:
                 symdata = __resample_ticks(data[data['symbol'] == sym].copy(),
-                                            freq=periods, by='last')
+                                           freq=periods, by='last')
                 symdata['symbol'] = sym
                 symdata['symbol_group'] = meta_data[
                     meta_data.index == sym]['symbol_group'].values[0]
@@ -719,7 +732,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
         if periods > 1:
             for sym in meta_data.index.values:
                 symdata = __resample_ticks(data[data['symbol'] == sym].copy(),
-                                            freq=periods, by='lastsize')
+                                           freq=periods, by='lastsize')
                 symdata['symbol'] = sym
                 symdata['symbol_group'] = meta_data[
                     meta_data.index == sym]['symbol_group'].values[0]
@@ -771,34 +784,16 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
 
         for sym in meta_data.index.values:
 
-            # ----------------------------
-            # force same last timestamp to all symbols before resampling
-            if sync_last_timestamp:
-                last_row = data[data['symbol'] == sym][-1:]
-                # last_row.index = pd.to_datetime(data.index[-1:], utc=True)
-                last_row.index = data.index[-1:].copy()
-                if "last" not in data.columns:
-                    last_row["open"] = last_row["close"]
-                    last_row["high"] = last_row["close"]
-                    last_row["low"] = last_row["close"]
-                    last_row["close"] = last_row["close"]
-                    last_row["volume"] = 0
-
-                data = pd.concat([data, last_row], sort=True).sort_index()
-                data.loc[:, '_idx_'] = data.index
-                data = data.drop_duplicates(
-                    subset=['_idx_', 'symbol',
-                            'symbol_group', 'asset_class'],
-                    keep='first')
-                data = data.drop('_idx_', axis=1)
-                data = data.sort_index()
-            # ----------------------------
-
             if "last" in data.columns:
+                tick_dict = {}
+                for col in data[data['symbol'] == sym].columns:
+                    if col in ticks_ohlc_dict.keys():
+                        tick_dict[col] = ticks_ohlc_dict[col]
+
                 ohlc = data[data['symbol'] == sym]['last'].resample(
                     resolution).ohlc()
                 symdata = data[data['symbol'] == sym].resample(
-                    resolution).apply(ticks_ohlc_dict).fillna(value=np.nan)
+                    resolution).apply(tick_dict).fillna(value=np.nan)
                 symdata.rename(
                     columns={'lastsize': 'volume'}, inplace=True)
 
@@ -808,9 +803,14 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
                 symdata['close'] = ohlc['close']
 
             else:
+                bar_dict = {}
+                for col in data[data['symbol'] == sym].columns:
+                    if col in bars_ohlc_dict.keys():
+                        bar_dict[col] = bars_ohlc_dict[col]
+
                 original_length = len(data[data['symbol'] == sym])
                 symdata = data[data['symbol'] == sym].resample(
-                    resolution).apply(bars_ohlc_dict).fillna(value=np.nan)
+                    resolution).apply(bar_dict).fillna(value=np.nan)
 
                 # deal with new rows caused by resample
                 if len(symdata) > original_length:
@@ -860,23 +860,24 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
     return __finalize(data, tz)
 
 
-
 # =============================================
 # store event in a temp data store
 # =============================================
 
 class DataStore():
+
     def __init__(self, output_file=None):
         self.auto = None
         self.recorded = None
         self.output_file = output_file
+        self.rows = []
 
     def record(self, timestamp, *args, **kwargs):
         """ add custom data to data store """
         if self.output_file is None:
             return
 
-        data = {}
+        data = {'datetime': timestamp}
 
         # append all data
         if len(args) == 1:
@@ -889,63 +890,77 @@ class DataStore():
         if kwargs:
             data.update(dict(kwargs))
 
-        # set the datetime
         data['datetime'] = timestamp
+        # self.rows.append(pd.DataFrame(data=data, index=[timestamp]))
 
-        # take datetime from index
-        if self.recorded is not None:
-            self.recorded['datetime'] = self.recorded.index
-
-        row = pd.DataFrame(data=data, index=[timestamp])
-        if self.recorded is None:
-            self.recorded = row
+        new_data = {}
+        if "symbol" not in data.keys():
+            new_data = dict(data)
         else:
-            self.recorded.merge(row)
-            self.recorded = pd.concat([self.recorded, row], sort=True)
+            sym = data["symbol"]
+            new_data["symbol"] = data["symbol"]
+            for key in data.keys():
+                if key not in ['datetime', 'symbol_group', 'asset_class']:
+                    new_data[sym + '_' + str(key).upper()] = data[key]
 
-        # merge rows (play nice with multi-symbol portfolios)
-        meta_data = self.recorded.groupby(["symbol"])[
-            ['symbol', 'symbol_group', 'asset_class']].last()
-        combined = []
+        new_data['datetime'] = timestamp
 
-        for sym in meta_data.index.values:
-            df = self.recorded[self.recorded['symbol'] == sym].copy()
-            symdata = df.groupby(df.index).sum()
-            symdata.index.rename('datetime', inplace=True)
+        # append to rows
+        self.rows.append(pd.DataFrame(data=new_data, index=[timestamp]))
 
-            symdata['symbol'] = sym
-            symdata['symbol_group'] = df['symbol_group'].values[0]
-            symdata['asset_class'] = df['asset_class'].values[0]
+        # create dataframe
+        recorded = pd.concat(self.rows, sort=True)
 
-            combined.append(symdata)
+        if "symbol" not in recorded.columns:
+            return
 
-        self.recorded = pd.concat(combined, sort=True)
 
-        # cleanup: remove non-option data if not working with options
-        opt_cols = df.columns[df.columns.str.startswith('opt_')].tolist()
-        if len(opt_cols) == len(df[opt_cols].isnull().all()):
-            self.recorded.drop(opt_cols, axis=1, inplace=True)
+        # group by symbol
+        recorded['datetime'] = recorded.index
+        data = recorded.groupby(['symbol', 'datetime'], as_index=False).sum()
+        data.set_index('datetime', inplace=True)
 
-        # cleanup: positions
-        if "position" in self.recorded.columns:
-            self.recorded['position'].ffill(inplace=True)
-        else:
-            self.recorded.loc[:, 'position'] = 0
+        symbols = data['symbol'].unique().tolist()
+        data.drop(columns=['symbol'], inplace=True)
 
-        self.recorded['position'] = self.recorded['position'].astype(int)
 
-        # cleanup: symbol names
-        data = self.recorded.copy()
-        for asset_class in data['asset_class'].unique().tolist():
-            data['symbol'] = data['symbol'].str.replace(
-                "_" + str(asset_class), "")
+        # cleanup:
+
+        # remove symbols
+        recorded.drop(['symbol'] + [sym + '_SYMBOL' for sym in symbols],
+                      axis=1, inplace=True)
+
+        # remove non-option data if not working with options
+        for sym in symbols:
+            try:
+                opt_cols = recorded.columns[
+                    recorded.columns.str.startswith(sym + '_OPT_')].tolist()
+                if len(opt_cols) == len(recorded[opt_cols].isnull().all()):
+                    recorded.drop(opt_cols, axis=1, inplace=True)
+            except Exception as e:
+                pass
+
+        # group df
+        recorded = recorded.groupby(recorded['datetime']).first()
+
+        # shift position
+        for sym in symbols:
+            recorded[sym + '_POSITION'] = recorded[sym + '_POSITION'
+                                                   ].shift(1).fillna(0)
+
+        # make this public
+        self.recorded = recorded.copy()
+
+        # cleanup columns names before saving...
+        recorded.columns = [col.replace('_FUT_', '_').replace(
+                            '_OPT_OPT_', '_OPT_') for col in recorded.columns]
 
         # save
         if ".csv" in self.output_file:
-            data.to_csv(self.output_file)
+            recorded.to_csv(self.output_file)
         elif ".h5" in self.output_file:
-            data.to_hdf(self.output_file, 0)
+            recorded.to_hdf(self.output_file, 0)
         elif (".pickle" in self.output_file) | (".pkl" in self.output_file):
-            data.to_pickle(self.output_file)
+            recorded.to_pickle(self.output_file)
 
         chmod(self.output_file)

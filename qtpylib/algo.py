@@ -128,12 +128,6 @@ class Algo(Broker):
         self.args.update(self.load_cli_args())
 
         # -----------------------------------
-        # initiate broker/order manager
-        super().__init__(instruments, **{
-            arg: val for arg, val in self.args.items() if arg in (
-                'ibport', 'ibclient', 'ibhost')})
-
-        # -----------------------------------
         # assign algo params
         self.bars = pd.DataFrame()
         self.ticks = pd.DataFrame()
@@ -166,24 +160,6 @@ class Algo(Broker):
         self.blotter_name = self.args["blotter"]
         self.record_output = self.args["output"]
 
-        # -----------------------------------
-        # signal collector
-        self.signals = {}
-        for sym in self.symbols:
-            self.signals[sym] = pd.DataFrame()
-
-        # -----------------------------------
-        # initilize output file
-        self.record_ts = None
-        if self.record_output:
-            self.datastore = tools.DataStore(self.args["output"])
-
-        # ---------------------------------------
-        # add stale ticks for more accurate time--based bars
-        if not self.backtest and self.resolution[-1] not in ("S", "K", "V"):
-            self.bar_timer = asynctools.RecurringTask(
-                self.add_stale_tick, interval_sec=1, init_sec=1, daemon=True)
-
         # ---------------------------------------
         # sanity checks for backtesting mode
         if self.backtest:
@@ -211,8 +187,35 @@ class Algo(Broker):
             self.backtest_start = None
             self.backtest_end = None
             self.backtest_csv = None
+
+        # -----------------------------------
+        # initiate broker/order manager
+        super().__init__(instruments, **{
+            arg: val for arg, val in self.args.items() if arg in (
+                'ibport', 'ibclient', 'ibhost')})
+
+        # -----------------------------------
+        # signal collector
+        self.signals = {}
+        for sym in self.symbols:
+            self.signals[sym] = pd.DataFrame()
+
+        # -----------------------------------
+        # initilize output file
+        self.record_ts = None
+        if self.record_output:
+            self.datastore = tools.DataStore(self.args["output"])
+
+        # ---------------------------------------
+        # add stale ticks for more accurate time--based bars
+        if not self.backtest and self.resolution[-1] not in ("S", "K", "V"):
+            self.bar_timer = asynctools.RecurringTask(
+                self.add_stale_tick, interval_sec=1, init_sec=1, daemon=True)
+
+        # ---------------------------------------
         # be aware of thread count
         self.threads = asynctools.multitasking.getPool(__name__)['threads']
+
 
     # ---------------------------------------
     def add_stale_tick(self):
@@ -306,18 +309,20 @@ class Algo(Broker):
                     sys.exit(0)
                 try:
                     df = pd.read_csv(file)
+                    if "expiry" not in df.columns:
+                        df.loc[:, "expiry"] = nan
 
-                    if "expiry" not in df.columns or \
-                            not validate_csv_columns(df, kind,
-                                                     raise_errors=False):
+                    if not validate_csv_columns(df, kind, raise_errors=False):
                         self.log_algo.error(
                             "%s isn't a QTPyLib-compatible format", file)
                         sys.exit(0)
+
                     if df['symbol'].values[-1] != symbol:
                         self.log_algo.error(
                             "%s Doesn't content data for %s", file, symbol)
                         sys.exit(0)
-                    dfs.append(df, sort=True)
+
+                    dfs.append(df)
 
                 except Exception as e:
                     self.log_algo.error(
@@ -587,7 +592,7 @@ class Algo(Broker):
             # print("EXIT", kwargs)
 
             try:
-                self.record(position=0)
+                self.record({symbol+'_POSITION': 0})
             except Exception as e:
                 pass
 
@@ -606,9 +611,10 @@ class Algo(Broker):
 
             # record
             try:
-                quantity = - \
-                    quantity if kwargs['direction'] == "BUY" else quantity
-                self.record(position=quantity)
+                quantity = abs(quantity)
+                if kwargs['direction'] != "BUY":
+                    quantity = -quantity
+                self.record({symbol+'_POSITION': quantity})
             except Exception as e:
                 pass
 

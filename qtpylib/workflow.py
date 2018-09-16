@@ -22,16 +22,12 @@
 import logging
 import time
 import sys
-from io import StringIO
 
 import numpy as np
-import requests
+import pandas as pd
 
 import pymysql
 from pymysql.constants.CLIENT import MULTI_STATEMENTS
-
-import pandas as pd
-from pandas_datareader import data as web
 
 from ezibpy import ezIBpy
 from ezibpy.utils import contract_expiry_from_symbol
@@ -50,192 +46,20 @@ if sys.version_info < (3, 4):
     raise SystemError("QTPyLib requires Python version >= 3.4")
 
 # =============================================
-tools.createLogger(__name__)
+tools.createLogger(__name__)  # .setLevel(logging.DEBUG)
 # =============================================
-
-# =============================================
-# data retreival methods
-# =============================================
-
-
-def get_data_yahoo(symbols, start, end=None, **kwargs):
-    """
-    Downloads and auto-adjusts daily data from Yahoo finance
-
-    :Parameters:
-        symbols : str/list
-            symbol(s) to downlaod intraday data for
-        start : str
-            Earliest date to download
-
-    :Optional:
-        end : str
-            Latest date to download (default: today)
-
-    :Returns:
-        data : pd.DataFrame
-            Pandas DataFrame with 1-minute bar data
-    """
-
-    dfs = []
-
-    # list of symbols?
-    if not isinstance(symbols, list):
-        symbols = [symbols]
-
-    # get the data
-    data = web.get_data_yahoo(symbols, start, end, **kwargs)
-
-    # parse the data
-    ohlc = []
-    for sym in symbols:
-        ohlc = pd.DataFrame({
-            "open": data['Open'][sym],
-            "high": data['High'][sym],
-            "low": data['Low'][sym],
-            "close": data['Close'][sym],
-            "adj_close": data['Adj Close'][sym],
-            "volume": data['Volume'][sym]
-        })
-        ohlc.index.names = ['date']
-
-        # auto-adjust prices
-        ratio = ohlc["close"] / ohlc["adj_close"]
-        ohlc["adj_open"] = ohlc["open"] / ratio
-        ohlc["adj_high"] = ohlc["high"] / ratio
-        ohlc["adj_low"] = ohlc["low"] / ratio
-
-        ohlc.drop(["open", "high", "low", "close"], axis=1, inplace=True)
-        ohlc.rename(columns={
-            "adj_open": "open",
-            "adj_high": "high",
-            "adj_low": "low",
-            "adj_close": "close"
-        }, inplace=True)
-
-        # round
-        decimals = pd.Series([2, 2, 2, 2], index=[
-                             'open', 'high', 'low', 'close'])
-        ohlc = ohlc.round(decimals)
-
-        # re-order columns
-        ohlc.loc[:, "symbol"] = sym
-        ohlc = ohlc[['symbol', 'open', 'high', 'low', 'close', 'volume']]
-        ohlc['volume'] = ohlc['volume'].astype(int)
-
-        # add to collection
-        dfs.append(ohlc)
-
-    return pd.concat(dfs, sort=True).sort_index()
-
-
-# ---------------------------------------------
-
-def get_data_yahoo_intraday(symbol):
-    """
-    Import intraday data (1M) from Yahoo finance (2 weeks max)
-
-    :Parameters:
-        symbol : str
-            symbol to downlaod intraday data for
-    :Returns:
-        data : pd.DataFrame
-            Pandas DataFrame with 1-minute bar data
-    """
-    raw = requests.get("http://chartapi.finance.yahoo.com/instrument/1.0/" +
-                       symbol + "/chartdata;type=quote;range=10d/csv")
-
-    cols = raw.text.split("values:")[1].split("\n")[0].lower()
-    data = raw.text.split("volume:")[1].split("\n")
-    data = "\n".join(data[1:])
-
-    if "timestamp" in cols:
-        df = pd.read_csv(StringIO(cols + "\n" + data),
-                         index_col=["timestamp"], parse_dates=["timestamp"])
-        df.index = pd.to_datetime(df.index, unit='s')
-
-        timezone = raw.text.split("timezone:")[1].split("\n")[0]
-        df = tools.set_timezone(df, timezone)
-
-        df = df.resample("T").last().dropna()
-        df['volume'] = df['volume'].astype(int)
-        return np.round(df, 2)
-
-    # parse csv
-    df = pd.read_csv(StringIO(cols + "\n" + data),
-                     index_col=["date"], parse_dates=["date"])
-    df.index = pd.to_datetime(df.index, utc=True)
-
-    # round
-    decimals = pd.Series([2, 2, 2, 2], index=['open', 'high', 'low', 'close'])
-    df = df.round(decimals)
-
-    df.loc[:, "symbol"] = symbol
-    return df[["symbol", "open", "high", "low", "close", "volume"]]
-
-# ---------------------------------------------
-
-
-def get_data_google_intraday(symbol, **kwargs):
-    """
-    Import intraday data (1M) from Google finance (3 weeks max)
-
-    :Parameters:
-        symbol : str
-            symbol to downlaod intraday data for
-    :Returns:
-        data : pd.DataFrame
-            Pandas DataFrame with 1-minute bar data
-    """
-
-    # build request url
-    url = "https://www.google.com/finance/getprices?q=" + \
-        symbol + "&i=60&p=30d&f=d,o,h,l,c,v"
-    for arg in kwargs:
-        url += "&" + arg + "=" + kwargs[arg]
-
-    # get data
-    raw = requests.get(url)
-
-    # split newlines
-    data = raw.text.split("\n")
-
-    # read to dataframe
-    df = pd.read_csv(StringIO("\n".join(data[7:])), names=[
-                     "offset", "open", "high", "low", "close", "volume"])
-
-    # adjust offset
-    df['timestamp'] = df[df['offset'].str[0] == "a"][
-        'offset'].str[1:].astype(int)
-    df.loc[~df[df['timestamp'].isnull()].index, 'offset'] = 0
-    df['timestamp'] = df['timestamp'].ffill() + pd.to_numeric(
-        df['offset'], errors='coerce') * 60
-
-    # convert to datetime
-    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s')
-
-    # set index
-    df.set_index(["timestamp"], inplace=True)
-
-    # round
-    decimals = pd.Series([2, 2, 2, 2], index=['open', 'high', 'low', 'close'])
-    df = df.round(decimals)
-
-    # return df
-    df.loc[:, "symbol"] = symbol
-    return df[["symbol", "open", "high", "low", "close", "volume"]]
-
-# ---------------------------------------------
 
 
 def ibCallback(caller, msg, **kwargs):
+    global _IB_HISTORY_DOWNLOADED
     if caller == "handleHistoricalData":
         if kwargs["completed"]:
             _IB_HISTORY_DOWNLOADED = True
         # print(kwargs)
 
 
-def get_data_ib(instrument, start, resolution="1 min", blotter=None, output_path=None):
+def get_data_ib(instrument, start, resolution="1 min",
+                blotter=None, output_path=None):
     """
     Downloads historical data from Interactive Brokers
 
@@ -251,12 +75,15 @@ def get_data_ib(instrument, start, resolution="1 min", blotter=None, output_path
         blotter : str
             Store MySQL server used by this Blotter (default is "auto detect")
         output_path : str
-            Path to the location where the resulting CSV should be saved (default: ``None``)
+            Path to where the resulting CSV should be saved (optional)
 
     :Returns:
         data : pd.DataFrame
             Pandas DataFrame in a QTPyLib-compatible format and timezone
     """
+    global _IB_HISTORY_DOWNLOADED
+    _IB_HISTORY_DOWNLOADED = False
+
     # load blotter settings
     blotter_args = load_blotter_args(
         blotter, logger=logging.getLogger(__name__))
@@ -266,8 +93,9 @@ def get_data_ib(instrument, start, resolution="1 min", blotter=None, output_path
     ibConn.ibCallback = ibCallback
 
     if not ibConn.connected:
-        ibConn.connect(clientId=0,
-                       port=int(blotter_args['ibport']), host=str(blotter_args['ibserver']))
+        ibConn.connect(clientId=997,
+                       port=int(blotter_args['ibport']),
+                       host=str(blotter_args['ibserver']))
 
     # generate a valid ib tuple
     instrument = tools.create_ib_tuple(instrument)
@@ -280,7 +108,7 @@ def get_data_ib(instrument, start, resolution="1 min", blotter=None, output_path
                                  rth=False)
 
     while not _IB_HISTORY_DOWNLOADED:
-        time.sleep(.1)
+        time.sleep(1)
 
     ibConn.disconnect()
 
@@ -333,6 +161,7 @@ _TICKS_COLSMAP = {
 
 
 def validate_columns(df, kind="BAR", raise_errors=True):
+    global _TICKS_COLSMAP, _BARS_COLSMAP
     # validate columns
     if "asset_class" not in df.columns:
         if raise_errors:
@@ -359,35 +188,41 @@ def validate_columns(df, kind="BAR", raise_errors=True):
 # ---------------------------------------------
 
 
-def prepare_data(instrument, df, output_path=None, index=None, colsmap=None, kind="BAR"):
+def prepare_data(instrument, data, output_path=None,
+                 index=None, colsmap=None, kind="BAR", resample="1T"):
     """
     Converts given DataFrame to a QTPyLib-compatible format and timezone
 
     :Parameters:
         instrument : mixed
             IB contract tuple / string (same as that given to strategy)
-        df : pd.DataFrame
+        data : pd.DataFrame
             Pandas DataDrame with that instrument's market data
         output_path : str
-            Path to the location where the resulting CSV should be saved (default: ``None``)
+            Path to where the resulting CSV should be saved (optional)
         index : pd.Series
-            Pandas Series that will be used for df's index (default is to use df.index)
+            Pandas Series that will be used for df's index (optioanl)
         colsmap : dict
             Dict for mapping df's columns to those used by QTPyLib
             (default assumes same naming convention as QTPyLib's)
         kind : str
             Is this ``BAR`` or ``TICK`` data
+        resample : str
+            Pandas resolution (defaults to 1min/1T)
 
     :Returns:
         data : pd.DataFrame
             Pandas DataFrame in a QTPyLib-compatible format and timezone
     """
 
+    global _TICKS_COLSMAP, _BARS_COLSMAP
+
     # work on copy
-    df = df.copy()
+    df = data.copy()
 
     # ezibpy's csv?
-    if set(df.columns) == set(['datetime', 'C', 'H', 'L', 'O', 'OI', 'V', 'WAP']):
+    if set(df.columns) == set([
+            'datetime', 'C', 'H', 'L', 'O', 'OI', 'V', 'WAP']):
         df.rename(columns={
             'datetime': 'datetime',
             'O': 'open',
@@ -399,6 +234,9 @@ def prepare_data(instrument, df, output_path=None, index=None, colsmap=None, kin
         df.index = pd.to_datetime(df['datetime'])
         df.index = df.index.tz_localize(tools.get_timezone()).tz_convert("UTC")
         index = None
+
+    # lower case columns
+    df.columns = map(str.lower, df.columns)
 
     # set index
     if index is None:
@@ -450,6 +288,10 @@ def prepare_data(instrument, df, output_path=None, index=None, colsmap=None, kin
     df.index = pd.to_datetime(index)
     df = tools.set_timezone(df, "UTC")
     df.index.rename("datetime", inplace=True)
+
+    # resample
+    if resample and kind == "BAR":
+        df = tools.resample(df, resolution=resample, tz="UTC")
 
     # add expiry
     df.loc[:, 'expiry'] = np.nan

@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+*September 17, 2018*
+
+1.5.81
+-----------
+- Added official support for Python 3.7
+- Removed Google and Yahoo data retrieval methods from ``Workflow``
+- Added auto-resample option to ``Workflow.prepare_data``
+- Fixed backtesting issues related to sometimes not logging positions
+- Lots of bugfixes, and code improvements
+
+
 *September 12, 2018*
 
 1.5.80

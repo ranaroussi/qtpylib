@@ -83,11 +83,24 @@ class Broker():
         # initilize class logger
         self.log_broker = logging.getLogger(__name__)
 
-        # default params (overrided in algo)
-        self.timezone = "UTC"
-        self.last_price = {}
-        self.tick_window = 1000
-        self.bar_window = 100
+        # -----------------------------------
+        # assign default vals if not propogated from algo
+        if not hasattr(self, 'timezone'):
+            self.timezone = "UTC"
+        if not hasattr(self, 'tick_window'):
+            self.tick_window = 1000
+        if not hasattr(self, 'bar_window'):
+            self.bar_window = 100
+        if not hasattr(self, 'last_price'):
+            self.last_price = {}
+        if not hasattr(self, 'backtest'):
+            self.backtest = False
+        if not hasattr(self, 'sms_numbers'):
+            self.sms_numbers = []
+        if not hasattr(self, 'trade_log_dir'):
+            self.trade_log_dir = None
+        if not hasattr(self, 'blotter_name'):
+            self.blotter_name = None
 
         # -----------------------------------
         # connect to IB
@@ -159,20 +172,6 @@ class Broker():
         self.dbconn = None
 
         # -----------------------------------
-        # assign default vals if not propogated from algo
-        if not hasattr(self, 'backtest'):
-            self.backtest = False
-
-        if not hasattr(self, 'sms_numbers'):
-            self.sms_numbers = []
-
-        if not hasattr(self, 'trade_log_dir'):
-            self.trade_log_dir = None
-
-        if not hasattr(self, 'blotter_name'):
-            self.blotter_name = None
-
-        # -----------------------------------
         # load blotter settings
         self.blotter_args = load_blotter_args(
             self.blotter_name, logger=self.log_broker)
@@ -189,7 +188,6 @@ class Broker():
                 autocommit=True
             )
             self.dbcurr = self.dbconn.cursor()
-
         # -----------------------------------
         # do stuff on exit
         atexit.register(self._on_exit)
@@ -895,7 +893,26 @@ class Broker():
     def get_positions(self, symbol):
         symbol = self.get_symbol(symbol)
 
-        if symbol in self.ibConn.positions:
+        if self.backtest:
+            position = 0
+            avgCost = 0.0
+
+            if self.datastore.recorded is not None:
+                data = self.datastore.recorded
+                col = symbol.upper() + '_POSITION'
+                position = data[col].values[-1]
+                if position != 0:
+                    pos = data[col].diff()
+                    avgCost = data[data.index.isin(pos[pos != 0][-1:].index)
+                                   ][symbol.upper() + '_OPEN'].values[-1]
+            return {
+                    "symbol": symbol,
+                    "position": position,
+                    "avgCost":  avgCost,
+                    "account":  "Backtest"
+                }
+
+        elif symbol in self.ibConn.positions:
             return self.ibConn.positions[symbol]
 
         return {
