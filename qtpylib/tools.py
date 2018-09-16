@@ -688,6 +688,20 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
     if data.empty:
         return __finalize(data, tz)
 
+    # ---------------------------------------------
+    # force same last timestamp to all symbols before resampling
+    if sync_last_timestamp:
+        data.loc[:, '_idx_'] = data.index
+        start_date = str(data.groupby(["symbol"])[
+                         ['_idx_']].min().max().values[-1]).replace('T', ' ')
+        end_date = str(data.groupby(["symbol"])[
+                       ['_idx_']].max().min().values[-1]).replace('T', ' ')
+        data = data[(data.index >= start_date) & (data.index <= end_date)
+                    ].drop_duplicates(subset=['_idx_', 'symbol',
+                                              'symbol_group', 'asset_class'],
+                                      keep='first')
+
+    # ---------------------------------------------
     # resample
     periods = int("".join([s for s in resolution if s.isdigit()]))
     meta_data = data.groupby(["symbol"])[
@@ -698,7 +712,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
         if periods > 1:
             for sym in meta_data.index.values:
                 symdata = __resample_ticks(data[data['symbol'] == sym].copy(),
-                                            freq=periods, by='last')
+                                           freq=periods, by='last')
                 symdata['symbol'] = sym
                 symdata['symbol_group'] = meta_data[
                     meta_data.index == sym]['symbol_group'].values[0]
@@ -719,7 +733,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
         if periods > 1:
             for sym in meta_data.index.values:
                 symdata = __resample_ticks(data[data['symbol'] == sym].copy(),
-                                            freq=periods, by='lastsize')
+                                           freq=periods, by='lastsize')
                 symdata['symbol'] = sym
                 symdata['symbol_group'] = meta_data[
                     meta_data.index == sym]['symbol_group'].values[0]
@@ -770,29 +784,6 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
         }
 
         for sym in meta_data.index.values:
-
-            # ----------------------------
-            # force same last timestamp to all symbols before resampling
-            if sync_last_timestamp:
-                last_row = data[data['symbol'] == sym][-1:]
-                # last_row.index = pd.to_datetime(data.index[-1:], utc=True)
-                last_row.index = data.index[-1:].copy()
-                if "last" not in data.columns:
-                    last_row["open"] = last_row["close"]
-                    last_row["high"] = last_row["close"]
-                    last_row["low"] = last_row["close"]
-                    last_row["close"] = last_row["close"]
-                    last_row["volume"] = 0
-
-                data = pd.concat([data, last_row], sort=True).sort_index()
-                data.loc[:, '_idx_'] = data.index
-                data = data.drop_duplicates(
-                    subset=['_idx_', 'symbol',
-                            'symbol_group', 'asset_class'],
-                    keep='first')
-                data = data.drop('_idx_', axis=1)
-                data = data.sort_index()
-            # ----------------------------
 
             if "last" in data.columns:
                 tick_dict = {}
