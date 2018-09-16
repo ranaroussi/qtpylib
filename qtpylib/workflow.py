@@ -58,7 +58,8 @@ def ibCallback(caller, msg, **kwargs):
         # print(kwargs)
 
 
-def get_data_ib(instrument, start, resolution="1 min", blotter=None, output_path=None):
+def get_data_ib(instrument, start, resolution="1 min",
+                blotter=None, output_path=None):
     """
     Downloads historical data from Interactive Brokers
 
@@ -74,7 +75,7 @@ def get_data_ib(instrument, start, resolution="1 min", blotter=None, output_path
         blotter : str
             Store MySQL server used by this Blotter (default is "auto detect")
         output_path : str
-            Path to the location where the resulting CSV should be saved (default: ``None``)
+            Path to where the resulting CSV should be saved (optional)
 
     :Returns:
         data : pd.DataFrame
@@ -198,9 +199,9 @@ def prepare_data(instrument, data, output_path=None,
         data : pd.DataFrame
             Pandas DataDrame with that instrument's market data
         output_path : str
-            Path to the location where the resulting CSV should be saved (default: ``None``)
+            Path to where the resulting CSV should be saved (optional)
         index : pd.Series
-            Pandas Series that will be used for df's index (default is to use df.index)
+            Pandas Series that will be used for df's index (optioanl)
         colsmap : dict
             Dict for mapping df's columns to those used by QTPyLib
             (default assumes same naming convention as QTPyLib's)
@@ -220,7 +221,8 @@ def prepare_data(instrument, data, output_path=None,
     df = data.copy()
 
     # ezibpy's csv?
-    if set(df.columns) == set(['datetime', 'C', 'H', 'L', 'O', 'OI', 'V', 'WAP']):
+    if set(df.columns) == set([
+            'datetime', 'C', 'H', 'L', 'O', 'OI', 'V', 'WAP']):
         df.rename(columns={
             'datetime': 'datetime',
             'O': 'open',
