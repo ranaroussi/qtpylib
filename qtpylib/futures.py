@@ -106,7 +106,7 @@ def create_continuous_contract(df, resolution="1T"):
         return flags[['symbol', 'expiry', 'gap']]
 
     # gonna need this later
-    df['datetime'] = df.index
+    df['dt'] = df.index
 
     # work with daily data
     daily_df = df.groupby('symbol').resample("D").last().dropna(how='all')
@@ -127,12 +127,12 @@ def create_continuous_contract(df, resolution="1T"):
     else:
         flags = flags.resample('T').last().ffill(
         ).reindex(df.index.unique()).ffill()
-    flags['datetime'] = flags.index
+    flags['dt'] = flags.index
 
     # build contract
     contract = pd.merge(df, flags, how='left', on=[
-                        'datetime', 'symbol']).ffill()
-    contract.set_index('datetime', inplace=True)
+                        'dt', 'symbol']).ffill()
+    contract.set_index('dt', inplace=True)
 
     contract = contract[contract.expiry_y == contract.expiry_x]
     contract['expiry'] = contract['expiry_y']
