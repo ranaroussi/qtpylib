@@ -868,7 +868,7 @@ class DataStore():
 
     def __init__(self, output_file=None):
         self.auto = None
-        # self.recorded = None
+        self.recorded = None
         self.output_file = output_file
         self.rows = []
 
@@ -948,11 +948,12 @@ class DataStore():
             recorded[sym + '_POSITION'] = recorded[sym + '_POSITION'
                                                    ].shift(1).fillna(0)
 
-        # cleanup columns names
+        # make this public
+        self.recorded = recorded.copy()
+
+        # cleanup columns names before saving...
         recorded.columns = [col.replace('_FUT_', '_').replace(
                             '_OPT_OPT_', '_OPT_') for col in recorded.columns]
-
-        # print(recorded.columns)
 
         # save
         if ".csv" in self.output_file:
