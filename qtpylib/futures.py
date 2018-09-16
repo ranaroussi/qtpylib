@@ -106,6 +106,7 @@ def create_continuous_contract(df, resolution="1T"):
         return flags[['symbol', 'expiry', 'gap']]
 
     # gonna need this later
+    df = df.copy()
     df['dt'] = df.index
 
     # work with daily data
