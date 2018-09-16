@@ -592,7 +592,7 @@ class Algo(Broker):
             # print("EXIT", kwargs)
 
             try:
-                self.record(position=0)
+                self.record({symbol+'_POSITION': 0})
             except Exception as e:
                 pass
 
@@ -611,9 +611,10 @@ class Algo(Broker):
 
             # record
             try:
-                quantity = - \
-                    quantity if kwargs['direction'] == "BUY" else quantity
-                self.record(position=quantity)
+                quantity = abs(quantity)
+                if kwargs['direction'] != "BUY":
+                    quantity = -quantity
+                self.record({symbol+'_POSITION': quantity})
             except Exception as e:
                 pass
 
