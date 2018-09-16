@@ -893,7 +893,26 @@ class Broker():
     def get_positions(self, symbol):
         symbol = self.get_symbol(symbol)
 
-        if symbol in self.ibConn.positions:
+        if self.backtest:
+            position = 0
+            avgCost = 0.0
+
+            if self.datastore.recorded is not None:
+                data = self.datastore.recorded
+                col = symbol.upper() + '_POSITION'
+                position = data[col].values[-1]
+                if position != 0:
+                    pos = data[col].diff()
+                    avgCost = data[data.index.isin(pos[pos != 0][-1:].index)
+                                   ][symbol.upper() + '_OPEN'].values[-1]
+            return {
+                    "symbol": symbol,
+                    "position": position,
+                    "avgCost":  avgCost,
+                    "account":  "Backtest"
+                }
+
+        elif symbol in self.ibConn.positions:
             return self.ibConn.positions[symbol]
 
         return {
