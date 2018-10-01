@@ -1,13 +1,9 @@
 QTPyLib, Pythonic Algorithmic Trading
 =====================================
 
-.. image:: https://img.shields.io/pypi/pyversions/qtpylib.svg?maxAge=60
+.. image:: https://img.shields.io/badge/python-3.4+-blue.svg?style=flat
     :target: https://pypi.python.org/pypi/qtpylib
     :alt: Python version
-
-.. image:: https://img.shields.io/travis/ranaroussi/qtpylib/master.svg?maxAge=1
-    :target: https://travis-ci.org/ranaroussi/qtpylib
-    :alt: Travis-CI build status
 
 .. image:: https://img.shields.io/pypi/v/qtpylib.svg?maxAge=60
     :target: https://pypi.python.org/pypi/qtpylib
@@ -17,15 +13,23 @@ QTPyLib, Pythonic Algorithmic Trading
     :target: https://pypi.python.org/pypi/qtpylib
     :alt: PyPi status
 
+.. image:: https://img.shields.io/travis/ranaroussi/qtpylib/master.svg?maxAge=1
+    :target: https://travis-ci.org/ranaroussi/qtpylib
+    :alt: Travis-CI build status
+
 .. image:: https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat
     :target: http://qtpylib.io/docs/latest/?badge=latest
     :alt: Documentation Status
+
+.. image:: https://img.shields.io/badge/Patreon-accepting-ff69b4.svg?style=flat
+    :target: https://www.patreon.com/aroussi
+    :alt: Patreon Status
 
 .. image:: https://img.shields.io/github/stars/ranaroussi/qtpylib.svg?style=social&label=Star&maxAge=60
     :target: https://github.com/ranaroussi/qtpylib
     :alt: Star this repo
 
-.. image:: https://img.shields.io/twitter/follow/aroussi.svg?style=social&label=Follow%20Me&maxAge=60
+.. image:: https://img.shields.io/twitter/follow/aroussi.svg?style=social&label=Follow&maxAge=60
     :target: https://twitter.com/aroussi
     :alt: Follow me on twitter
 
