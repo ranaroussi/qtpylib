@@ -212,12 +212,13 @@ class Blotter():
             self.log_blotter.info("Deleting runtime args...")
             self._remove_cached_args()
 
-        self.log_blotter.info("Disconnecting from MySQL...")
-        try:
-            self.dbcurr.close()
-            self.dbconn.close()
-        except Exception as e:
-            pass
+        if not self.args['dbskip']:
+            self.log_blotter.info("Disconnecting from MySQL...")
+            try:
+                self.dbcurr.close()
+                self.dbconn.close()
+            except Exception as e:
+                pass
 
         if terminate:
             os._exit(0)
