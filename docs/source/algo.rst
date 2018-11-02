@@ -331,7 +331,7 @@ You can override any of the above parameters using run-time using command line a
 - ``--output`` Path to save the recorded data (default: ``None``)
 - ``--blotter`` Log trades to MySQL server used by this Blotter (default: ``auto-detect``)
 - ``--continuous`` Construct continuous Futures contracts (flag, default: ``True``)
-- ``--threads`` Maximum number of threads to use (default is # of CPU cores)
+- ``--threads`` Maximum number of threads to use (default is 1)
 
 **Example:**
 
