@@ -118,7 +118,7 @@ class Algo(Broker):
         self.log_algo = logging.getLogger(__name__)
 
         # initilize strategy logger
-        tools.createLogger(self.name)
+        tools.createLogger(self.name, level=logging.INFO)
         self.log = logging.getLogger(self.name)
 
         # override args with any (non-default) command-line args
