@@ -571,9 +571,9 @@ class Broker():
 
     # ---------------------------------------
     def _create_order(self, symbol, direction, quantity, order_type="",
-                      limit_price=0, expiry=0, orderId=0, target=0, initial_stop=0,
-                      trail_stop_at=0, trail_stop_by=0, stop_limit=False,
-                      trail_stop_type='percent', **kwargs):
+                      limit_price=0, expiry=0, orderId=0, target=0,
+                      initial_stop=0, trail_stop_at=0, trail_stop_by=0,
+                      stop_limit=False, trail_stop_type='percent', **kwargs):
 
         # fix prices to comply with contract's min-tick
         ticksize = self.get_contract_details(symbol)['m_minTick']
