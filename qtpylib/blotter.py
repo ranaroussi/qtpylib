@@ -45,6 +45,7 @@ from pymysql.constants.CLIENT import MULTI_STATEMENTS
 from numpy import (
     isnan as np_isnan,
     nan as np_nan,
+    int64 as np_int64
 )
 
 from ezibpy import (
@@ -675,7 +676,18 @@ class Blotter():
 
     # -------------------------------------------
     def broadcast(self, data, kind):
-        string2send = "%s %s" % (self.args["zmqtopic"], json.dumps(data))
+        def int64_handler(o):
+            if isinstance(o, np_int64):
+                try:
+                    return pd.to_datetime(o, unit='ms').strftime(
+                        ibDataTypes["DATE_TIME_FORMAT_LONG"])
+                except Exception as e:
+                    return int(o)
+            raise TypeError
+
+        string2send = "%s %s" % (
+            self.args["zmqtopic"], json.dumps(data, default=int64_handler))
+
         # print(kind, string2send)
         try:
             self.socket.send_string(string2send)
