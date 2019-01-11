@@ -881,7 +881,7 @@ class Blotter():
 
         # remove future dates
         df['datetime'] = pd.to_datetime(df['datetime'], utc=True)
-        blacklist = df[df['datetime'] > datetime.utcnow()]
+        blacklist = df[df['datetime'] > pd.to_datetime('now', utc=True)]
         df = df.loc[set(df.index) - set(blacklist)]  # .tail()
 
         # loop through data, symbol by symbol
