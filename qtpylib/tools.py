@@ -695,10 +695,15 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
                          ['_idx_']].min().max().values[-1]).replace('T', ' ')
         end_date = str(data.groupby(["symbol"])[
                        ['_idx_']].max().min().values[-1]).replace('T', ' ')
-        data = data[(data.index >= start_date) & (data.index <= end_date)
-                    ].drop_duplicates(subset=['_idx_', 'symbol',
-                                              'symbol_group', 'asset_class'],
-                                      keep='first')
+
+        data = data[(data.index <= end_date)].drop_duplicates(
+            subset=['_idx_', 'symbol', 'symbol_group', 'asset_class'],
+            keep='first')
+
+        # try also sync start date
+        trimmed = data[data.index >= start_date]
+        if not trimmed.empty:
+            data = trimmed
 
     # ---------------------------------------------
     # resample

@@ -43,8 +43,9 @@ import pymysql
 from pymysql.constants.CLIENT import MULTI_STATEMENTS
 
 from numpy import (
-    isnan as npisnan,
-    nan as npnan
+    isnan as np_isnan,
+    nan as np_nan,
+    int64 as np_int64
 )
 
 from ezibpy import (
@@ -212,12 +213,13 @@ class Blotter():
             self.log_blotter.info("Deleting runtime args...")
             self._remove_cached_args()
 
-        self.log_blotter.info("Disconnecting from MySQL...")
-        try:
-            self.dbcurr.close()
-            self.dbconn.close()
-        except Exception as e:
-            pass
+        if not self.args['dbskip']:
+            self.log_blotter.info("Disconnecting from MySQL...")
+            try:
+                self.dbcurr.close()
+                self.dbconn.close()
+            except Exception as e:
+                pass
 
         if terminate:
             os._exit(0)
@@ -674,7 +676,18 @@ class Blotter():
 
     # -------------------------------------------
     def broadcast(self, data, kind):
-        string2send = "%s %s" % (self.args["zmqtopic"], json.dumps(data))
+        def int64_handler(o):
+            if isinstance(o, np_int64):
+                try:
+                    return pd.to_datetime(o, unit='ms').strftime(
+                        ibDataTypes["DATE_TIME_FORMAT_LONG"])
+                except Exception as e:
+                    return int(o)
+            raise TypeError
+
+        string2send = "%s %s" % (
+            self.args["zmqtopic"], json.dumps(data, default=int64_handler))
+
         # print(kind, string2send)
         try:
             self.socket.send_string(string2send)
@@ -805,7 +818,7 @@ class Blotter():
                                 df['expiry'] >= int(datetime.now().strftime('%Y%m')))) | (
                             (df['expiry'] >= 1000000) & (
                                 df['expiry'] >= int(datetime.now().strftime('%Y%m%d')))) |
-                            npisnan(df['expiry'])
+                            np_isnan(df['expiry'])
                             ]
 
                     # fix expiry formatting (no floats)
@@ -880,7 +893,7 @@ class Blotter():
 
         # remove future dates
         df['datetime'] = pd.to_datetime(df['datetime'], utc=True)
-        blacklist = df[df['datetime'] > datetime.utcnow()]
+        blacklist = df[df['datetime'] > pd.to_datetime('now', utc=True)]
         df = df.loc[set(df.index) - set(blacklist)]  # .tail()
 
         # loop through data, symbol by symbol
@@ -1034,7 +1047,7 @@ class Blotter():
                         continue
 
                     # convert None to np.nan !!
-                    data.update((k, npnan)
+                    data.update((k, np_nan)
                                 for k, v in data.items() if v is None)
 
                     # quote

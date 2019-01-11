@@ -124,7 +124,7 @@ or via CLI:
 - ``--dbpass`` MySQL server password (default: ``None``)
 - ``--dbskip`` [flag] Skip MySQL logging of market data (default: ``False``)
 - ``--orderbook`` [flag] Tells the blotter to fetch and stream order book data (default: ``False``)
-- ``--threads`` Maximum number of threads to use (default is # of CPU cores)
+- ``--threads`` Maximum number of threads to use (default is 1)
 
 .. note::
 

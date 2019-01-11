@@ -571,8 +571,9 @@ class Broker():
 
     # ---------------------------------------
     def _create_order(self, symbol, direction, quantity, order_type="",
-                      limit_price=0, expiry=0, orderId=0, target=0, initial_stop=0,
-                      trail_stop_at=0, trail_stop_by=0, stop_limit=False, **kwargs):
+                      limit_price=0, expiry=0, orderId=0, target=0,
+                      initial_stop=0, trail_stop_at=0, trail_stop_by=0,
+                      stop_limit=False, trail_stop_type='percent', **kwargs):
 
         # fix prices to comply with contract's min-tick
         ticksize = self.get_contract_details(symbol)['m_minTick']
@@ -581,6 +582,7 @@ class Broker():
         initial_stop = tools.round_to_fraction(initial_stop, ticksize)
         trail_stop_at = tools.round_to_fraction(trail_stop_at, ticksize)
         trail_stop_by = tools.round_to_fraction(trail_stop_by, ticksize)
+        trail_stop_type = "amount" if trail_stop_type == "amount" else "percent"
 
         self.log_broker.debug('CREATE ORDER: %s %4d %s %s', direction,
                               quantity, symbol, dict(locals(), **kwargs))
@@ -649,13 +651,18 @@ class Broker():
 
             # triggered trailing stop?
             if trail_stop_by != 0 and trail_stop_at != 0:
-                self.ibConn.createTriggerableTrailingStop(symbol, -order_quantity,
-                                                          triggerPrice=trail_stop_at,
-                                                          trailPercent=trail_stop_by,
-                                                          # trailAmount   = trail_stop_by,
-                                                          parentId=order['entryOrderId'],
-                                                          stopOrderId=order["stopOrderId"]
-                                                          )
+                trail_stop_params = {
+                    "symbol": symbol,
+                    "quantity": -order_quantity,
+                    "triggerPrice": trail_stop_at,
+                    "parentId": order["entryOrderId"],
+                    "stopOrderId": order["stopOrderId"]
+                }
+                if trail_stop_type.lower() == 'amount':
+                    trail_stop_params["trailAmount"] = trail_stop_by
+                else:
+                    trail_stop_params["trailPercent"] = trail_stop_by
+                self.ibConn.createTriggerableTrailingStop(**trail_stop_params)
 
             # add all orders to history
             self._update_order_history(symbol=symbol,

@@ -118,7 +118,7 @@ class Algo(Broker):
         self.log_algo = logging.getLogger(__name__)
 
         # initilize strategy logger
-        tools.createLogger(self.name)
+        tools.createLogger(self.name, level=logging.INFO)
         self.log = logging.getLogger(self.name)
 
         # override args with any (non-default) command-line args
@@ -561,22 +561,25 @@ class Algo(Broker):
             orderId : int
                 If modifying an order, the order id of the modified order
             target : float
-                target (exit) price
+                Target (exit) price
             initial_stop : float
-                price to set hard stop
+                Price to set hard stop
             stop_limit: bool
-                Flag to indicate if the stop should be STOP or STOP LIMIT
-                (default False=STOP)
+                Flag to indicate if the stop should be STOP or STOP LIMIT.
+                Default is ``False`` (STOP)
             trail_stop_at : float
-                price at which to start trailing the stop
+                Price at which to start trailing the stop
+            trail_stop_type : string
+                Type of traiing stop offset (amount, percent).
+                Default is ``percent``
             trail_stop_by : float
-                % of trailing stop distance from current price
+                Offset of trailing stop distance from current price
             fillorkill: bool
-                fill entire quantiry or none at all
+                Fill entire quantiry or none at all
             iceberg: bool
-                is this an iceberg (hidden) order
+                Is this an iceberg (hidden) order
             tif: str
-                time in force (DAY, GTC, IOC, GTD). default is ``DAY``
+                Time in force (DAY, GTC, IOC, GTD). default is ``DAY``
         """
         self.log_algo.debug('ORDER: %s %4d %s %s', signal,
                             quantity, symbol, kwargs)
