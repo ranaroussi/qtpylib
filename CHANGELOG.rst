@@ -9,6 +9,7 @@ Release Notes
 - Suppress SQL messages when using ``--dbskip``
 - Added option to set trailing stop offset type by specifiying ``trail_stop_type``. Options are: **amount** and **percent** (default)
 - Defaults to single threaded mode unless otherwise specified
+- Requires ezIBpy >= 1.12.66
 - Lots of bugfixes, and code improvements
 
 *September 17, 2018*
