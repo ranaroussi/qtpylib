@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+*January 11, 2019*
+
+1.5.82
+-----------
+- Set strategy's logging level to ``INFO``
+- Suppress SQL messages when using ``--dbskip``
+- Added option to set trailing stop offset type by specifiying ``trail_stop_type``. Options are: **amount** and **percent** (default)
+- Defaults to single threaded mode unless otherwise specified
+- Lots of bugfixes, and code improvements
+
 *September 17, 2018*
 
 1.5.81
