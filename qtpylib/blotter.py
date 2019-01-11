@@ -43,8 +43,8 @@ import pymysql
 from pymysql.constants.CLIENT import MULTI_STATEMENTS
 
 from numpy import (
-    isnan as npisnan,
-    nan as npnan
+    isnan as np_isnan,
+    nan as np_nan,
 )
 
 from ezibpy import (
@@ -806,7 +806,7 @@ class Blotter():
                                 df['expiry'] >= int(datetime.now().strftime('%Y%m')))) | (
                             (df['expiry'] >= 1000000) & (
                                 df['expiry'] >= int(datetime.now().strftime('%Y%m%d')))) |
-                            npisnan(df['expiry'])
+                            np_isnan(df['expiry'])
                             ]
 
                     # fix expiry formatting (no floats)
@@ -1035,7 +1035,7 @@ class Blotter():
                         continue
 
                     # convert None to np.nan !!
-                    data.update((k, npnan)
+                    data.update((k, np_nan)
                                 for k, v in data.items() if v is None)
 
                     # quote
