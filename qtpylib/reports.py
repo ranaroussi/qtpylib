@@ -351,7 +351,7 @@ class Reports():
         app.add_url_rule('/trades/<start>/<path:end>',
                          'trades', view_func=self.trades)
         app.add_url_rule('/login/<password>', 'login', view_func=self.login)
-        app.add_url_rule('/static/<path>', 'send_static',
+        app.add_url_rule('/static/<url_path>', 'send_static',
                          view_func=self.send_static)
 
         # let user know what the temp password is
