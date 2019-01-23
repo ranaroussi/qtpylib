@@ -536,32 +536,22 @@ def stoch(df, window=14, d=3, k=3, fast=False):
     compute the n period relative strength indicator
     http://excelta.blogspot.co.il/2013/09/stochastic-oscillator-technical.html
     """
-    highs_ma = pd.concat([df['high'].shift(i)
-                          for i in np.arange(window)], 1, sort=True).apply(list, 1)
-    highs_ma = highs_ma.T.max().T
 
-    lows_ma = pd.concat([df['low'].shift(i)
-                         for i in np.arange(window)], 1, sort=True).apply(list, 1)
-    lows_ma = lows_ma.T.min().T
+    my_df = pd.DataFrame(index=df.index)
 
-    fast_k = ((df['close'] - lows_ma) / (highs_ma - lows_ma)) * 100
-    fast_d = numpy_rolling_mean(fast_k, d)
+    my_df['rolling_max'] = df['high'].rolling(window).max()
+    my_df['rolling_min'] = df['low'].rolling(window).min()
+
+    my_df['fast_k'] = 100 * (df['close'] - my_df['rolling_min'])/(my_df['rolling_max'] - my_df['rolling_min'])
+    my_df['fast_d'] = my_df['fast_k'].rolling(d).mean()
 
     if fast:
-        data = {
-            'k': fast_k,
-            'd': fast_d
-        }
+        return my_df.loc[:, ['fast_k', 'fast_d']]
 
-    else:
-        slow_k = numpy_rolling_mean(fast_k, k)
-        slow_d = numpy_rolling_mean(slow_k, d)
-        data = {
-            'k': slow_k,
-            'd': slow_d
-        }
+    my_df['slow_k'] = my_df['fast_k'].rolling(k).mean()
+    my_df['slow_d'] = my_df['slow_k'].rolling(d).mean()
 
-    return pd.DataFrame(index=df.index, data=data)
+    return my_df.loc[:, ['slow_k', 'slow_d']]
 
 # ---------------------------------------------
 
