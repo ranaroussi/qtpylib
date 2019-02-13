@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+*February 13, 2019*
+
+1.5.83
+-----------
+- Fix numpy transpose error in stoch indicator
+- Fix reports' ``KeyError`` under Python 3.7+ when not using ``--nopass``
+- Fix reports' static file error with incorrect path
+
 *January 11, 2019*
 
 1.5.82
