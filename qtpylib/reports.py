@@ -304,7 +304,7 @@ class Reports():
 
     # ---------------------------------------
     def index(self, start=None, end=None):
-        if not self.args['nopass']:
+        if 'nopass' not in self.args:
             if self._password != "" and self._password != request.cookies.get('password'):
                 return render_template('login.html')
 
@@ -355,7 +355,7 @@ class Reports():
                          view_func=self.send_static)
 
         # let user know what the temp password is
-        if not self.args['nopass'] and self._password != "":
+        if 'nopass' not in self.args and self._password != "":
             print(" * Web app password is:", self._password)
 
         # notice
