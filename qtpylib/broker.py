@@ -121,9 +121,9 @@ class Broker():
                 # print('*', end="", flush=True)
                 connection_tries += 1
                 if connection_tries > 10:
-                    self.log_broker.info(
+                    self.log_broker.error(
                         "Cannot connect to Interactive Brokers...")
-                    sys.exit(0)
+                    sys.exit(1)
 
         self.log_broker.info("Connection established...")
 
