@@ -19,24 +19,25 @@
 # limitations under the License.
 #
 
+from abc import ABCMeta, abstractmethod
 import argparse
+from datetime import datetime
 import inspect
-import sys
 import logging
 import os
+import re
+import sys
 
-from datetime import datetime
-from abc import ABCMeta, abstractmethod
-
-import pandas as pd
 from numpy import nan
 
-from qtpylib.broker import Broker
-from qtpylib.workflow import validate_columns as validate_csv_columns
-from qtpylib.blotter import prepare_history
+import pandas as pd
 from qtpylib import (
     tools, sms, asynctools
 )
+from qtpylib.blotter import prepare_history
+from qtpylib.broker import Broker
+from qtpylib.workflow import validate_columns as validate_csv_columns
+
 
 # =============================================
 # check min, python version
@@ -324,7 +325,7 @@ class Algo(Broker):
 
                     dfs.append(df)
 
-                except Exception as e:
+                except Exception:
                     self.log_algo.error(
                         "Error reading data for %s (%s)", symbol, file)
                     sys.exit(0)
@@ -596,7 +597,7 @@ class Algo(Broker):
 
             try:
                 self.record({symbol+'_POSITION': 0})
-            except Exception as e:
+            except Exception:
                 pass
 
             if not self.backtest:
@@ -618,7 +619,7 @@ class Algo(Broker):
                 if kwargs['direction'] != "BUY":
                     quantity = -quantity
                 self.record({symbol+'_POSITION': quantity})
-            except Exception as e:
+            except Exception:
                 pass
 
             if not self.backtest:
@@ -652,7 +653,7 @@ class Algo(Broker):
         if self.record_output:
             try:
                 self.datastore.record(self.record_ts, *args, **kwargs)
-            except Exception as e:
+            except Exception:
                 pass
 
     # ---------------------------------------
@@ -723,7 +724,7 @@ class Algo(Broker):
         try:
             return data.dropna(subset=[
                 'open', 'high', 'low', 'close', 'volume'])
-        except Exception as e:
+        except Exception:
             return data
 
     # ---------------------------------------
@@ -872,7 +873,13 @@ class Algo(Broker):
             df = df.append(data, sort=True)
 
         # resample
-        if resolution:
+        # pattern = re.compile("1[Y,M,W,D,T,K]")
+        # No need to resample if working with 1T data. 
+        # It is possible that other standard unit bar dimensions may also not need resampling.
+        # Resampling with multiple instruments can cause data truncation, for resolutions other than 1T, 
+        #   that bug may still persist. 
+        pattern = re.compile("1[T]")
+        if resolution and not pattern.match(resolution):
             tz = str(df.index.tz)
             # try:
             #     tz = str(df.index.tz)

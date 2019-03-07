@@ -15,3 +15,7 @@ Icon
 /tests
 .vscode
 nosy.py
+.project
+.pydevproject
+*~
+.settings
