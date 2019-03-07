@@ -57,8 +57,15 @@ class Instrument(str):
     def _get_symbol_dataframe(df, symbol):
         try:
             # this produce a "IndexingError using Boolean Indexing" (on rare occasions)
-            return df[(df['symbol'] == symbol) | (df['symbol_group'] == symbol)].copy()
-        except Exception as e:
+            # see algo._base_bar_handler for more explanation -- unclear what the 
+            #    symbol format strategy is -- this is a kludge to get it working
+            csh_symbol = symbol
+            if '_CASH' in symbol and '_CSH' not in symbol:
+                csh_symbol = "%s_CSH"%symbol
+            return df[(df['symbol'] == symbol) |
+                    (df['symbol'] == csh_symbol) |
+                    (df['symbol_group'] == symbol)].copy()          
+        except Exception:
             df = pd_concat([df[df['symbol'] == symbol],
                             df[df['symbol_group'] == symbol]], sort=True)
             df.loc[:, '_idx_'] = df.index
@@ -411,7 +418,7 @@ class Instrument(str):
             if attr is not None:
                 attr = attr.replace("quantity", "position")
             return pos[attr]
-        except Exception as e:
+        except Exception:
             return pos
 
     # ---------------------------------------

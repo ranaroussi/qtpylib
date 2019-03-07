@@ -218,7 +218,7 @@ class Blotter():
             try:
                 self.dbcurr.close()
                 self.dbconn.close()
-            except Exception as e:
+            except Exception:
                 pass
 
         if terminate:
@@ -240,7 +240,7 @@ class Blotter():
             stdout_list = process.communicate()[0].decode('utf-8').split("\n")
             stdout_list = list(filter(None, stdout_list))
             return len(stdout_list) > 0
-        except Exception as e:
+        except Exception:
             return False
 
     # -------------------------------------------
@@ -364,7 +364,7 @@ class Blotter():
             try:
                 self.ibConn.cancelHistoricalData(
                     self.ibConn.contracts[msg.reqId])
-            except Exception as e:
+            except Exception:
                 pass
 
         else:
@@ -511,7 +511,7 @@ class Blotter():
             else:
                 self.broadcast(quote, "QUOTE")
 
-        except Exception as e:
+        except Exception:
             pass
 
     # -------------------------------------------
@@ -619,7 +619,7 @@ class Blotter():
 
         try:
             timestamp = parse_date(timestamp)
-        except Exception as e:
+        except Exception:
             pass
 
         # placeholders
@@ -645,7 +645,6 @@ class Blotter():
 
         # add tools.resampled raw to self._bars
         ohlc = _raw_bars['last'].resample('1T').ohlc()
-        vol = _raw_bars['volume'].resample('1T').sum()
         vol = _raw_bars['volume'].resample('1T').sum()
 
         opened_bar = ohlc
@@ -675,13 +674,13 @@ class Blotter():
             self._raw_bars[symbol] = _raw_bars
 
     # -------------------------------------------
-    def broadcast(self, data, kind):
+    def broadcast(self, data, kind):  # @UnusedVariable
         def int64_handler(o):
             if isinstance(o, np_int64):
                 try:
                     return pd.to_datetime(o, unit='ms').strftime(
                         ibDataTypes["DATE_TIME_FORMAT_LONG"])
-                except Exception as e:
+                except Exception:
                     return int(o)
             raise TypeError
 
@@ -691,7 +690,7 @@ class Blotter():
         # print(kind, string2send)
         try:
             self.socket.send_string(string2send)
-        except Exception as e:
+        except Exception:
             pass
 
     # -------------------------------------------
@@ -722,18 +721,18 @@ class Blotter():
         if kind == "TICK":
             try:
                 mysql_insert_tick(data, symbol_id, dbcurr)
-            except Exception as e:
+            except Exception:
                 pass
         elif kind == "BAR":
             try:
                 mysql_insert_bar(data, symbol_id, dbcurr)
-            except Exception as e:
+            except Exception:
                 pass
 
         # commit
         try:
             dbconn.commit()
-        except Exception as e:
+        except Exception:
             pass
 
         # disconect from mysql
@@ -754,8 +753,8 @@ class Blotter():
         # connect to mysql
         self.mysql_connect()
 
-        self.context = zmq.Context(zmq.REP)
-        self.socket = self.context.socket(zmq.PUB)
+        self.context = zmq.Context(zmq.REP)  # @UndefinedVariable
+        self.socket = self.context.socket(zmq.PUB)  # @UndefinedVariable
         self.socket.bind("tcp://*:" + str(self.args['zmqport']))
 
         db_modified = 0
@@ -905,15 +904,28 @@ class Blotter():
             data = df[df['symbol_id'] == symbol_id].copy()
 
             # sort by id
-            data.sort_values('id', axis=0, ascending=True, inplace=False)
+            # data.sort_values('id', axis=0, ascending=True, inplace=False)
+            # Sorting by date seems reasonable, it seems the results from the original were
+            #   not being kept. 
+            data = data.sort_values('datetime', axis=0, ascending=True, inplace=False)
 
             # convert index to column
             data.loc[:, "ix"] = data.index
             data.reset_index(inplace=True)
 
             # find out of sequence ticks/bars
-            malformed = data.shift(1)[(data['id'] > data['id'].shift(1)) & (
-                data['datetime'] < data['datetime'].shift(1))]
+            # malformed = data.shift(1)[(data['id'] > data['id'].shift(1)) & (
+            #     data['datetime'] < data['datetime'].shift(1))]
+            # What is this error condition that this checks for??  
+            # The assumption that all indexes and datetimes 
+            #   will increase monotonically together doesn't seem to hold in the case of backfilling
+            #   for live trading.  Imagine I just started my blotter, and I need an hours worth of data 
+            #   to start trading.  The Blotter has started to insert data.  Since the id column is an
+            #   autoincrement column, the index will follow order of operations, but I might backfill missing 
+            #   data from time previous to when the blotter was started.  The indexes will be out of order with 
+            #   time of the data, but that does not mean that they are incorrect or malformed. 
+            # With the data already sorted by datetime, this is a no-op.  
+            malformed = data.shift(1)[(data['datetime'] < data['datetime'].shift(1))]
 
             # cleanup rows
             if malformed.empty:
@@ -943,7 +955,7 @@ class Blotter():
                                 " WHERE id IN (%s)" % (",".join(bad_ids)))
             try:
                 self.dbconn.commit()
-            except Exception as e:
+            except Exception:
                 self.dbconn.rollback()
 
         # return
@@ -964,14 +976,14 @@ class Blotter():
         try:
             start = start.strftime(
                 ibDataTypes["DATE_TIME_FORMAT_LONG_MILLISECS"])
-        except Exception as e:
+        except Exception:
             pass
 
         if end is not None:
             try:
                 end = end.strftime(
                     ibDataTypes["DATE_TIME_FORMAT_LONG_MILLISECS"])
-            except Exception as e:
+            except Exception:
                 pass
 
         # connect to mysql
@@ -1031,8 +1043,8 @@ class Blotter():
 
         # connect to zeromq self.socket
         self.context = zmq.Context()
-        sock = self.context.socket(zmq.SUB)
-        sock.setsockopt_string(zmq.SUBSCRIBE, "")
+        sock = self.context.socket(zmq.SUB)  # @UndefinedVariable
+        sock.setsockopt_string(zmq.SUBSCRIBE, "")  # @UndefinedVariable
         sock.connect('tcp://127.0.0.1:' + str(self.args['zmqport']))
 
         try:
@@ -1063,7 +1075,7 @@ class Blotter():
 
                     try:
                         data["datetime"] = parse_date(data["timestamp"])
-                    except Exception as e:
+                    except Exception:
                         pass
 
                     df = pd.DataFrame(index=[0], data=data)
@@ -1073,7 +1085,7 @@ class Blotter():
 
                     try:
                         df.index = df.index.tz_convert(tz)
-                    except Exception as e:
+                    except Exception:
                         df.index = df.index.tz_localize('UTC').tz_convert(tz)
 
                     # add options columns
@@ -1264,7 +1276,7 @@ class Blotter():
             self.dbconn = self.get_mysql_connection()
             self.dbcurr = self.dbconn.cursor()
 
-        except Exception as e:
+        except Exception:
             self.dbconn.rollback()
             self.log_blotter.error("Cannot create database schema")
             self._remove_cached_args()
@@ -1404,7 +1416,7 @@ def get_symbol_id(symbol, dbconn, dbcurr, ibConn=None):
                 dbcurr.execute(sql)
                 try:
                     dbconn.commit()
-                except Exception as e:
+                except Exception:
                     return False
                 return int(row[0])
 
@@ -1418,7 +1430,7 @@ def get_symbol_id(symbol, dbconn, dbcurr, ibConn=None):
                              asset_class, expiry, expiry))
         try:
             dbconn.commit()
-        except Exception as e:
+        except Exception:
             return False
 
         return dbcurr.lastrowid
@@ -1458,7 +1470,7 @@ def mysql_insert_tick(data, symbol_id, dbcurr):
                                         float(data["opt_theta"]), float(
                                             data["opt_vega"]),
                                         ))
-        except Exception as e:
+        except Exception:
             pass
 
 
@@ -1498,7 +1510,7 @@ def mysql_insert_bar(data, symbol_id, dbcurr):
                                         float(greeks["opt_theta"]), float(
                                             greeks["opt_vega"]),
                                         ))
-        except Exception as e:
+        except Exception:
             pass
 
 # -------------------------------------------

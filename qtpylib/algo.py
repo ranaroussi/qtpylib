@@ -324,7 +324,7 @@ class Algo(Broker):
 
                     dfs.append(df)
 
-                except Exception as e:
+                except Exception:
                     self.log_algo.error(
                         "Error reading data for %s (%s)", symbol, file)
                     sys.exit(0)
@@ -596,7 +596,7 @@ class Algo(Broker):
 
             try:
                 self.record({symbol+'_POSITION': 0})
-            except Exception as e:
+            except Exception:
                 pass
 
             if not self.backtest:
@@ -618,7 +618,7 @@ class Algo(Broker):
                 if kwargs['direction'] != "BUY":
                     quantity = -quantity
                 self.record({symbol+'_POSITION': quantity})
-            except Exception as e:
+            except Exception:
                 pass
 
             if not self.backtest:
@@ -652,7 +652,7 @@ class Algo(Broker):
         if self.record_output:
             try:
                 self.datastore.record(self.record_ts, *args, **kwargs)
-            except Exception as e:
+            except Exception:
                 pass
 
     # ---------------------------------------
@@ -723,7 +723,7 @@ class Algo(Broker):
         try:
             return data.dropna(subset=[
                 'open', 'high', 'low', 'close', 'volume'])
-        except Exception as e:
+        except Exception:
             return data
 
     # ---------------------------------------
@@ -848,8 +848,26 @@ class Algo(Broker):
         self.bar_hashes[symbol] = this_bar_hash
 
         if newbar and handle_bar:
-            if self.bars[(self.bars['symbol'] == symbol) | (
-                    self.bars['symbol_group'] == symbol)].empty:
+#             >>> self.bars['symbol'].unique()
+#             array(['AUDUSD_CASH_CSH', 'EURUSD_CASH_CSH', 'EURGBP_CASH_CSH',
+#                    'GBPUSD_CASH_CSH', 'EURCAD_CASH_CSH', 'USDSEK_CASH_CSH',
+#                    'EURSEK_CASH_CSH', 'USDCHF_CASH_CSH', 'USDJPY_CASH_CSH',
+#                    'USDCAD_CASH_CSH', 'EURAUD_CASH_CSH', 'EURCHF_CASH_CSH',
+#                    'EURJPY_CASH_CSH'], dtype=object)
+#             >>> symbol
+#             'EURUSD_CASH'
+            # What is the appropriate symbol to use? It seems that it is sometimes 
+            #   EURUSD, sometimes EURUSD_CASH, and sometimes EURUSD_CASH_CSH
+            # Since there is a secondary check and reference to symbol_group, the 
+            #   appending of CASH and CSH to the FX symbols seems redundant.  Since
+            #   I do not know the motivation for doing so, I'll try to make a kludge
+            #   that works for now.  -lemieuxm
+            csh_symbol = symbol
+            if '_CASH' in symbol and '_CSH' not in symbol:
+                csh_symbol = "%s_CSH"%symbol
+            if self.bars[(self.bars['symbol'] == symbol) |
+                    (self.bars['symbol'] == csh_symbol) |
+                    (self.bars['symbol_group'] == symbol)].empty:
                 return
             bar_instrument = self.get_instrument(symbol)
             if bar_instrument:
