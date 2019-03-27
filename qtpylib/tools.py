@@ -36,6 +36,9 @@ from dateutil import relativedelta
 from dateutil.parser import parse as parse_date
 from pytz import timezone
 
+from pathlib import Path
+from importlib import import_module, machinery
+
 # for re-export
 from ezibpy.utils import (
     createLogger, contract_expiry_from_symbol,
@@ -49,6 +52,20 @@ decimal.getcontext().prec = 5
 if sys.version_info < (3, 4):
     raise SystemError("QTPyLib requires Python version >= 3.4")
 # =============================================
+
+
+def dynamic_import(module, class_name=None):
+    """ dynamically import module and class """
+    if Path(module).is_file():
+        module_name = module.split('/')[-1].replace('.py', '')
+        loader = machinery.SourceFileLoader(module_name, module)
+        module_object = loader.load_module(module_name)
+    else:
+        module_object = import_module(module)
+    if class_name:
+        target_class = getattr(module_object, class_name)
+        return target_class
+    return module_object
 
 
 class make_object:
