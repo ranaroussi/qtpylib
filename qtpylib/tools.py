@@ -97,8 +97,9 @@ def multi_shift(df, window):
 
     dfs = [df.shift(i) for i in np.arange(window)]
     for ix, df_item in enumerate(dfs[1:]):
-        dfs[ix + 1].columns = [str(col) for col in df_item.columns + str(ix + 1)]
-    return pd.concat(dfs, 1, sort=True) #.apply(list, 1)
+        dfs[ix + 1].columns = [str(col)
+                               for col in df_item.columns + str(ix + 1)]
+    return pd.concat(dfs, 1, sort=True)  # .apply(list, 1)
 
 # ---------------------------------------------
 
@@ -178,8 +179,9 @@ def create_ib_tuple(instrument):
                     expiry = futures.get_active_contract(symdata[1])
 
                 instrument = (spec['symbol'].upper(), "FUT",
-                              spec['exchange'].upper(), spec['currency'].upper(),
-                              int(expiry), 0.0, "")
+                              spec['exchange'].upper(
+                ), spec['currency'].upper(),
+                    int(expiry), 0.0, "")
 
             except Exception as e:
                 raise ValueError("Un-parsable contract tuple")
@@ -621,7 +623,6 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
         return data
         # return data[~data.index.duplicated(keep='last')]
 
-
     def __resample_ticks(data, freq=1000, by='last'):
         """
         function that re-samples tick data into an N-tick or N-volume OHLC format
@@ -742,7 +743,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
 
                 # cleanup
                 symdata.dropna(inplace=True, subset=[
-                                'open', 'high', 'low', 'close', 'volume'])
+                    'open', 'high', 'low', 'close', 'volume'])
                 if sym[-3:] in ("OPT", "FOP"):
                     symdata.dropna(inplace=True)
 
@@ -763,7 +764,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
 
                 # cleanup
                 symdata.dropna(inplace=True, subset=[
-                                'open', 'high', 'low', 'close', 'volume'])
+                    'open', 'high', 'low', 'close', 'volume'])
                 if sym[-3:] in ("OPT", "FOP"):
                     symdata.dropna(inplace=True)
 
@@ -843,18 +844,18 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
                     # no fill / return original index
                     if ffill:
                         symdata['open'] = np.where(symdata['volume'] <= 0,
-                                                    symdata['close'], symdata['open'])
+                                                   symdata['close'], symdata['open'])
                         symdata['high'] = np.where(symdata['volume'] <= 0,
-                                                    symdata['close'], symdata['high'])
+                                                   symdata['close'], symdata['high'])
                         symdata['low'] = np.where(symdata['volume'] <= 0,
-                                                    symdata['close'], symdata['low'])
+                                                  symdata['close'], symdata['low'])
                     else:
                         symdata['open'] = np.where(symdata['volume'] <= 0,
-                                                    np.nan, symdata['open'])
+                                                   np.nan, symdata['open'])
                         symdata['high'] = np.where(symdata['volume'] <= 0,
-                                                    np.nan, symdata['high'])
+                                                   np.nan, symdata['high'])
                         symdata['low'] = np.where(symdata['volume'] <= 0,
-                                                    np.nan, symdata['low'])
+                                                  np.nan, symdata['low'])
                         symdata['close'] = np.where(symdata['volume'] <= 0,
                                                     np.nan, symdata['close'])
 
@@ -866,11 +867,11 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
             symdata['symbol_group'] = meta_data[meta_data.index ==
                                                 sym]['symbol_group'].values[0]
             symdata['asset_class'] = meta_data[meta_data.index ==
-                                                sym]['asset_class'].values[0]
+                                               sym]['asset_class'].values[0]
 
             # cleanup
             symdata.dropna(inplace=True, subset=[
-                            'open', 'high', 'low', 'close', 'volume'])
+                'open', 'high', 'low', 'close', 'volume'])
             if sym[-3:] in ("OPT", "FOP"):
                 symdata.dropna(inplace=True)
 
@@ -936,7 +937,6 @@ class DataStore():
         if "symbol" not in recorded.columns:
             return
 
-
         # group by symbol
         recorded['datetime'] = recorded.index
         data = recorded.groupby(['symbol', 'datetime'], as_index=False).sum()
@@ -944,7 +944,6 @@ class DataStore():
 
         symbols = data['symbol'].unique().tolist()
         data.drop(columns=['symbol'], inplace=True)
-
 
         # cleanup:
 
