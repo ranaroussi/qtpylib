@@ -24,10 +24,16 @@ import logging
 
 from sqlalchemy import (
     create_engine, MetaData, ForeignKey,
-    Table, Column, UniqueConstraint, CheckConstraint,
-    Integer, Numeric, Float, String, Date, DateTime,
-    and_, or_, text
+    Table, Column, UniqueConstraint,
+    Integer, Float, String, Date, DateTime,
+    and_, text, insert
 )
+from sqlalchemy.dialects import mysql
+
+import pandas as pd
+
+from ezibpy import dataTypes as ibDataTypes
+
 from qtpylib import (
     tools, asynctools
 )
@@ -46,25 +52,41 @@ tools.createLogger(__name__, logging.INFO)
 
 class Datastore():
 
-    def __init__(self, conn_str, threads=None, debug=True, **kwargs):
+    def __init__(self, conn_str, threads=None, debug=False, **kwargs):
         """ initialize engine """
-
-        # class settings
-        asynctools.multitasking.createPool(__name__, threads)
-        self.symbol_ids = {}
 
         # parse conn_str
         dbname = conn_str.strip().split('/')[-1]
         conn_str = conn_str.replace("/%s" % dbname, "")
         self.dialect = conn_str.split('://')[0].split('+')[0].lower()
 
+        if self.dialect not in ["mysql", "postgres"]:
+            return
+
+        # class settings
+        asynctools.multitasking.createPool(__name__, threads)
+        self.symbol_ids = {}
+
         # initialize engine
-        engine = create_engine(conn_str, echo=debug)
-        engine.execute("CREATE DATABASE IF NOT EXISTS {0}".format(dbname))
-        engine.execute("USE {0}".format(dbname))
+        self.engine = create_engine(conn_str, echo=debug)
+
+        # create database?
+        dbs = self.engine.execute("SHOW DATABASES;")
+        if dbname not in [d[0] for d in dbs]:
+            self.engine.execute("CREATE DATABASE {0};".format(dbname))
+
+        # select database
+        self.engine.execute("USE {0}".format(dbname))
+
+        # default insert function (for on_duplicate_key_update)
+        self.insert = mysql.insert
+        datetime_col = mysql.DATETIME(fsp=6)
+        if self.dialect == "postgres":
+            self.insert = insert
+            datetime_col = DateTime()
 
         # define tables
-        metadata = MetaData()
+        metadata = MetaData(bind=self.engine)
 
         self.symbols = Table(
             'symbols', metadata,
@@ -75,30 +97,16 @@ class Datastore():
             Column('expiry', Date, index=True)
         )
 
-        # self.bars_eod = Table(
-        #     'bars_eod', metadata,
-        #     Column('id', Integer, primary_key=True),
-        #     Column('datetime', Date, index=True),
-        #     Column('symbol_id', Integer, index=True,
-        #            ForeignKey("symbols.id"), nullable=False),
-        #     Column('open', Numeric),
-        #     Column('high', Numeric),
-        #     Column('low', Numeric),
-        #     Column('close', Numeric),
-        #     Column('volume', Integer),
-        #     UniqueConstraint('datetime', 'symbol_id', name='uix_dt_sym')
-        # )
-
         self.bars = Table(
             'bars', metadata,
             Column('id', Integer, primary_key=True),
             Column('datetime', DateTime, index=True),
             Column('symbol_id', Integer, ForeignKey("symbols.id"),
                    nullable=False, index=True),
-            Column('open', Numeric),
-            Column('high', Numeric),
-            Column('low', Numeric),
-            Column('close', Numeric),
+            Column('open', Float),
+            Column('high', Float),
+            Column('low', Float),
+            Column('close', Float),
             Column('volume', Integer),
             UniqueConstraint('datetime', 'symbol_id', name='uix_dt_sym')
         )
@@ -106,14 +114,14 @@ class Datastore():
         self.ticks = Table(
             'ticks', metadata,
             Column('id', Integer, primary_key=True),
-            Column('datetime', DateTime(3), index=True),
+            Column('datetime', datetime_col, index=True),
             Column('symbol_id', Integer, ForeignKey("symbols.id"),
                    nullable=False, index=True),
-            Column('bid', Numeric, nullable=True),
+            Column('bid', Float, nullable=True),
             Column('bidsize', Integer, nullable=True),
-            Column('ask', Numeric, nullable=True),
+            Column('ask', Float, nullable=True),
             Column('asksize', Integer, nullable=True),
-            Column('last', Numeric, nullable=True),
+            Column('last', Float, nullable=True),
             Column('lastsize', Integer, nullable=True),
             UniqueConstraint('datetime', 'symbol_id', name='uix_dt_sym')
         )
@@ -125,20 +133,29 @@ class Datastore():
                    nullable=True, index=True),
             Column('bar_id', Integer, ForeignKey("bars.id"),
                    nullable=True, index=True),
-            Column('price', Numeric),
-            Column('underlying', Numeric),
-            Column('dividend', Numeric),
+            Column('price', Float),
+            Column('underlying', Float),
+            Column('dividend', Float),
             Column('volume', Integer),
-            Column('iv', Numeric),
-            Column('oi', Numeric),
+            Column('iv', Float),
+            Column('oi', Float),
             Column('delta', Float(3, 2)),
             Column('gamma', Float(3, 2)),
             Column('theta', Float(3, 2)),
             Column('vega', Float(3, 2)),
         )
 
-        self.conn = engine.connect()
+        self.conn = self.engine.connect()
         metadata.create_all(self.conn, checkfirst=True)
+
+    # -----------------------------------
+    def _update_on_conflict(self, query, update_params, constraint):
+        if self.dialect == 'postgres':
+            return query.on_conflict_do_update(
+                constraint=constraint,
+                set_=update_params)
+        # else (mysql)
+        return query.on_duplicate_key_update(**update_params)
 
     # -----------------------------------
     def get_symbol_id(self, symbol, expiry=None):
@@ -204,10 +221,8 @@ class Datastore():
             self.symbol_ids[symbol] = symbol_id
 
         # insert to db
-        transaction = self.conn.begin()
-
         if kind == "TICK":
-            q = self.ticks.insert().prefix_with("IGNORE").values(**{
+            q = self.insert(self.ticks).prefix_with("IGNORE").values(**{
                 "symbol_id": symbol_id,
                 "datetime": data["timestamp"],
                 "bid": float(data["bid"]),
@@ -217,19 +232,12 @@ class Datastore():
                 "last": float(data["last"]),
                 "lastsize": int(data["lastsize"])
             })
-
-            update_params = {"symbol_id": symbol_id}
-
-            if self.dialect == 'mysql':
-                q = q.on_duplicate_key_update(**update_params)
-
-            elif self.dialect == 'postgres':
-                q = q.on_conflict_do_update(
-                    constraint='uix_dt_sym',
-                    set_=update_params)
+            q = self._update_on_conflict(q, {
+                "symbol_id": symbol_id
+            }, 'uix_dt_sym')
 
         elif kind == "BAR":
-            q = self.bars.insert().prefix_with("IGNORE").values(**{
+            q = self.insert(self.bars).prefix_with("IGNORE").values(**{
                 "symbol_id": symbol_id,
                 "datetime": data["timestamp"],
                 "open": float(data["open"]),
@@ -239,29 +247,22 @@ class Datastore():
                 "volume": int(data["volume"])
             })
 
-            update_params = {
+            q = self._update_on_conflict(q, {
                 "open": float(data["open"]),
                 "high": float(data["high"]),
                 "low": float(data["low"]),
                 "close": float(data["close"]),
                 "volume": int(data["volume"])
-            }
+            }, 'uix_dt_sym')
 
-            if self.dialect == 'mysql':
-                q = q.on_duplicate_key_update(**update_params)
-
-            elif self.dialect == 'postgres':
-                q = q.on_conflict_do_update(
-                    constraint='uix_dt_sym',
-                    set_=update_params)
-
-        res = self.conn.execute(q)
+        transaction = self.conn.begin()
         try:
+            res = self.conn.execute(q)
             transaction.commit()
             lastrow_id = res.lastrowid
         except Exception:
             transaction.rollback()
-            pass
+            raise
 
         # add greeks?
         if greeks:
@@ -282,9 +283,10 @@ class Datastore():
             elif kind == "BAR":
                 greeks["bar_id"] = lastrow_id
 
-            q = self.greeks.insert().prefix_with("IGNORE").values(**greeks)
-            res = self.conn.execute(q)
+            q = self.insert(self.greeks).prefix_with("IGNORE").values(**greeks)
+            transaction = self.conn.begin()
             try:
+                res = self.conn.execute(q)
                 transaction.commit()
                 return res.lastrowid
             except Exception:
@@ -294,14 +296,16 @@ class Datastore():
     # -----------------------------------
     def history(self, symbols, start, end=None,
                 resolution="1T", tz="UTC", continuous=True):
+
+        resolution = resolution.upper()
+
         # load runtime/default data
         if isinstance(symbols, str):
             symbols = symbols.split(',')
 
         # work with symbol groups
-        # symbols = list(map(tools.gen_symbol_group, symbols))
         symbol_groups = list(map(tools.gen_symbol_group, symbols))
-        # print(symbols)
+        # print(symbol_groups)
 
         # convert datetime to string for MySQL
         try:
@@ -317,13 +321,10 @@ class Datastore():
             except Exception:
                 pass
 
-        # connect to mysql
-        self.mysql_connect()
-
         # --- build query
         table = 'ticks' if resolution[-1] in ("K", "V", "S") else 'bars'
 
-        query = """SELECT tbl.*,
+        q = """SELECT tbl.*,
                 CONCAT(s.`symbol`, "_", s.`asset_class`) as symbol,
                 s.symbol_group, s.asset_class, s.expiry, g.price AS opt_price,
                 g.underlying AS opt_underlying, g.dividend AS opt_dividend,
@@ -336,30 +337,30 @@ class Datastore():
                 WHERE (`datetime` >= "{START}"{END_SQL}) """
 
         if end is not None:
-            query = query.replace('{END_SQL}', ' AND `datetime` <= "{END}"')
-            query = query.replace('{END}', end)
+            q = q.replace('{END_SQL}', ' AND `datetime` <= "{END}"')
+            q = q.replace('{END}', end)
         else:
-            query = query.replace('{END_SQL}', '')
+            q = q.replace('{END_SQL}', '')
 
         if symbols[0].strip() != "*":
             if continuous:
-                query += """ AND ( s.`symbol_group` in ("{SYMBOL_GROUPS}") OR
+                q += """ AND ( s.`symbol_group` in ("{SYMBOL_GROUPS}") OR
                          CONCAT(s.`symbol`, "_", s.`asset_class`)
                          IN ("{SYMBOLS}") ) """
             else:
-                query += """ AND ( CONCAT(s.`symbol`, "_", s.`asset_class`)
+                q += """ AND ( CONCAT(s.`symbol`, "_", s.`asset_class`)
                          IN ("{SYMBOLS}") ) """
 
-        query = query.replace('{START}', start)
-        query = query.replace('{TABLE}', table)
-        query = query.replace.replace('{TABLE_ID}', table[:-1] + '_id')
-        query = query.replace('{SYMBOLS}', '","'.join(symbols))
-        query = query.replace('{SYMBOL_GROUPS}', '","'.join(symbol_groups))
+        q = q.replace('{START}', start)
+        q = q.replace('{TABLE}', table)
+        q = q.replace('{TABLE_ID}', table[:-1] + '_id')
+        q = q.replace('{SYMBOLS}', '","'.join(symbols))
+        q = q.replace('{SYMBOL_GROUPS}', '","'.join(symbol_groups))
 
         # --- end build query
 
         # get data using pandas
-        data = pd.read_sql(query, self.dbconn)  # .dropna()
+        data = pd.read_sql(q, self.conn)
 
         # no data in db
         if data.empty:
@@ -368,8 +369,8 @@ class Datastore():
         # clearup records that are out of sequence
         return self._fix_history_sequence(data, table)
 
-
     # -----------------------------------
+
     def _fix_history_sequence(self, df, table):
         """ fix out-of-sequence ticks/bars """
 
@@ -423,19 +424,21 @@ class Datastore():
         # remove bad ids from db
         if bad_ids:
             bad_ids = list(map(str, map(int, bad_ids)))
-            self.dbcurr.execute("DELETE FROM greeks WHERE %s IN (%s)" % (
-                table.lower()[:-1] + "_id", ",".join(bad_ids)))
-            self.dbcurr.execute("DELETE FROM " + table.lower() +
-                                " WHERE id IN (%s)" % (",".join(bad_ids)))
+
+            transaction = self.conn.begin()
             try:
-                self.dbconn.commit()
+                self.conn.execute("DELETE FROM greeks WHERE %s IN (%s)" % (
+                    table.lower()[:-1] + "_id", ",".join(bad_ids)))
+                self.conn.execute("DELETE FROM " + table.lower() +
+                                  " WHERE id IN (%s)" % (",".join(bad_ids)))
+                transaction.commit()
             except Exception:
-                self.dbconn.rollback()
+                transaction.rollback()
 
         # return
         return data.drop(['id', 'ix', 'index'], axis=1)
 
-
     # -----------------------------------
+
     def close(self):
         self.conn.close()
