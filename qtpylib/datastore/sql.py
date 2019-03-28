@@ -52,7 +52,7 @@ tools.createLogger(__name__, logging.INFO)
 
 class Datastore():
 
-    def __init__(self, conn_str, threads=None, debug=False, **kwargs):
+    def __init__(self, conn_str, debug=False, **kwargs):
         """ initialize engine """
 
         # parse conn_str
@@ -64,7 +64,7 @@ class Datastore():
             return
 
         # class settings
-        asynctools.multitasking.createPool(__name__, threads)
+        asynctools.multitasking.createPool(__name__)
         self.symbol_ids = {}
 
         # initialize engine

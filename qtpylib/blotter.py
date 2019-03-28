@@ -50,7 +50,7 @@ from ezibpy import (
 )
 
 from qtpylib import (
-    tools, asynctools, path, futures, __version__
+    tools, path, futures, __version__
 )
 
 # =============================================
@@ -66,15 +66,8 @@ tools.createLogger(__name__, logging.INFO)
 logging.getLogger('ezibpy').setLevel(logging.CRITICAL)
 
 # =============================================
-# set up threading pool
-__threads__ = tools.read_single_argv("--threads")
-__threads__ = __threads__ if tools.is_number(__threads__) else None
-asynctools.multitasking.createPool(__name__, __threads__)
-
-# =============================================
 
 cash_ticks = {}
-
 
 class Blotter():
     """Broker class initilizer
@@ -180,10 +173,6 @@ class Blotter():
         self.backfilled = False
         self.backfilled_symbols = []
         self.backfill_resolution = "1 min"
-
-        # be aware of thread count
-        self.threads = __threads__
-        # self.threads = asynctools.multitasking.getPool(__name__)['threads']
 
     # -------------------------------------------
     def _on_exit(self, terminate=True):
@@ -379,7 +368,7 @@ class Blotter():
             self.datastore.store(data=data, kind=data["kind"])
 
     # -------------------------------------------
-    @asynctools.multitasking.task
+
     def on_tick_received(self, tick):
         # data
         symbol = tick['symbol']
@@ -451,7 +440,7 @@ class Blotter():
             self._raw_bars[symbol] = _raw_bars
 
     # -------------------------------------------
-    @asynctools.multitasking.task
+
     def on_tick_string_received(self, tickerId, kwargs):
 
         # kwargs is empty
@@ -520,7 +509,7 @@ class Blotter():
             self.on_tick_received(data)
 
     # -------------------------------------------
-    @asynctools.multitasking.task
+
     def on_quote_received(self, tickerId):
         try:
 
@@ -570,7 +559,7 @@ class Blotter():
             pass
 
     # -------------------------------------------
-    @asynctools.multitasking.task
+
     def on_option_computation_received(self, tickerId):
         # try:
         symbol = self.ibConn.tickerSymbol(tickerId)
@@ -644,7 +633,7 @@ class Blotter():
             # pass
 
     # -------------------------------------------
-    @asynctools.multitasking.task
+
     def on_orderbook_received(self, tickerId):
         orderbook = self.ibConn.marketDepthData[tickerId].dropna(
             subset=['bid', 'ask']).fillna(0).to_dict(orient='list')
@@ -696,9 +685,11 @@ class Blotter():
                 datastore = "pystore"
             datastore = tools.dynamic_import(
                 "qtpylib.datastore.%s" % datastore, "Datastore")
-            self.datastore = datastore(self.args["datastore"],
-                                       threads=self.threads)
+            self.datastore = datastore(self.args["datastore"])
 
+
+        hist = self.history(['ESM2019_FUT'], '2019-03-28', resolution="10K")
+        print(hist.head())
 
         self.zmq = zmq.Context(zmq.REP)
         self.socket = self.zmq.socket(zmq.PUB)
@@ -826,8 +817,6 @@ class Blotter():
             self.quitting = True  # don't display connection errors on ctrl+c
             print("\n\n>>> Interrupted with Ctrl-c...")
             print("(waiting for running tasks to be completed)\n")
-            # asynctools.multitasking.killall() # stop now
-            asynctools.multitasking.wait_for_tasks()  # wait for threads
             sys.exit(1)
 
     # -------------------------------------------
@@ -918,8 +907,6 @@ class Blotter():
             print("\n\n>>> Interrupted with Ctrl-c...")
             print("(waiting for running tasks to be completed)\n")
             print(".\n.\n.\n")
-            # asynctools.multitasking.killall() # stop now
-            asynctools.multitasking.wait_for_tasks()  # wait for threads
             sys.exit(1)
 
     # -------------------------------------------
@@ -937,8 +924,6 @@ class Blotter():
             print("\n\n>>> Interrupted with Ctrl-c...")
             print("(waiting for running tasks to be completed)\n")
             print(".\n.\n.\n")
-            # asynctools.multitasking.killall() # stop now
-            asynctools.multitasking.wait_for_tasks()  # wait for threads
             sys.exit(1)
 
     # ---------------------------------------
