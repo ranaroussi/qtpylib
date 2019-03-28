@@ -687,10 +687,6 @@ class Blotter():
                 "qtpylib.datastore.%s" % datastore, "Datastore")
             self.datastore = datastore(self.args["datastore"])
 
-
-        hist = self.history(['ESM2019_FUT'], '2019-03-28', resolution="10K")
-        print(hist.head())
-
         self.zmq = zmq.Context(zmq.REP)
         self.socket = self.zmq.socket(zmq.PUB)
         self.socket.bind("tcp://*:" + str(self.args['zmqport']))
