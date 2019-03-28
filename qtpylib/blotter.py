@@ -162,11 +162,6 @@ class Blotter():
         self.args.update(kwargs)
         self.args.update(self.load_cli_args())
 
-        # determine on datastore
-        if self.args["datastore"] is not None and \
-                "pystore" not in self.args["datastore"]:
-            self.args["datastore"] = "sql"
-
         # read cached args to detect duplicate blotters
         self.duplicate_run = False
         self.cahced_args = {}
@@ -187,7 +182,8 @@ class Blotter():
         self.backfill_resolution = "1 min"
 
         # be aware of thread count
-        self.threads = asynctools.multitasking.getPool(__name__)['threads']
+        self.threads = __threads__
+        # self.threads = asynctools.multitasking.getPool(__name__)['threads']
 
     # -------------------------------------------
     def _on_exit(self, terminate=True):
@@ -695,10 +691,14 @@ class Blotter():
 
         # initialize datastore
         if self.args["datastore"] is not None:
+            datastore = "sql"
+            if "pystore" in self.args["datastore"]:
+                datastore = "pystore"
             datastore = tools.dynamic_import(
-                "datastore.%s" % self.args["datastore"], "Datastore")
+                "qtpylib.datastore.%s" % datastore, "Datastore")
             self.datastore = datastore(self.args["datastore"],
-                                       threads=__threads__)
+                                       threads=self.threads)
+
 
         self.zmq = zmq.Context(zmq.REP)
         self.socket = self.zmq.socket(zmq.PUB)
