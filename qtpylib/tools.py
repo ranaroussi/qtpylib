@@ -887,7 +887,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
 # store event in a temp data store
 # =============================================
 
-class DataStore():
+class Recorder():
 
     def __init__(self, output_file=None):
         self.auto = None

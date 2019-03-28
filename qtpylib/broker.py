@@ -904,8 +904,8 @@ class Broker():
             position = 0
             avgCost = 0.0
 
-            if self.datastore.recorded is not None:
-                data = self.datastore.recorded
+            if self.recorder.recorded is not None:
+                data = self.recorder.recorded
                 col = symbol.upper() + '_POSITION'
                 position = data[col].values[-1]
                 if position != 0:
