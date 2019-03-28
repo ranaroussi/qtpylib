@@ -204,7 +204,7 @@ class Algo(Broker):
         # initilize output file
         self.record_ts = None
         if self.record_output:
-            self.datastore = tools.DataStore(self.args["output"])
+            self.recorder = tools.Recorder(self.args["output"])
 
         # ---------------------------------------
         # add stale ticks for more accurate time--based bars
@@ -651,7 +651,7 @@ class Algo(Broker):
         """
         if self.record_output:
             try:
-                self.datastore.record(self.record_ts, *args, **kwargs)
+                self.recorder.record(self.record_ts, *args, **kwargs)
             except Exception as e:
                 pass
 
