@@ -39,9 +39,6 @@ import zmq
 import pandas as pd
 from dateutil.parser import parse as parse_date
 
-import pymysql
-from pymysql.constants.CLIENT import MULTI_STATEMENTS
-
 from numpy import (
     isnan as np_isnan,
     nan as np_nan,
@@ -100,26 +97,19 @@ class Blotter():
             ZeroMQ string to use (default: _qtpylib_BLOTTERNAME_)
         orderbook : str
             Get Order Book (Market Depth) data (default: False)
-        dbhost : str
-            MySQL server hostname (default: localhost)
-        dbport : str
-            MySQL server port (default: 3306)
-        dbname : str
-            MySQL server database (default: qpy)
-        dbuser : str
-            MySQL server username (default: root)
-        dbpass : str
-            MySQL server password (default: none)
-        dbskip : str
-            Skip MySQL logging (default: False)
+        datastore : obj
+            None (dbskip)
+            sqlalchemy connectiion string
+
+            pystore (defaults to ~/.pystore)
+            pystore://path
     """
 
     __metaclass__ = ABCMeta
 
     def __init__(self, name=None, symbols="symbols.csv",
                  ibport=4001, ibclient=999, ibserver="localhost",
-                 dbhost="localhost", dbport="3306", dbname="qtpy",
-                 dbuser="root", dbpass="", dbskip=False, orderbook=False,
+                 datastore=None, orderbook=False,
                  zmqport="12345", zmqtopic=None, **kwargs):
 
         # whats my name?
@@ -146,9 +136,8 @@ class Blotter():
         self._raw_bars = {"~": self._raw_bars}
 
         # global objects
-        self.dbcurr = None
-        self.dbconn = None
-        self.context = None
+        self.datastore = None
+        self.zmq = None
         self.socket = None
         self.ibConn = None
 
@@ -172,6 +161,11 @@ class Blotter():
         ) if arg not in ('__class__', 'self', 'kwargs')}
         self.args.update(kwargs)
         self.args.update(self.load_cli_args())
+
+        # determine on datastore
+        if self.args["datastore"] is not None and \
+                "pystore" not in self.args["datastore"]:
+            self.args["datastore"] = "sql"
 
         # read cached args to detect duplicate blotters
         self.duplicate_run = False
@@ -213,11 +207,10 @@ class Blotter():
             self.log_blotter.info("Deleting runtime args...")
             self._remove_cached_args()
 
-        if not self.args['dbskip']:
-            self.log_blotter.info("Disconnecting from MySQL...")
+        if not self.args['datastore']:
+            self.log_blotter.info("Disconnecting from Datastore...")
             try:
-                self.dbcurr.close()
-                self.dbconn.close()
+                self.datastore.close()
             except Exception:
                 pass
 
@@ -291,19 +284,8 @@ class Blotter():
         parser.add_argument('--orderbook', action='store_true',
                             help='Get Order Book (Market Depth) data',
                             required=False)
-        parser.add_argument('--dbhost', default=self.args['dbhost'],
-                            help='MySQL server hostname', required=False)
-        parser.add_argument('--dbport', default=self.args['dbport'],
-                            help='MySQL server port', required=False)
-        parser.add_argument('--dbname', default=self.args['dbname'],
-                            help='MySQL server database', required=False)
-        parser.add_argument('--dbuser', default=self.args['dbuser'],
-                            help='MySQL server username', required=False)
-        parser.add_argument('--dbpass', default=self.args['dbpass'],
-                            help='MySQL server password', required=False)
-        parser.add_argument('--dbskip', default=self.args['dbskip'],
-                            required=False, help='Skip MySQL logging (flag)',
-                            action='store_true')
+        parser.add_argument('--datastore', default=self.args['datastore'],
+                            help='Data storage engine', required=False)
 
         # only return non-default cmd line args
         # (meaning only those actually given)
@@ -398,7 +380,7 @@ class Blotter():
             # print(data)
 
             # store in db
-            self.log2db(data, data["kind"])
+            self.datastore.store(data=data, kind=data["kind"])
 
     # -------------------------------------------
     @asynctools.multitasking.task
@@ -428,7 +410,8 @@ class Blotter():
         # send tick to message self.broadcast
         tick["kind"] = "TICK"
         self.broadcast(tick, "TICK")
-        self.log2db(tick, "TICK")
+        self.datastore.store(data=tick, kind="TICK",
+                             greeks=self.cash_ticks[symbol])
 
         # add tick to raw self._bars
         tick_data = pd.DataFrame(index=['timestamp'],
@@ -464,7 +447,8 @@ class Blotter():
 
             bar["kind"] = "BAR"
             self.broadcast(bar, "BAR")
-            self.log2db(bar, "BAR")
+            self.datastore.store(data=bar, kind="BAR",
+                                 greeks=self.cash_ticks[symbol])
 
             self._bars[symbol] = self._bars[symbol][-1:]
             _raw_bars.drop(_raw_bars.index[:], inplace=True)
@@ -700,53 +684,6 @@ class Blotter():
             pass
 
     # -------------------------------------------
-    def log2db(self, data, kind):
-        if self.args['dbskip'] or len(data["symbol"].split("_")) > 2:
-            return
-
-        # connect to mysql per call (thread safe)
-        if self.threads > 0:
-            dbconn = self.get_mysql_connection()
-            dbcurr = dbconn.cursor()
-        else:
-            dbconn = self.dbconn
-            dbcurr = self.dbcurr
-
-        # set symbol details
-        symbol_id = 0
-        symbol = data["symbol"].replace("_" + data["asset_class"], "")
-
-        if symbol in self.symbol_ids.keys():
-            symbol_id = self.symbol_ids[symbol]
-        else:
-            symbol_id = get_symbol_id(
-                data["symbol"], dbconn, dbcurr, self.ibConn)
-            self.symbol_ids[symbol] = symbol_id
-
-        # insert to db
-        if kind == "TICK":
-            try:
-                mysql_insert_tick(data, symbol_id, dbcurr)
-            except Exception:
-                pass
-        elif kind == "BAR":
-            try:
-                mysql_insert_bar(data, symbol_id, dbcurr)
-            except Exception:
-                pass
-
-        # commit
-        try:
-            dbconn.commit()
-        except Exception:
-            pass
-
-        # disconect from mysql
-        if self.threads > 0:
-            dbcurr.close()
-            dbconn.close()
-
-    # -------------------------------------------
     def run(self):
         """Starts the blotter
 
@@ -756,11 +693,15 @@ class Blotter():
 
         self._check_unique_blotter()
 
-        # connect to mysql
-        self.mysql_connect()
+        # initialize datastore
+        if self.args["datastore"] is not None:
+            datastore = tools.dynamic_import(
+                "datastore.%s" % self.args["datastore"], "Datastore")
+            self.datastore = datastore(self.args["datastore"],
+                                       threads=__threads__)
 
-        self.context = zmq.Context(zmq.REP)
-        self.socket = self.context.socket(zmq.PUB)
+        self.zmq = zmq.Context(zmq.REP)
+        self.socket = self.zmq.socket(zmq.PUB)
         self.socket.bind("tcp://*:" + str(self.args['zmqport']))
 
         db_modified = 0
@@ -892,151 +833,20 @@ class Blotter():
     # -------------------------------------------
     # CLIENT / STATIC
     # -------------------------------------------
-    def _fix_history_sequence(self, df, table):
-        """ fix out-of-sequence ticks/bars """
-
-        # remove "Unnamed: x" columns
-        cols = df.columns[df.columns.str.startswith('Unnamed:')].tolist()
-        df.drop(cols, axis=1, inplace=True)
-
-        # remove future dates
-        df['datetime'] = pd.to_datetime(df['datetime'], utc=True)
-        blacklist = df[df['datetime'] > pd.to_datetime('now', utc=True)]
-        df = df.loc[set(df.index) - set(blacklist)]  # .tail()
-
-        # loop through data, symbol by symbol
-        dfs = []
-        bad_ids = [blacklist['id'].values.tolist()]
-
-        for symbol_id in list(df['symbol_id'].unique()):
-
-            data = df[df['symbol_id'] == symbol_id].copy()
-
-            # sort by id
-            data.sort_values('id', axis=0, ascending=True, inplace=False)
-
-            # convert index to column
-            data.loc[:, "ix"] = data.index
-            data.reset_index(inplace=True)
-
-            # find out of sequence ticks/bars
-            malformed = data.shift(1)[(data['id'] > data['id'].shift(1)) & (
-                data['datetime'] < data['datetime'].shift(1))]
-
-            # cleanup rows
-            if malformed.empty:
-                # if all rows are in sequence, just remove last row
-                dfs.append(data)
-            else:
-                # remove out of sequence rows + last row from data
-                index = [x for x in data.index.values
-                         if x not in malformed['ix'].values]
-                dfs.append(data.loc[index])
-
-                # add to bad id list (to remove from db)
-                bad_ids.append(list(malformed['id'].values))
-
-        # combine all lists
-        data = pd.concat(dfs, sort=True)
-
-        # flatten bad ids
-        bad_ids = sum(bad_ids, [])
-
-        # remove bad ids from db
-        if bad_ids:
-            bad_ids = list(map(str, map(int, bad_ids)))
-            self.dbcurr.execute("DELETE FROM greeks WHERE %s IN (%s)" % (
-                table.lower()[:-1] + "_id", ",".join(bad_ids)))
-            self.dbcurr.execute("DELETE FROM " + table.lower() +
-                                " WHERE id IN (%s)" % (",".join(bad_ids)))
-            try:
-                self.dbconn.commit()
-            except Exception:
-                self.dbconn.rollback()
-
-        # return
-        return data.drop(['id', 'ix', 'index'], axis=1)
-
-    # -------------------------------------------
     def history(self, symbols, start, end=None,
                 resolution="1T", tz="UTC", continuous=True):
-        # load runtime/default data
-        if isinstance(symbols, str):
-            symbols = symbols.split(',')
+        """ get history from datastore """
 
-        # work with symbol groups
-        # symbols = list(map(tools.gen_symbol_group, symbols))
-        symbol_groups = list(map(tools.gen_symbol_group, symbols))
-        # print(symbols)
+        data = self.datastore.history(symbols=symbols, start=start, end=end,
+                                      resolution=resolution, tz=tz,
+                                      continuous=continuous)
 
-        # convert datetime to string for MySQL
-        try:
-            start = start.strftime(
-                ibDataTypes["DATE_TIME_FORMAT_LONG_MILLISECS"])
-        except Exception:
-            pass
-
-        if end is not None:
-            try:
-                end = end.strftime(
-                    ibDataTypes["DATE_TIME_FORMAT_LONG_MILLISECS"])
-            except Exception:
-                pass
-
-        # connect to mysql
-        self.mysql_connect()
-
-        # --- build query
-        table = 'ticks' if resolution[-1] in ("K", "V", "S") else 'bars'
-
-        query = """SELECT tbl.*,
-                CONCAT(s.`symbol`, "_", s.`asset_class`) as symbol,
-                s.symbol_group, s.asset_class, s.expiry, g.price AS opt_price,
-                g.underlying AS opt_underlying, g.dividend AS opt_dividend,
-                g.volume AS opt_volume, g.iv AS opt_iv, g.oi AS opt_oi,
-                g.delta AS opt_delta, g.gamma AS opt_gamma,
-                g.theta AS opt_theta, g.vega AS opt_vega
-                FROM `{TABLE}` tbl
-                LEFT JOIN `symbols` s ON tbl.symbol_id = s.id
-                LEFT JOIN `greeks` g ON tbl.id = g.{TABLE_ID}
-                WHERE (`datetime` >= "{START}"{END_SQL}) """
-
-        if end is not None:
-            query = query.replace('{END_SQL}', ' AND `datetime` <= "{END}"')
-            query = query.replace('{END}', end)
-        else:
-            query = query.replace('{END_SQL}', '')
-
-        if symbols[0].strip() != "*":
-            if continuous:
-                query += """ AND ( s.`symbol_group` in ("{SYMBOL_GROUPS}") OR
-                         CONCAT(s.`symbol`, "_", s.`asset_class`)
-                         IN ("{SYMBOLS}") ) """
-            else:
-                query += """ AND ( CONCAT(s.`symbol`, "_", s.`asset_class`)
-                         IN ("{SYMBOLS}") ) """
-
-        query = query.replace('{START}', start)
-        query = query.replace('{TABLE}', table)
-        query = query.replace.replace('{TABLE_ID}', table[:-1] + '_id')
-        query = query.replace('{SYMBOLS}', '","'.join(symbols))
-        query = query.replace('{SYMBOL_GROUPS}', '","'.join(symbol_groups))
-
-        # --- end build query
-
-        # get data using pandas
-        data = pd.read_sql(query, self.dbconn)  # .dropna()
-
-        # no data in db
         if data.empty:
             return data
 
-        # clearup records that are out of sequence
-        data = self._fix_history_sequence(data, table)
-
         # setup dataframe
         return prepare_history(data=data, resolution=resolution,
-                               tz=tz, continuous=True)
+                               tz=tz, continuous=continuous)
 
     # -------------------------------------------
     def stream(self, symbols="*", tick_handler=None, bar_handler=None,
@@ -1048,8 +858,8 @@ class Blotter():
         symbols = list(map(str.strip, symbols))
 
         # connect to zeromq self.socket
-        self.context = zmq.Context()
-        sock = self.context.socket(zmq.SUB)
+        self.zmq = zmq.Context()
+        sock = self.zmq.socket(zmq.SUB)
         sock.setsockopt_string(zmq.SUBSCRIBE, "")
         sock.connect('tcp://127.0.0.1:' + str(self.args['zmqport']))
 
@@ -1224,79 +1034,11 @@ class Blotter():
         db.to_csv(self.args['symbols'], header=True, index=False)
         tools.chmod(self.args['symbols'])
 
-    # -------------------------------------------
-    def get_mysql_connection(self):
-        if self.args['dbskip']:
-            return None
 
-        return pymysql.connect(
-            client_flag=MULTI_STATEMENTS,
-            host=str(self.args['dbhost']),
-            port=int(self.args['dbport']),
-            user=str(self.args['dbuser']),
-            passwd=str(self.args['dbpass']),
-            db=str(self.args['dbname'])
-        )
+# ===========================================
+# Utility functions --->
+# ===========================================
 
-    def mysql_connect(self):
-
-        # skip db connection
-        if self.args['dbskip']:
-            return
-
-        # already connected?
-        if self.dbcurr is not None or self.dbconn is not None:
-            return
-
-        # connect to mysql
-        self.dbconn = self.get_mysql_connection()
-        self.dbcurr = self.dbconn.cursor()
-
-        # check for db schema
-        self.dbcurr.execute("SHOW TABLES")
-        tables = [table[0] for table in self.dbcurr.fetchall()]
-
-        required = ["bars", "ticks", "symbols",
-                    "trades", "greeks", "_version_"]
-        if all(item in tables for item in required):
-            self.dbcurr.execute("SELECT version FROM `_version_`")
-            db_version = self.dbcurr.fetchone()
-            if db_version is not None and __version__ == db_version[0]:
-                return
-
-        # create database schema
-        self.dbcurr.execute(open(path['library'] + '/schema.sql', "rb").read())
-        try:
-            self.dbconn.commit()
-
-            # update version #
-            sql = """ TRUNCATE TABLE _version_;
-                  INSERT INTO _version_ (`version`) VALUES (%s) """
-            self.dbcurr.execute(sql, (__version__))
-            self.dbconn.commit()
-
-            # unless we do this, there's a problem with curr.fetchX()
-            self.dbcurr.close()
-            self.dbconn.close()
-
-            # re-connect to mysql
-            self.dbconn = self.get_mysql_connection()
-            self.dbcurr = self.dbconn.cursor()
-
-        except Exception:
-            self.dbconn.rollback()
-            self.log_blotter.error("Cannot create database schema")
-            self._remove_cached_args()
-            sys.exit(1)
-
-    # ===========================================
-    # Utility functions --->
-    # ===========================================
-
-    # -------------------------------------------
-
-
-# -------------------------------------------
 def load_blotter_args(blotter_name=None, logger=None):
     """ Load running blotter's settings (used by clients)
 
@@ -1343,190 +1085,6 @@ def load_blotter_args(blotter_name=None, logger=None):
     args['as_client'] = True
 
     return args
-
-# -------------------------------------------
-
-
-def get_symbol_id(symbol, dbconn, dbcurr, ibConn=None):
-    """
-    Retrives symbol's ID from the Database or create it if it doesn't exist
-
-    :Parameters:
-        symbol : str
-            Instrument symbol
-        dbconn : object
-            Database connection to be used
-        dbcurr : object
-            Database cursor to be used
-
-    :Optional:
-        ibConn : object
-            ezIBpy object (used for determining futures/options expiration)
-
-    :Returns:
-        symbol_id : int
-            Symbol ID
-    """
-    def _get_contract_expiry(symbol, ibConn=None):
-        # parse w/p ibConn
-        if ibConn is None or isinstance(symbol, str):
-            return tools.contract_expiry_from_symbol(symbol)
-
-        # parse with ibConn
-        contract_details = ibConn.contractDetails(symbol)["m_summary"]
-        if contract_details["m_expiry"] == "":
-            ibConn.createContract(symbol)
-            return _get_contract_expiry(symbol, ibConn)
-
-        if contract_details["m_expiry"]:
-            return datetime.strptime(str(contract_details["m_expiry"]),
-                                     '%Y%m%d').strftime("%Y-%m-%d")
-
-        return contract_details["m_expiry"]
-
-    # start
-    asset_class = tools.gen_asset_class(symbol)
-    symbol_group = tools.gen_symbol_group(symbol)
-    clean_symbol = symbol.replace("_" + asset_class, "")
-    expiry = None
-
-    if asset_class in ("FUT", "OPT", "FOP"):
-        expiry = _get_contract_expiry(symbol, ibConn)
-
-        # look for symbol w/ expiry
-        sql = """SELECT id FROM `symbols` WHERE
-              `symbol`=%s AND `symbol_group`=%s
-              AND `asset_class`=%s  AND `expiry`=%s LIMIT 1"""
-        dbcurr.execute(sql, (clean_symbol, symbol_group, asset_class, expiry))
-
-    else:
-        # look for symbol w/o expiry
-        sql = """SELECT id FROM `symbols` WHERE
-            `symbol`=%s AND `symbol_group`=%s AND `asset_class`=%s LIMIT 1"""
-        dbcurr.execute(sql, (clean_symbol, symbol_group, asset_class))
-
-    row = dbcurr.fetchone()
-
-    # symbol already in db
-    if row is not None:
-        return row[0]
-
-    # symbol/expiry not in db... insert new/update expiry
-    else:
-        # need to update the expiry?
-        if expiry is not None:
-            sql = """SELECT id FROM `symbols` WHERE
-                  `symbol`=%s AND `symbol_group`=%s
-                  AND `asset_class`=%s LIMIT 1"""
-            dbcurr.execute(sql, (clean_symbol, symbol_group, asset_class))
-
-            row = dbcurr.fetchone()
-            if row is not None:
-                sql = "UPDATE `symbols` SET `expiry`='" + \
-                    str(expiry) + "' WHERE id=" + str(row[0])
-                dbcurr.execute(sql)
-                try:
-                    dbconn.commit()
-                except Exception:
-                    return False
-                return int(row[0])
-
-        # insert new symbol
-        sql = """INSERT IGNORE INTO `symbols`
-              (`symbol`, `symbol_group`, `asset_class`, `expiry`)
-              VALUES (%s, %s, %s, %s)
-              ON DUPLICATE KEY UPDATE `symbol`=`symbol`, `expiry`=%s """
-
-        dbcurr.execute(sql, (clean_symbol, symbol_group,
-                             asset_class, expiry, expiry))
-        try:
-            dbconn.commit()
-        except Exception:
-            return False
-
-        return dbcurr.lastrowid
-
-
-# -------------------------------------------
-def mysql_insert_tick(data, symbol_id, dbcurr):
-
-    sql = """INSERT IGNORE INTO `ticks` (`datetime`, `symbol_id`,
-        `bid`, `bidsize`, `ask`, `asksize`, `last`, `lastsize`)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        ON DUPLICATE KEY UPDATE `symbol_id`=`symbol_id`
-    """
-    dbcurr.execute(sql, (data["timestamp"], symbol_id,
-                         float(data["bid"]), int(data["bidsize"]),
-                         float(data["ask"]), int(data["asksize"]),
-                         float(data["last"]), int(data["lastsize"])
-                         ))
-
-    # add greeks
-    if dbcurr.lastrowid and data["asset_class"] in ("OPT", "FOP"):
-        greeks_sql = """INSERT IGNORE INTO `greeks` (
-            `tick_id`, `price`, `underlying`, `dividend`, `volume`,
-            `iv`, `oi`, `delta`, `gamma`, `theta`, `vega`)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """
-        try:
-            dbcurr.execute(greeks_sql, (dbcurr.lastrowid,
-                                        round(float(data["opt_price"]), 2),
-                                        round(float(data["opt_underlying"]), 5),
-                                        float(data["opt_dividend"]),
-                                        int(data["opt_volume"]),
-                                        float(data["opt_iv"]),
-                                        float(data["opt_oi"]),
-                                        float(data["opt_delta"]),
-                                        float(data["opt_gamma"]),
-                                        float(data["opt_theta"]),
-                                        float(data["opt_vega"])))
-        except Exception:
-            pass
-
-
-# -------------------------------------------
-def mysql_insert_bar(data, symbol_id, dbcurr):
-    sql = """INSERT IGNORE INTO `bars`
-        (`datetime`, `symbol_id`, `open`, `high`, `low`, `close`, `volume`)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-        ON DUPLICATE KEY UPDATE
-            `open`=%s, `high`=%s, `low`=%s, `close`=%s, `volume`=`volume`+%s
-    """
-    dbcurr.execute(sql, (data["timestamp"],
-                         symbol_id,
-                         float(data["open"]),
-                         float(data["high"]),
-                         float(data["low"]),
-                         float(data["close"]),
-                         int(data["volume"]),
-                         float(data["open"]),
-                         float(data["high"]),
-                         float(data["low"]),
-                         float(data["close"]),
-                         int(data["volume"])))
-
-    # add greeks
-    if dbcurr.lastrowid and data["asset_class"] in ("OPT", "FOP"):
-        greeks_sql = """INSERT IGNORE INTO `greeks` (
-            `bar_id`, `price`, `underlying`, `dividend`, `volume`,
-            `iv`, `oi`, `delta`, `gamma`, `theta`, `vega`)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """
-        greeks = cash_ticks[data['symbol']]
-        try:
-            dbcurr.execute(greeks_sql, (dbcurr.lastrowid,
-                                        round(float(greeks["opt_price"]), 2),
-                                        round(float(greeks["opt_underlying"]), 5),
-                                        float(greeks["opt_dividend"]),
-                                        int(greeks["opt_volume"]),
-                                        float(greeks["opt_iv"]),
-                                        float(greeks["opt_oi"]),
-                                        float(greeks["opt_delta"]),
-                                        float(greeks["opt_gamma"]),
-                                        float(greeks["opt_theta"]),
-                                        float(greeks["opt_vega"])))
-        except Exception:
-            pass
 
 # -------------------------------------------
 
