@@ -53,8 +53,8 @@ class multitasking():
             name = cls.__POOL_NAME__
 
         return {
-            "engine": "thread" if cls.__POOLS__[cls.__POOL_NAME__
-                                                ]["engine"] == Thread else "process",
+            "engine": "thread" if cls.__POOLS__[
+                cls.__POOL_NAME__]["engine"] == Thread else "process",
             "name": name,
             "threads": cls.__POOLS__[cls.__POOL_NAME__]["threads"]
         }
@@ -69,7 +69,7 @@ class multitasking():
 
         try:
             threads = int(threads)
-        except Exception as e:
+        except Exception:
             threads = 1
 
         # 1 thread is no threads
@@ -102,7 +102,8 @@ class multitasking():
             # has threads
             if not cls.__KILL_RECEIVED__:
                 task = cls.__POOLS__[cls.__POOL_NAME__]['engine'](
-                    target=_run_via_pool, args=args, kwargs=kwargs, daemon=False)
+                    target=_run_via_pool, args=args, kwargs=kwargs,
+                    daemon=False)
                 cls.__TASKS__.append(task)
                 task.start()
                 return task
@@ -119,12 +120,14 @@ class multitasking():
             return True
 
         try:
-            running = len([t.join(1)
-                           for t in cls.__TASKS__ if t is not None and t.isAlive()])
+            running = len([
+                t.join(1) for t in cls.__TASKS__
+                if t is not None and t.isAlive()])
             while running > 0:
-                running = len(
-                    [t.join(1) for t in cls.__TASKS__ if t is not None and t.isAlive()])
-        except Exception as e:
+                running = len([
+                    t.join(1) for t in cls.__TASKS__
+                    if t is not None and t.isAlive()])
+        except Exception:
             pass
         return True
 
