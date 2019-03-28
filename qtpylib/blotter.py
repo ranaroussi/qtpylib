@@ -203,7 +203,7 @@ class Blotter():
             self.log_blotter.info("Deleting runtime args...")
             self._remove_cached_args()
 
-        if not self.args['datastore']:
+        if self.args['datastore']:
             self.log_blotter.info("Disconnecting from Datastore...")
             try:
                 self.datastore.close()
