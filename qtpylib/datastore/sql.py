@@ -265,7 +265,8 @@ class Datastore():
             raise
 
         # add greeks?
-        if greeks:
+        has_greeks = any([greeks[key] for key in greeks.keys() if "opt" in key])
+        if has_greeks:
             greeks = {
                 "price": round(float(greeks["opt_price"]), 2),
                 "underlying": round(float(greeks["opt_underlying"]), 5),
