@@ -51,7 +51,7 @@ Features
 
 - **Full-featured event-based backtester with a beautiful and insightful performance report.**
 - A continuously-running Blotter that lets you capture market data even when your algos aren't running.
-- Tick, Bar and Trade data is stored in either `PyStore <https://github.com/ranaroussi/pystore>`_ or SQL Databases for later analysis and backtesting.
+- Tick, Bar and Trade data is stored in either `PyStore <https://github.com/ranaroussi/pystore>`_, `MySQL <https://www.mysql.com/>`_ or `PostgreSQL <https://www.postgresql.org>`_ databases for later analysis and backtesting.
 - Using pub/sub architecture using `ØMQ <http://zeromq.org>`_ (ZeroMQ) for communicating between the Algo and the Blotter allows for a single Blotter/multiple Algos running on the same machine.
 - **Support for Order Book, Quote, Time, Tick or Volume based strategy resolutions**.
 - Includes many common indicators that you can seamlessly use in your algorithm.
@@ -270,7 +270,7 @@ PyStore (Fast data store for Pandas timeseries data)
 
 SQL Database
 ~~~~~~~~~~~~
-* `SQLAlchemy <https://www.sqlalchemy.org>`_ (tested to work with >=1.2.15)
+* `SQLAlchemy <https://www.sqlalchemy.org>`_ (tested to work with >=1.3.0)
 * `MySQL Server <https://www.mysql.com/>`_ or `PostgreSQL Server <https://www.postgresql.org>`_ installed
 
 -----
