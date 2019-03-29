@@ -89,7 +89,13 @@ To get started, you need to first create a Blotter script:
         pass # we just need the name
 
     if __name__ == "__main__":
-        blotter = MainBlotter()
+        blotter = MainBlotter(
+            # to store data in MySQL, use:
+            # datastore='mysql://root:password@localhost/qtpylib'
+
+            # to store data in PyStore, use:
+            # datastore='pystore://path/to/datastore'
+        )
         blotter.run()
 
 Then, with IB TWS/GW running, run the Blotter from the command line:
