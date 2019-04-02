@@ -50,7 +50,7 @@ from ezibpy import (
 )
 
 from qtpylib import (
-    tools, path, futures, __version__
+    tools, path, futures
 )
 
 # =============================================
@@ -85,6 +85,8 @@ class Blotter():
             TWS/GW Client ID (default: 999)
         ibserver : str
             IB TWS/GW Server hostname (default: localhost)
+        ibaccount : str
+            Specific IB accunt to use (default: None / IB Default)
         zmqport : str
             ZeroMQ Port to use (default: 12345)
         zmqtopic : str
@@ -102,8 +104,8 @@ class Blotter():
 
     def __init__(self, name=None, symbols="symbols.csv",
                  ibport=4001, ibclient=999, ibserver="localhost",
-                 datastore=None, store="ticks+bars", orderbook=False,
-                 zmqport="12345", zmqtopic=None, **kwargs):
+                 ibaccount=None, datastore=None, store="ticks+bars",
+                 orderbook=False, zmqport="12345", zmqtopic=None, **kwargs):
 
         # whats my name?
         self.name = str(self.__class__).split('.')[-1].split("'")[0].lower()
@@ -268,6 +270,8 @@ class Blotter():
                             help='TWS/GW Client ID', required=False)
         parser.add_argument('--ibserver', default=self.args['ibserver'],
                             help='IB TWS/GW Server hostname', required=False)
+        parser.add_argument('--ibaccount', default=self.args['ibaccount'],
+                            help='Specific IB account to use', required=False)
         parser.add_argument('--zmqport', default=self.args['zmqport'],
                             help='ZeroMQ Port to use', required=False)
         parser.add_argument('--orderbook', action='store_true',
@@ -714,7 +718,8 @@ class Blotter():
         while not self.ibConn.connected:
             self.ibConn.connect(clientId=int(self.args['ibclient']),
                                 port=int(self.args['ibport']),
-                                host=str(self.args['ibserver']))
+                                host=str(self.args['ibserver']),
+                                account=self.args['ibaccount'])
             time.sleep(1)
             if not self.ibConn.connected:
                 print('*', end="", flush=True)
@@ -924,7 +929,6 @@ class Blotter():
                 handler(data.iloc[i:i + 1])
                 time.sleep(.15)
 
-            asynctools.multitasking.wait_for_tasks()
             print("\n\n>>> Backtesting Completed.")
 
         except (KeyboardInterrupt, SystemExit):

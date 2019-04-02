@@ -56,13 +56,16 @@ class Instrument(str):
     @staticmethod
     def _get_symbol_dataframe(df, symbol):
         try:
-            # this produce a "IndexingError using Boolean Indexing" (on rare occasions)
-            return df[(df['symbol'] == symbol) | (df['symbol_group'] == symbol)].copy()
-        except Exception as e:
+            # this produce a "IndexingError using Boolean Indexing"
+            # (on rare occasions)
+            return df[(df['symbol'] == symbol) | (
+                df['symbol_group'] == symbol)].copy()
+        except Exception:
             df = pd_concat([df[df['symbol'] == symbol],
                             df[df['symbol_group'] == symbol]], sort=True)
             df.loc[:, '_idx_'] = df.index
-            return df.drop_duplicates(subset=['_idx_'], keep='last').drop('_idx_', axis=1)
+            return df.drop_duplicates(subset=['_idx_'], keep='last'
+                                      ).drop('_idx_', axis=1)
 
     # ---------------------------------------
     def get_bars(self, lookback=None, as_dict=False):
@@ -88,7 +91,8 @@ class Instrument(str):
         # if lookback is not None:
         #     bars = bars[-lookback:]
 
-        if not bars.empty > 0 and bars['asset_class'].values[-1] not in ("OPT", "FOP"):
+        if not bars.empty > 0 and bars['asset_class'
+                                       ].values[-1] not in ("OPT", "FOP"):
             bars.drop(bars.columns[
                 bars.columns.str.startswith('opt_')].tolist(),
                 inplace=True, axis=1)
@@ -127,7 +131,8 @@ class Instrument(str):
         # if lookback is not None:
         #     ticks = ticks[-lookback:]
 
-        if not ticks.empty and ticks['asset_class'].values[-1] not in ("OPT", "FOP"):
+        if not ticks.empty and ticks['asset_class'
+                                     ].values[-1] not in ("OPT", "FOP"):
             ticks.drop(ticks.columns[
                 ticks.columns.str.startswith('opt_')].tolist(),
                 inplace=True, axis=1)
@@ -195,9 +200,11 @@ class Instrument(str):
             limit_price : float
                 In case of a LIMIT order, this is the LIMIT PRICE
             expiry : int
-                Cancel this order if not filled after *n* seconds (default 60 seconds)
+                Cancel this order if not filled after *n* seconds
+                (default 60 seconds)
             order_type : string
-                Type of order: Market (default), LIMIT (default when limit_price is passed),
+                Type of order: Market (default), LIMIT
+                (default when limit_price is passed),
                 MODIFY (required passing or orderId)
             orderId : int
                 If modifying an order, the order id of the modified order
@@ -206,7 +213,8 @@ class Instrument(str):
             initial_stop : float
                 price to set hard stop
             stop_limit: bool
-                Flag to indicate if the stop should be STOP or STOP LIMIT (default False=STOP)
+                Flag to indicate if the stop should be STOP or STOP LIMIT
+                (default False=STOP)
             trail_stop_at : float
                 price at which to start trailing the stop
             trail_stop_by : float
@@ -217,7 +225,9 @@ class Instrument(str):
                 is this an iceberg (hidden) order
             tif: str
                 time in force (DAY, GTC, IOC, GTD). default is ``DAY``
-        """
+`           account : str
+                Specific IB accunt to use (default: None / IB Default)
+            """
         self.parent.order(direction.upper(), self, quantity, **kwargs)
 
     # ---------------------------------------
@@ -265,8 +275,8 @@ class Instrument(str):
 
     # ---------------------------------------
     def buy(self, quantity, **kwargs):
-        """ Shortcut for ``instrument.order("BUY", ...)`` and accepts all of its
-        `optional parameters <#qtpylib.instrument.Instrument.order>`_
+        """ Shortcut for ``instrument.order("BUY", ...)`` and accepts all of
+        its `optional parameters <#qtpylib.instrument.Instrument.order>`_
 
         :Parameters:
             quantity : int
@@ -276,8 +286,8 @@ class Instrument(str):
 
     # ---------------------------------------
     def buy_market(self, quantity, **kwargs):
-        """ Shortcut for ``instrument.order("BUY", ...)`` and accepts all of its
-        `optional parameters <#qtpylib.instrument.Instrument.order>`_
+        """ Shortcut for ``instrument.order("BUY", ...)`` and accepts all of
+        its `optional parameters <#qtpylib.instrument.Instrument.order>`_
 
         :Parameters:
             quantity : int
@@ -289,8 +299,8 @@ class Instrument(str):
 
     # ---------------------------------------
     def buy_limit(self, quantity, price, **kwargs):
-        """ Shortcut for ``instrument.order("BUY", ...)`` and accepts all of its
-        `optional parameters <#qtpylib.instrument.Instrument.order>`_
+        """ Shortcut for ``instrument.order("BUY", ...)`` and accepts all of
+        its `optional parameters <#qtpylib.instrument.Instrument.order>`_
 
         :Parameters:
             quantity : int
@@ -304,8 +314,8 @@ class Instrument(str):
 
     # ---------------------------------------
     def sell(self, quantity, **kwargs):
-        """ Shortcut for ``instrument.order("SELL", ...)`` and accepts all of its
-        `optional parameters <#qtpylib.instrument.Instrument.order>`_
+        """ Shortcut for ``instrument.order("SELL", ...)`` and accepts all of
+        its `optional parameters <#qtpylib.instrument.Instrument.order>`_
 
         :Parameters:
             quantity : int
@@ -315,8 +325,8 @@ class Instrument(str):
 
     # ---------------------------------------
     def sell_market(self, quantity, **kwargs):
-        """ Shortcut for ``instrument.order("SELL", ...)`` and accepts all of its
-        `optional parameters <#qtpylib.instrument.Instrument.order>`_
+        """ Shortcut for ``instrument.order("SELL", ...)`` and accepts all of
+        its `optional parameters <#qtpylib.instrument.Instrument.order>`_
 
         :Parameters:
             quantity : int
@@ -328,8 +338,8 @@ class Instrument(str):
 
     # ---------------------------------------
     def sell_limit(self, quantity, price, **kwargs):
-        """ Shortcut for ``instrument.order("SELL", ...)`` and accepts all of its
-        `optional parameters <#qtpylib.instrument.Instrument.order>`_
+        """ Shortcut for ``instrument.order("SELL", ...)`` and accepts all of
+        its`optional parameters <#qtpylib.instrument.Instrument.order>`_
 
         :Parameters:
             quantity : int
@@ -342,16 +352,16 @@ class Instrument(str):
         self.parent.order("SELL", self, quantity=quantity, **kwargs)
 
     # ---------------------------------------
-    def exit(self):
+    def exit(self, account=None):
         """ Shortcut for ``instrument.order("EXIT", ...)``
         (accepts no parameters)"""
-        self.parent.order("EXIT", self)
+        self.parent.order("EXIT", self, account=account)
 
     # ---------------------------------------
-    def flatten(self):
+    def flatten(self, account=None):
         """ Shortcut for ``instrument.order("FLATTEN", ...)``
         (accepts no parameters)"""
-        self.parent.order("FLATTEN", self)
+        self.parent.order("FLATTEN", self, account=account)
 
     # ---------------------------------------
     def get_contract(self):
@@ -394,79 +404,90 @@ class Instrument(str):
         return self.parent.get_combo(self)
 
     # ---------------------------------------
-    def get_positions(self, attr=None):
+    def get_positions(self, attr=None, account=None):
         """Get the positions data for the instrument
 
         :Optional:
             attr : string
                 Position attribute to get
                 (optional attributes: symbol, position, avgCost, account)
-
+            account : str
+                Specific IB accunt to use (default: None / IB Default)
         :Retruns:
             positions : dict (positions) / float/str (attribute)
                 positions data for the instrument
         """
-        pos = self.parent.get_positions(self)
+        pos = self.parent.get_positions(self, account=account)
         try:
             if attr is not None:
                 attr = attr.replace("quantity", "position")
             return pos[attr]
-        except Exception as e:
+        except Exception:
             return pos
 
     # ---------------------------------------
-    def get_portfolio(self):
+    def get_portfolio(self, account=None):
         """Get portfolio data for the instrument
-
+        :Optional:
+            account : str
+                Specific IB accunt to use (default: None / IB Default)
         :Retruns:
             portfolio : dict
                 portfolio data for the instrument
         """
-        return self.parent.get_portfolio(self)
+        return self.parent.get_portfolio(self, account=account)
 
     # ---------------------------------------
-    def get_orders(self):
+    def get_orders(self, account=None):
         """Get orders for the instrument
-
+        :Optional:
+            account : str
+                Specific IB accunt to use (default: None / IB Default)
         :Retruns:
             orders : list
                 list of order data as dict
         """
-        return self.parent.get_orders(self)
+        return self.parent.get_orders(self, account=account)
 
     # ---------------------------------------
-    def get_pending_orders(self):
+    def get_pending_orders(self, account=None):
         """Get pending orders for the instrument
-
+        :Optional:
+            account : str
+                Specific IB accunt to use (default: None / IB Default)
         :Retruns:
             orders : list
                 list of pending order data as dict
         """
-        return self.parent.get_pending_orders(self)
+        return self.parent.get_pending_orders(self, account=account)
 
     # ---------------------------------------
-    def get_active_order(self, order_type="STOP"):
+    def get_active_order(self, order_type="STOP", account=None):
         """Get artive order id for the instrument by order_type
-
         :Optional:
             order_type : string
                 the type order to return: STOP (default), LIMIT, MARKET
+            account : str
+                Specific IB accunt to use (default: None / IB Default)
 
         :Retruns:
             order : object
                 IB Order object of instrument
         """
-        return self.parent.active_order(self, order_type=order_type)
+        return self.parent.active_order(self,
+                                        order_type=order_type, account=account)
 
     # ---------------------------------------
-    def get_trades(self):
+    def get_trades(self, account=None):
         """Get orderbook for the instrument
-
+        :Optional:
+            account : str
+                Specific IB accunt to use (default: None / IB Default)
         :Retruns:
             trades : pd.DataFrame
                 instrument's trade log as DataFrame
         """
-        return self.parent.get_trades(self)
+        return self.parent.get_trades(self, account=account)
 
     # ---------------------------------------
     def get_symbol(self):
@@ -479,8 +500,10 @@ class Instrument(str):
         return self
 
     # ---------------------------------------
-    def modify_order(self, orderId, quantity=None, limit_price=None):
-        """Modify quantity and/or limit price of an active order for the instrument
+    def modify_order(self, orderId, quantity=None, limit_price=None,
+                     account=None):
+        """ Modify quantity and/or limit price of an active order
+        for the instrument
 
         :Parameters:
             orderId : int
@@ -491,11 +514,15 @@ class Instrument(str):
                 the required quantity of the modified order
             limit_price : int
                 the new limit price of the modified order
+            account : str
+                Specific IB accunt to use (default: None / IB Default)
         """
-        return self.parent.modify_order(self, orderId, quantity, limit_price)
+        return self.parent.modify_order(self, orderId, quantity, limit_price,
+                                        account=account)
 
     # ---------------------------------------
-    def modify_order_group(self, orderId, entry=None, target=None, stop=None, quantity=None):
+    def modify_order_group(self, orderId, entry=None, target=None, stop=None,
+                           quantity=None, account=None):
         """Modify bracket order
 
         :Parameters:
@@ -511,26 +538,32 @@ class Instrument(str):
                 new stop limit price (for unfilled limit orders only)
             quantity : int
                 the required quantity of the modified order
+            account : str
+                Specific IB accunt to use (default: None / IB Default)
         """
         return self.parent.modify_order_group(self, orderId=orderId,
                                               entry=entry, target=target,
-                                              stop=stop, quantity=quantity)
+                                              stop=stop, quantity=quantity,
+                                              account=account)
 
     # ---------------------------------------
-    def move_stoploss(self, stoploss):
+    def move_stoploss(self, stoploss, account=None):
         """Modify stop order.
-        Auto-discover **orderId** and **quantity** and invokes ``self.modify_order(...)``.
+        Auto-discover **orderId** and **quantity** and invokes
+        ``self.modify_order(...)``.
 
         :Parameters:
             stoploss : float
                 the new stoploss limit price
-
+            account : str
+                Specific IB accunt to use (default: None / IB Default)
         """
-        stopOrder = self.get_active_order(order_type="STOP")
+        stopOrder = self.get_active_order(order_type="STOP", account=account)
 
         if stopOrder is not None and "orderId" in stopOrder.keys():
             self.modify_order(orderId=stopOrder['orderId'],
-                              quantity=stopOrder['quantity'], limit_price=stoploss)
+                              quantity=stopOrder['quantity'],
+                              limit_price=stoploss, account=account)
 
     # ---------------------------------------
     def get_margin_requirement(self):
@@ -544,7 +577,8 @@ class Instrument(str):
         contract = self.get_contract()
 
         if contract.m_secType == "FUT":
-            return futures.get_ib_futures(contract.m_symbol, contract.m_exchange)
+            return futures.get_ib_futures(contract.m_symbol,
+                                          contract.m_exchange)
 
         # else...
         return {
@@ -560,25 +594,30 @@ class Instrument(str):
         }
 
     # ---------------------------------------
-    def get_max_contracts_allowed(self, overnight=True):
+    def get_max_contracts_allowed(self, overnight=True, account=None):
         """ Get maximum contracts allowed to trade
         baed on required margin per contract and
         current account balance (futures only)
 
         :Parameters:
             overnight : bool
-                Calculate based on Overnight margin (set to ``False`` to use Intraday margin req.)
-
+                Calculate based on Overnight margin (set to ``False``
+                to use Intraday margin req.)
+            account : str
+                Specific IB accunt to use (default: None / IB Default)
         :Retruns:
             contracts : int
-                maximum contracts allowed to trade (returns ``None`` for non-futures)
+                maximum contracts allowed to trade (returns ``None``
+                for non-futures)
         """
         timeframe = 'overnight_initial' if overnight else 'intraday_initial'
         req_margin = self.get_margin_requirement()
         if req_margin[timeframe] is not None:
-            if 'AvailableFunds' in self.parent.account:
-                return int(math.floor(self.parent.account['AvailableFunds'
-                                                          ] / req_margin[timeframe]))
+            ib_account = self.parent.ibConn.getAccount(
+                self.parent._get_ibaccount(account))
+            if 'AvailableFunds' in ib_account:
+                return int(math.floor(ib_account['AvailableFunds'
+                                                 ] / req_margin[timeframe]))
 
         return None
 
@@ -598,7 +637,7 @@ class Instrument(str):
         return float(ticksize)
 
     # ---------------------------------------
-    def pnl_in_range(self, min_pnl, max_pnl):
+    def pnl_in_range(self, min_pnl, max_pnl, account=None):
         """ Check if instrument pnl is within given range
 
         :Parameters:
@@ -611,7 +650,7 @@ class Instrument(str):
             status : bool
                 if pnl is within range
         """
-        portfolio = self.get_portfolio()
+        portfolio = self.get_portfolio(account=account)
         return -abs(min_pnl) < portfolio['totalPNL'] < abs(max_pnl)
 
     # ---------------------------------------

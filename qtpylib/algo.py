@@ -101,6 +101,8 @@ class Algo(Broker):
             IB TWS/GW Client ID (default: 998)
         ibserver: str
             IB TWS/GW Server hostname (default: localhost)
+        ibaccount : str
+            Specific IB accunt to use (default: None / IB Default)
     """
 
     __metaclass__ = ABCMeta
@@ -109,7 +111,8 @@ class Algo(Broker):
                  tick_window=1, bar_window=100, timezone="UTC", preload=None,
                  continuous=True, blotter=None, sms=None, log=None,
                  backtest=False, start=None, end=None, data=None, output=None,
-                 ibclient=998, ibport=4001, ibserver="localhost", **kwargs):
+                 ibclient=998, ibport=4001, ibserver="localhost",
+                 ibaccount=None, **kwargs):
 
         # detect algo name
         self.name = str(self.__class__).split('.')[-1].split("'")[0]
@@ -192,7 +195,7 @@ class Algo(Broker):
         # initiate broker/order manager
         super().__init__(instruments, **{
             arg: val for arg, val in self.args.items() if arg in (
-                'ibport', 'ibclient', 'ibhost')})
+                'ibport', 'ibclient', 'ibserver', 'ibaccount')})
 
         # -----------------------------------
         # signal collector
@@ -215,7 +218,6 @@ class Algo(Broker):
         # ---------------------------------------
         # be aware of thread count
         self.threads = asynctools.multitasking.getPool(__name__)['threads']
-
 
     # ---------------------------------------
     def add_stale_tick(self):
@@ -257,6 +259,8 @@ class Algo(Broker):
                             help='IB TWS/GW Client ID', type=int)
         parser.add_argument('--ibserver', default=self.args["ibserver"],
                             help='IB TWS/GW Server hostname')
+        parser.add_argument('--ibaccount', default=self.args['ibaccount'],
+                            help='Specific IB account to use', required=False)
         parser.add_argument('--sms', default=self.args["sms"],
                             help='Numbers to text orders', nargs='+')
         parser.add_argument('--log', default=self.args["log"],
@@ -324,7 +328,7 @@ class Algo(Broker):
 
                     dfs.append(df)
 
-                except Exception as e:
+                except Exception:
                     self.log_algo.error(
                         "Error reading data for %s (%s)", symbol, file)
                     sys.exit(0)
@@ -380,7 +384,8 @@ class Algo(Broker):
         # optimize pandas
         if not history.empty:
             history['symbol'] = history['symbol'].astype('category')
-            history['symbol_group'] = history['symbol_group'].astype('category')
+            history['symbol_group'] = history['symbol_group'
+                                              ].astype('category')
             history['asset_class'] = history['asset_class'].astype('category')
 
         if self.backtest:
@@ -580,6 +585,8 @@ class Algo(Broker):
                 Is this an iceberg (hidden) order
             tif: str
                 Time in force (DAY, GTC, IOC, GTD). default is ``DAY``
+            account : str
+                Specific IB accunt to use (default: None / IB Default)
         """
         self.log_algo.debug('ORDER: %s %4d %s %s', signal,
                             quantity, symbol, kwargs)
@@ -596,7 +603,7 @@ class Algo(Broker):
 
             try:
                 self.record({symbol+'_POSITION': 0})
-            except Exception as e:
+            except Exception:
                 pass
 
             if not self.backtest:
@@ -618,7 +625,7 @@ class Algo(Broker):
                 if kwargs['direction'] != "BUY":
                     quantity = -quantity
                 self.record({symbol+'_POSITION': quantity})
-            except Exception as e:
+            except Exception:
                 pass
 
             if not self.backtest:
@@ -652,7 +659,7 @@ class Algo(Broker):
         if self.record_output:
             try:
                 self.recorder.record(self.record_ts, *args, **kwargs)
-            except Exception as e:
+            except Exception:
                 pass
 
     # ---------------------------------------
@@ -704,8 +711,8 @@ class Algo(Broker):
             dfs.append(df[df['symbol'] == sym][-window:])
         return pd.concat(dfs, sort=True).sort_index()
 
-
     # ---------------------------------------
+
     @staticmethod
     def _thread_safe_merge(symbol, basedata, newdata):
         data = newdata
@@ -723,7 +730,7 @@ class Algo(Broker):
         try:
             return data.dropna(subset=[
                 'open', 'high', 'low', 'close', 'volume'])
-        except Exception as e:
+        except Exception:
             return data
 
     # ---------------------------------------
@@ -834,8 +841,10 @@ class Algo(Broker):
         # optimize pandas
         if len(self.bars) == 1:
             self.bars['symbol'] = self.bars['symbol'].astype('category')
-            self.bars['symbol_group'] = self.bars['symbol_group'].astype('category')
-            self.bars['asset_class'] = self.bars['asset_class'].astype('category')
+            self.bars['symbol_group'] = self.bars['symbol_group'].astype(
+                'category')
+            self.bars['asset_class'] = self.bars['asset_class'].astype(
+                'category')
 
         # new bar?
         hash_string = bar[:1]['symbol'].to_string().translate(
@@ -876,7 +885,7 @@ class Algo(Broker):
             tz = str(df.index.tz)
             # try:
             #     tz = str(df.index.tz)
-            # except Exception as e:
+            # except Exception:
             #     tz = None
             df = tools.resample(df, resolution=resolution, tz=tz)
 
