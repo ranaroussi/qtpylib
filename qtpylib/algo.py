@@ -140,6 +140,8 @@ class Algo(Broker):
         self.tick_bar_count = 0
         self.bar_count = 0
         self.bar_hashes = {}
+        self.last_time_bar = pd.Timestamp(datetime(
+            datetime.today().year-1, 1, 1), tz=timezone)
 
         self.tick_window = tick_window if tick_window > 0 else 1
         if "V" in resolution:
@@ -862,12 +864,34 @@ class Algo(Broker):
             if self.bars[(self.bars['symbol'] == symbol) | (
                     self.bars['symbol_group'] == symbol)].empty:
                 return
-            bar_instrument = self.instrument(symbol)
-            if bar_instrument:
-                self.record_ts = bar.index[0]
-                self.on_bar(bar_instrument)
-                # if self.resolution[-1] not in ("S", "K", "V"):
-                self.record(bar)
+            """
+            if TIME-BASED bars AND algo symbol count > 1:
+                # pass instrument constructure
+                # trader can call:
+                # instrument('ES')...
+                self.on_bar(self.instrument)
+            else:
+                # instrument
+                self.on_bar(self.instrument(symbol))
+            """
+            self.record_ts = bar.index[0]
+            if self.resolution[-1] not in ("K", "V") and len(self.symbols) > 1:
+                if self.record_ts > self.last_time_bar:
+                    self.last_time_bar = bar.index[0]
+                    self.on_bar(self.instrument)
+                    self.record(bar)
+            else:
+                bar_instrument = self.instrument(symbol)
+                if bar_instrument:
+                    self.on_bar(bar_instrument)
+                    self.record(bar)
+
+            # bar_instrument = self.instrument(symbol)
+            # if bar_instrument:
+            #     self.record_ts = bar.index[0]
+            #     self.on_bar(bar_instrument)
+            #     # if self.resolution[-1] not in ("S", "K", "V"):
+            #     self.record(bar)
 
     # ---------------------------------------
     @asynctools.multitasking.task
