@@ -69,14 +69,15 @@ logging.getLogger('ezibpy').setLevel(logging.CRITICAL)
 
 cash_ticks = {}
 
+
 class Blotter():
     """Broker class initilizer
 
     :Optional:
 
-        name : string
+        name : str
             name of the blotter (used by other modules)
-        symbols : str
+        symbols : list
             IB contracts CSV database (default: ./symbols.csv)
         ibport : int
             TWS/GW Port to use (default: 4001)
@@ -88,14 +89,13 @@ class Blotter():
             ZeroMQ Port to use (default: 12345)
         zmqtopic : str
             ZeroMQ string to use (default: _qtpylib_BLOTTERNAME_)
-        orderbook : str
+        orderbook : bool
             Get Order Book (Market Depth) data (default: False)
-        datastore : obj
-            None (dbskip)
-            sqlalchemy connectiion string
-
-            pystore (defaults to ~/.pystore)
-            pystore://path
+        datastore : str
+            Datastore engine: SQLAlchemy connection string or pystore[://path]
+            (Default: None)
+        store : str
+            Store ticks/bars if datastore is enabled? (default ticks+bars)
     """
 
     __metaclass__ = ABCMeta
