@@ -26,7 +26,7 @@ setup(
     url='https://github.com/ranaroussi/qtpylib',
     author='Ran Aroussi',
     author_email='ran@aroussi.com',
-    license='LGPL',
+    license='Apache',
     classifiers=[
         'License :: OSI Approved :: Apache Software License',
         'Development Status :: 4 - Beta',
