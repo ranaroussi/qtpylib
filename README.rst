@@ -150,8 +150,8 @@ While the Blotter running in the background, write and execute your algorithm:
                 return
 
             # compute averages using internal rolling_mean
-            bars['short_ma'] = bars['close'].rolling_mean(window=10)
-            bars['long_ma']  = bars['close'].rolling_mean(window=20)
+            bars['short_ma'] = bars['close'].rolling(window=10).mean()
+            bars['long_ma']  = bars['close'].rolling(window=20).mean()
 
             # get current position data
             positions = instrument.get_positions()
