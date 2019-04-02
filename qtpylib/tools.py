@@ -183,7 +183,7 @@ def create_ib_tuple(instrument):
                 ), spec['currency'].upper(),
                     int(expiry), 0.0, "")
 
-            except Exception as e:
+            except Exception:
                 raise ValueError("Un-parsable contract tuple")
 
     # tuples without strike/right
@@ -202,7 +202,7 @@ def create_ib_tuple(instrument):
 
         try:
             instrument_list[4] = int(instrument_list[4])
-        except Exception as e:
+        except Exception:
             pass
 
         instrument_list[5] = 0. if isinstance(instrument_list[5], str) \
@@ -276,8 +276,9 @@ def mark_options_values(data):
 # ---------------------------------------------
 
 def force_options_columns(data):
-    opt_cols = ['opt_price', 'opt_underlying', 'opt_dividend', 'opt_volume',
-                'opt_iv', 'opt_oi', 'opt_delta', 'opt_gamma', 'opt_vega', 'opt_theta']
+    opt_cols = ['opt_price', 'opt_underlying', 'opt_dividend',
+                'opt_volume', 'opt_iv', 'opt_oi', 'opt_delta',
+                'opt_gamma', 'opt_vega', 'opt_theta']
 
     if isinstance(data, dict):
         if not set(opt_cols).issubset(data.keys()):
@@ -314,11 +315,11 @@ def chmod(f):
     """ change mod to writeable """
     try:
         os.chmod(f, S_IWRITE)  # windows (cover all)
-    except Exception as e:
+    except Exception:
         pass
     try:
         os.chmod(f, 0o777)  # *nix
-    except Exception as e:
+    except Exception:
         pass
 
 
@@ -401,7 +402,7 @@ def backdate(res, date=None, as_datetime=False, fmt='%Y-%m-%d'):
     else:
         try:
             date = parse_date(date)
-        except Exception as e:
+        except Exception:
             pass
 
     new_date = date
@@ -479,7 +480,7 @@ def get_timezone(as_timedelta=False):
     """ utility to get the machine's timezone """
     try:
         offset_hour = -(time.altzone if time.daylight else time.timezone)
-    except Exception as e:
+    except Exception:
         offset_hour = -(datetime.datetime.now() -
                         datetime.datetime.utcnow()).seconds
 
@@ -527,13 +528,13 @@ def set_timezone(data, tz=None, from_local=False):
         try:
             try:
                 data.index = data.index.tz_convert(tz)
-            except Exception as e:
+            except Exception:
                 if from_local:
                     data.index = data.index.tz_localize(
                         get_timezone()).tz_convert(tz)
                 else:
                     data.index = data.index.tz_localize('UTC').tz_convert(tz)
-        except Exception as e:
+        except Exception:
             pass
 
     # not pandas...
@@ -543,9 +544,9 @@ def set_timezone(data, tz=None, from_local=False):
         try:
             try:
                 data = data.astimezone(tz)
-            except Exception as e:
+            except Exception:
                 data = timezone('UTC').localize(data).astimezone(timezone(tz))
-        except Exception as e:
+        except Exception:
             pass
 
     return data
@@ -601,13 +602,13 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
         # figure out timezone
         try:
             tz = data.index.tz if tz is None else tz
-        except Exception as e:
+        except Exception:
             pass
 
         if str(tz) != 'None':
             try:
                 data.index = data.index.tz_convert(tz)
-            except Exception as e:
+            except Exception:
                 data.index = data.index.tz_localize('UTC').tz_convert(tz)
 
         # sort by index (datetime)
@@ -625,7 +626,7 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
 
     def __resample_ticks(data, freq=1000, by='last'):
         """
-        function that re-samples tick data into an N-tick or N-volume OHLC format
+        function that re-samples tick data into an N-tick or N-volume OHLC
 
         df = pandas pd.dataframe of raw tick data
         freq = resoltuin grouping
@@ -638,13 +639,15 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
         try:
             df = data[['last', 'lastsize', 'opt_underlying', 'opt_price',
                        'opt_dividend', 'opt_volume', 'opt_iv', 'opt_oi',
-                       'opt_delta', 'opt_gamma', 'opt_theta', 'opt_vega']].copy()
+                       'opt_delta', 'opt_gamma', 'opt_theta', 'opt_vega']
+                      ].copy()
             price_col = 'last'
             size_col = 'lastsize'
-        except Exception as e:
+        except Exception:
             df = data[['close', 'volume', 'opt_underlying', 'opt_price',
                        'opt_dividend', 'opt_volume', 'opt_iv', 'opt_oi',
-                       'opt_delta', 'opt_gamma', 'opt_theta', 'opt_vega']].copy()
+                       'opt_delta', 'opt_gamma', 'opt_theta', 'opt_vega']
+                      ].copy()
             price_col = 'close'
             size_col = 'volume'
 
@@ -844,11 +847,14 @@ def resample(data, resolution="1T", tz=None, ffill=True, dropna=False,
                     # no fill / return original index
                     if ffill:
                         symdata['open'] = np.where(symdata['volume'] <= 0,
-                                                   symdata['close'], symdata['open'])
+                                                   symdata['close'],
+                                                   symdata['open'])
                         symdata['high'] = np.where(symdata['volume'] <= 0,
-                                                   symdata['close'], symdata['high'])
+                                                   symdata['close'],
+                                                   symdata['high'])
                         symdata['low'] = np.where(symdata['volume'] <= 0,
-                                                  symdata['close'], symdata['low'])
+                                                  symdata['close'],
+                                                  symdata['low'])
                     else:
                         symdata['open'] = np.where(symdata['volume'] <= 0,
                                                    np.nan, symdata['open'])
@@ -958,7 +964,7 @@ class Recorder():
                     recorded.columns.str.startswith(sym + '_OPT_')].tolist()
                 if len(opt_cols) == len(recorded[opt_cols].isnull().all()):
                     recorded.drop(opt_cols, axis=1, inplace=True)
-            except Exception as e:
+            except Exception:
                 pass
 
         # group df
