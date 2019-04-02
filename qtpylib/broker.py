@@ -156,6 +156,9 @@ class Broker():
         self.active_trades = {}
         self.trades = []
 
+        # hold instruments created with self.instrument()
+        self._instrument_objects = {}
+
         # use: self.orders.pending...
         _orders = self.ibConn.orders
         _symbols = self.ibConn.symbol_orders
@@ -237,7 +240,7 @@ class Broker():
         legs_dict = {}
         for leg in legs:
             leg = self.ibConn.contractString(leg)
-            legs_dict[leg] = self.get_instrument(leg)
+            legs_dict[leg] = self.instrument(leg)
         self.instrument_combos[parent] = legs_dict
 
     def get_combo(self, symbol):
@@ -245,7 +248,7 @@ class Broker():
         for parent, legs in self.instrument_combos.items():
             if symbol == parent or symbol in legs.keys():
                 return {
-                    "parent": self.get_instrument(parent),
+                    "parent": self.instrument(parent),
                     "legs": legs,
                 }
         return {
@@ -358,7 +361,7 @@ class Broker():
 
                 # filled
                 time.sleep(0.005)
-                self.on_fill(self.get_instrument(order['symbol']), order)
+                self.on_fill(self.instrument(order['symbol']), order)
 
     # ---------------------------------------
     def _register_trade(self, order):
@@ -898,6 +901,10 @@ class Broker():
     # UTILITY FUNCTIONS
     # ---------------------------------------
     def get_instrument(self, symbol):
+        """ backward-compatibility """
+        return self.instrument(symbol)
+
+    def instrument(self, symbol):
         """
         A string subclass that provides easy access to misc
         symbol-related methods and information using shorthand.
@@ -905,16 +912,21 @@ class Broker():
         for available methods and properties
 
         Call from within your strategy:
-        ``instrument = self.get_instrument("SYMBOL")``
+        ``instrument = self.instrument("SYMBOL")``
 
         :Parameters:
             symbol : string
                 instrument symbol
 
         """
-        instrument = Instrument(self.get_symbol(symbol))
+        symbol = self.get_symbol(symbol)
+        if symbol in self._instrument_objects.keys():
+            return self._instrument_objects[symbol]
+
+        instrument = Instrument(symbol)
         instrument._set_parent(self)
         instrument._set_windows(ticks=self.tick_window, bars=self.bar_window)
+        self._instrument_objects[symbol] = instrument
 
         return instrument
 
