@@ -693,14 +693,14 @@ class Algo(Broker):
         del book['kind']
 
         self.books[symbol] = book
-        self.on_orderbook(self.get_instrument(symbol))
+        self.on_orderbook(self.instrument(symbol))
 
     # ---------------------------------------
     @asynctools.multitasking.task
     def _quote_handler(self, quote):
         del quote['kind']
         self.quotes[quote['symbol']] = quote
-        self.on_quote(self.get_instrument(quote))
+        self.on_quote(self.instrument(quote))
 
     # ---------------------------------------
     @staticmethod
@@ -791,17 +791,19 @@ class Algo(Broker):
             if self.ticks[(self.ticks['symbol'] == symbol) | (
                     self.ticks['symbol_group'] == symbol)].empty:
                 return
-            tick_instrument = self.get_instrument(tick)
+            tick_instrument = self.instrument(tick)
             if tick_instrument:
                 self.on_tick(tick_instrument)
 
     # ---------------------------------------
     def _base_bar_handler(self, bar):
-        """ non threaded bar handler (called by threaded _tick_handler) """
+        """ non threaded bar handler (called by _tick_handler) """
+
         # bar symbol
         symbol = bar['symbol'].values
         if len(symbol) == 0:
             return
+
         symbol = symbol[0]
         self_bars = self.bars.copy()  # work on copy
 
@@ -860,7 +862,7 @@ class Algo(Broker):
             if self.bars[(self.bars['symbol'] == symbol) | (
                     self.bars['symbol_group'] == symbol)].empty:
                 return
-            bar_instrument = self.get_instrument(symbol)
+            bar_instrument = self.instrument(symbol)
             if bar_instrument:
                 self.record_ts = bar.index[0]
                 self.on_bar(bar_instrument)
