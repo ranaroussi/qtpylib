@@ -866,19 +866,18 @@ class Algo(Broker):
                 return
             """
             if TIME-BASED bars AND algo symbol count > 1:
-                # pass instrument constructure
-                # trader can call:
-                # instrument('ES')...
-                self.on_bar(self.instrument)
+                # pass none; trader should call instrument constructure:
+                # >>> self.instrument('ES')...
+                self.on_bar(None)
             else:
-                # instrument
+                # pass instrument; trader can use instrument:
                 self.on_bar(self.instrument(symbol))
             """
             self.record_ts = bar.index[0]
             if self.resolution[-1] not in ("K", "V") and len(self.symbols) > 1:
                 if self.record_ts > self.last_time_bar:
                     self.last_time_bar = bar.index[0]
-                    self.on_bar(self.instrument)
+                    self.on_bar(None)
                     self.record(bar)
             else:
                 bar_instrument = self.instrument(symbol)
