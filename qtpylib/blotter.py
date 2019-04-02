@@ -102,7 +102,7 @@ class Blotter():
 
     def __init__(self, name=None, symbols="symbols.csv",
                  ibport=4001, ibclient=999, ibserver="localhost",
-                 datastore=None, orderbook=False,
+                 datastore=None, store="ticks+bars", orderbook=False,
                  zmqport="12345", zmqtopic=None, **kwargs):
 
         # whats my name?
@@ -154,6 +154,10 @@ class Blotter():
         ) if arg not in ('__class__', 'self', 'kwargs')}
         self.args.update(kwargs)
         self.args.update(self.load_cli_args())
+
+        self.args["store"] = self.args["store"].lower()
+        if self.args["store"] == "all":
+            self.args["store"] = "ticks+bars"
 
         # read cached args to detect duplicate blotters
         self.duplicate_run = False
@@ -271,6 +275,8 @@ class Blotter():
                             required=False)
         parser.add_argument('--datastore', default=self.args['datastore'],
                             help='Data storage engine', required=False)
+        parser.add_argument('--store', default=self.args['store'],
+                            help='Store ticks/bars in DB?', required=False)
 
         # only return non-default cmd line args
         # (meaning only those actually given)
@@ -365,7 +371,9 @@ class Blotter():
             # print(data)
 
             # store in db
-            self.datastore.store(data=data, kind=data["kind"])
+            if (data["kind"] == "TICK" and "tick" in self.args['store']) or \
+                    (data["kind"] == "BAR" and "bar" in self.args['store']):
+                self.datastore.store(data=data, kind=data["kind"])
 
     # -------------------------------------------
 
@@ -395,8 +403,10 @@ class Blotter():
         # send tick to message self.broadcast
         tick["kind"] = "TICK"
         self.broadcast(tick, "TICK")
-        self.datastore.store(data=tick, kind="TICK",
-                             greeks=self.cash_ticks[symbol])
+        if "tick" in self.args['store']:
+            if "tick" in self.args['store']:
+                self.datastore.store(data=tick, kind="TICK",
+                                     greeks=self.cash_ticks[symbol])
 
         # add tick to raw self._bars
         tick_data = pd.DataFrame(index=['timestamp'],
@@ -432,8 +442,9 @@ class Blotter():
 
             bar["kind"] = "BAR"
             self.broadcast(bar, "BAR")
-            self.datastore.store(data=bar, kind="BAR",
-                                 greeks=self.cash_ticks[symbol])
+            if "tick" in self.args['store']:
+                self.datastore.store(data=bar, kind="BAR",
+                                     greeks=self.cash_ticks[symbol])
 
             self._bars[symbol] = self._bars[symbol][-1:]
             _raw_bars.drop(_raw_bars.index[:], inplace=True)
