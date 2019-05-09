@@ -469,7 +469,7 @@ def returns(series):
 def log_returns(series):
     try:
         res = np.log(series / series.shift(1)
-                    ).replace([np.inf, -np.inf], float('NaN'))
+                     ).replace([np.inf, -np.inf], float('NaN'))
     except Exception as e:
         res = nans(len(series))
 
@@ -481,7 +481,7 @@ def log_returns(series):
 def implied_volatility(series, window=252):
     try:
         logret = np.log(series / series.shift(1)
-                       ).replace([np.inf, -np.inf], float('NaN'))
+                        ).replace([np.inf, -np.inf], float('NaN'))
         res = numpy_rolling_std(logret, window) * np.sqrt(window)
     except Exception as e:
         res = nans(len(series))
@@ -540,7 +540,8 @@ def stoch(df, window=14, d=3, k=3, fast=False):
     my_df['rolling_max'] = df['high'].rolling(window).max()
     my_df['rolling_min'] = df['low'].rolling(window).min()
 
-    my_df['fast_k'] = 100 * (df['close'] - my_df['rolling_min'])/(my_df['rolling_max'] - my_df['rolling_min'])
+    my_df['fast_k'] = 100 * (df['close'] - my_df['rolling_min']) / \
+        (my_df['rolling_max'] - my_df['rolling_min'])
     my_df['fast_d'] = my_df['fast_k'].rolling(d).mean()
 
     if fast:
