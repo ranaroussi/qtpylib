@@ -621,6 +621,8 @@ class Broker():
         initial_stop = tools.round_to_fraction(initial_stop, ticksize)
         trail_stop_at = tools.round_to_fraction(trail_stop_at, ticksize)
         trail_stop_by = tools.round_to_fraction(trail_stop_by, ticksize)
+        if stop_limit not in [True, False]:
+            stop_limit = tools.round_to_fraction(stop_limit, ticksize)
         trail_stop_type = "percent"
         if trail_stop_type == "amount":
             trail_stop_type = "amount"
