@@ -65,7 +65,8 @@ class Instrument(str):
                             df[df['symbol_group'] == symbol]], sort=True)
             df.loc[:, '_idx_'] = df.index
             return df.drop_duplicates(subset=['_idx_'], keep='last'
-                                      ).drop('_idx_', axis=1)
+                                      ).drop('_idx_', axis=1
+                                             ).sort_index(ascending=True)
 
     # ---------------------------------------
     def get_bars(self, lookback=None, as_dict=False):
