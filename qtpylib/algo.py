@@ -763,11 +763,16 @@ class Algo(Broker):
                     self_ticks, tick, window=self.tick_window)
                 self.ticks = self._thread_safe_merge(
                     symbol, self.ticks, self_ticks)  # assign back
+            # sort ticks
+            self.ticks.sort_index(ascending=True, inplace=True)
         else:
             self.ticks = self._update_window(self.ticks, tick)
             # bars = tools.resample(self.ticks, self.resolution)
             bars = tools.resample(
                 self.ticks, self.resolution, tz=self.timezone)
+
+            # sort ticks
+            self.ticks.sort_index(ascending=True, inplace=True)
 
             if len(bars.index) > self.tick_bar_count > 0 or stale_tick:
                 self.record_ts = tick.index[0]
@@ -850,6 +855,9 @@ class Algo(Broker):
             self.bars['asset_class'] = self.bars['asset_class'].astype(
                 'category')
 
+        # sort bars
+        self.bars.sort_index(ascending=True, inplace=True)
+
         # new bar?
         hash_string = bar[:1]['symbol'].to_string().translate(
             str.maketrans({key: None for key in "\n -:+"}))
@@ -873,6 +881,7 @@ class Algo(Broker):
                 # pass instrument; trader can use instrument:
                 self.on_bar(self.instrument(symbol))
             """
+
             self.record_ts = bar.index[0]
             if self.resolution[-1] not in ("K", "V") and len(self.symbols) > 1:
                 if self.record_ts > self.last_time_bar:
