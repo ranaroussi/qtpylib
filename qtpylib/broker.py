@@ -690,31 +690,28 @@ class Broker():
                 contract), tools.order_to_dict(order))
         else:
             # bracket order
-            order = self.ibConn.createBracketOrder(contract, order_quantity,
-                                                   entry=limit_price,
-                                                   target=target,
-                                                   stop=initial_stop,
-                                                   stop_limit=stop_limit,
-                                                   fillorkill=fillorkill,
-                                                   iceberg=iceberg,
-                                                   tif=tif,
-                                                   account=account)
-            orderId = order["entryOrderId"]
+            params = {
+                "contract": contract,
+                "quantity": order_quantity,
+                "entry": limit_price,
+                "target": target,
+                "stop": initial_stop,
+                "stopType": "LMT" if stop_limit else "MKT",
+                "fillorkill": fillorkill,
+                "iceberg": iceberg,
+                "tif": tif,
+                "account": account
+            }
+            if "targetType" in kwargs:
+                params["targetType"] = kwargs["targetType"]
 
-            # triggered trailing stop?
             if trail_stop_by != 0 and trail_stop_at != 0:
-                trail_stop_params = {
-                    "symbol": symbol,
-                    "quantity": -order_quantity,
-                    "triggerPrice": trail_stop_at,
-                    "parentId": order["entryOrderId"],
-                    "stopOrderId": order["stopOrderId"]
-                }
-                if trail_stop_type.lower() == 'amount':
-                    trail_stop_params["trailAmount"] = trail_stop_by
-                else:
-                    trail_stop_params["trailPercent"] = trail_stop_by
-                self.ibConn.createTriggerableTrailingStop(**trail_stop_params)
+                params["trailingStop"] = trail_stop_type
+                params["trailingValue"] = trail_stop_by
+                params["trailingTrigger"] = trail_stop_at
+
+            order = self.ibConn.createBracketOrder(**{**params, **kwargs})
+            orderId = order["entryOrderId"]
 
             # add all orders to history
             self._update_order_history(symbol=symbol,

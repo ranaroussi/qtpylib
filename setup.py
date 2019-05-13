@@ -32,7 +32,11 @@ setup(
         'Development Status :: 4 - Beta',
 
         'Operating System :: OS Independent',
+
         'Intended Audience :: Developers',
+        'Intended Audience :: Financial and Insurance Industry',
+        'Intended Audience :: Science/Research',
+
         'Topic :: Office/Business :: Financial',
         'Topic :: Office/Business :: Financial :: Investment',
         'Topic :: Software Development :: Libraries',
@@ -47,7 +51,7 @@ setup(
     keywords='qtpylib qtpy algotrading algo trading interactive brokers tws ibgw ibpy ezibpy',
     packages=find_packages(exclude=['contrib', 'docs', 'tests', 'demo', 'demos', 'examples']),
     install_requires=[
-        'python-dateutil>=2.5.3','ezibpy>=1.12.66',
+        'python-dateutil>=2.5.3','ezibpy>=1.12.68',
         'flask>=0.11.1','numpy>=1.11.1','pandas>=0.22.0','pymysql>=0.7.6',
         'pytz>=2016.6.1','requests>=2.10.0','pyzmq>=15.2.1',
         'nexmo>=1.2.0','twilio>=5.4.0','ibpy2>=0.8.0',
