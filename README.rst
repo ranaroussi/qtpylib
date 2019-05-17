@@ -46,6 +46,11 @@ trading logic itself and ignore everything else.
 
 -----
 
+**Read about the future of QTPyLib here:**
+https://aroussi.com/post/the-future-of-qtpylib
+
+-----
+
 Features
 ========
 
