@@ -21,6 +21,10 @@ QTPyLib, Pythonic Algorithmic Trading
     :target: http://qtpylib.io/docs/latest/?badge=latest
     :alt: Documentation Status
 
+.. image:: https://img.shields.io/badge/Chat-Discord-%237289d6.svg?style=flat&logo=discord&maxAge=60
+    :target: https://discord.gg/7wEzsuV
+    :alt: Chat on Discord
+
 .. image:: https://img.shields.io/github/stars/ranaroussi/qtpylib.svg?style=social&label=Star&maxAge=60
     :target: https://github.com/ranaroussi/qtpylib
     :alt: Star this repo
