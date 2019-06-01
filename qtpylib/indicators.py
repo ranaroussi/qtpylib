@@ -598,6 +598,14 @@ def pvt(bars):
              bars['close'].shift(1)) * bars['volume']
     return trend.cumsum()
 
+
+def chopiness(bars, window=14):
+    atrsum = true_range(bars).rolling(window).sum()
+    highs = bars['high'].rolling(window).max()
+    lows = bars['low'].rolling(window).min()
+    return 100 * np.log10(atrsum / (highs - lows)) / np.log10(window)
+
+
 # =============================================
 
 
@@ -625,6 +633,7 @@ PandasObject.rsi = rsi
 PandasObject.stoch = stoch
 PandasObject.zscore = zscore
 PandasObject.pvt = pvt
+PandasObject.chopiness = chopiness
 PandasObject.tdi = tdi
 PandasObject.true_range = true_range
 PandasObject.mid_price = mid_price
