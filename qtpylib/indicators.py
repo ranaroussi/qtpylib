@@ -604,7 +604,7 @@ def pvt(bars):
 # ---------------------------------------------
 
 
-def chopiness(bars, window=14):
+def choppiness(bars, window=14):
     atrsum = true_range(bars).rolling(window).sum()
     highs = bars['high'].rolling(window).max()
     lows = bars['low'].rolling(window).min()
@@ -637,7 +637,7 @@ PandasObject.rsi = rsi
 PandasObject.stoch = stoch
 PandasObject.zscore = zscore
 PandasObject.pvt = pvt
-PandasObject.chopiness = chopiness
+PandasObject.choppiness = choppiness
 PandasObject.tdi = tdi
 PandasObject.true_range = true_range
 PandasObject.mid_price = mid_price
