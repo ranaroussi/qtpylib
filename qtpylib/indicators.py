@@ -108,24 +108,23 @@ def session(df, start='17:00', end='16:00'):
 
 
 def heikinashi(bars):
-    bars = bars.copy()
-    bars['ha_close'] = (bars['open'] + bars['high'] +
-                        bars['low'] + bars['close']) / 4
+    openp, highp, lowp, closep = bars[
+        ['open','high','low','close']].T.values
 
-    # ha open
-    bars.at[0, 'ha_open'] = (bars.at[0, 'open'] + bars.at[0, 'close']) / 2
-    for i in range(1, len(bars)):
-        bars.at[i, 'ha_open'] = (bars.at[i - 1, 'ha_open'] +
-                                 bars.at[i - 1, 'ha_close']) / 2
+    ha_close = (openp + highp + lowp + closep) / 4
 
-    bars['ha_high'] = bars.loc[:, ['high', 'ha_open', 'ha_close']].max(axis=1)
-    bars['ha_low'] = bars.loc[:, ['low', 'ha_open', 'ha_close']].min(axis=1)
+    ha_open = (openp + closep) / 2
+    for i in range(1, len(ha_open)):
+        ha_open[i] = (ha_open[i-1] + ha_close[i-1]) / 2
+
+    ha_high = np.amax([highp, ha_open, ha_close], axis=0)
+    ha_low = np.amin([lowp, ha_open, ha_close], axis=0)
 
     return pd.DataFrame(index=bars.index,
-                        data={'open': bars['ha_open'],
-                              'high': bars['ha_high'],
-                              'low': bars['ha_low'],
-                              'close': bars['ha_close']})
+                        data={'open': ha_open,
+                              'high': ha_high,
+                              'low': ha_low,
+                              'close': ha_close})
 
 # ---------------------------------------------
 
@@ -258,7 +257,7 @@ def rolling_std(series, window=200, min_periods=None):
     else:
         try:
             return series.rolling(window=window, min_periods=min_periods).std()
-        except Exception as e:
+        except Exception:
             return pd.Series(series).rolling(window=window, min_periods=min_periods).std()
 
 # ---------------------------------------------
@@ -271,7 +270,7 @@ def rolling_mean(series, window=200, min_periods=None):
     else:
         try:
             return series.rolling(window=window, min_periods=min_periods).mean()
-        except Exception as e:
+        except Exception:
             return pd.Series(series).rolling(window=window, min_periods=min_periods).mean()
 
 # ---------------------------------------------
@@ -281,7 +280,7 @@ def rolling_min(series, window=14, min_periods=None):
     min_periods = window if min_periods is None else min_periods
     try:
         return series.rolling(window=window, min_periods=min_periods).min()
-    except Exception as e:
+    except Exception:
         return pd.Series(series).rolling(window=window, min_periods=min_periods).min()
 
 
@@ -291,7 +290,7 @@ def rolling_max(series, window=14, min_periods=None):
     min_periods = window if min_periods is None else min_periods
     try:
         return series.rolling(window=window, min_periods=min_periods).min()
-    except Exception as e:
+    except Exception:
         return pd.Series(series).rolling(window=window, min_periods=min_periods).min()
 
 
@@ -301,7 +300,7 @@ def rolling_weighted_mean(series, window=200, min_periods=None):
     min_periods = window if min_periods is None else min_periods
     try:
         return series.ewm(span=window, min_periods=min_periods).mean()
-    except Exception as e:
+    except Exception:
         return pd.ewma(series, span=window, min_periods=min_periods)
 
 
@@ -458,7 +457,7 @@ def returns(series):
     try:
         res = (series / series.shift(1) -
                1).replace([np.inf, -np.inf], float('NaN'))
-    except Exception as e:
+    except Exception:
         res = nans(len(series))
 
     return pd.Series(index=series.index, data=res)
@@ -470,7 +469,7 @@ def log_returns(series):
     try:
         res = np.log(series / series.shift(1)
                      ).replace([np.inf, -np.inf], float('NaN'))
-    except Exception as e:
+    except Exception:
         res = nans(len(series))
 
     return pd.Series(index=series.index, data=res)
@@ -483,7 +482,7 @@ def implied_volatility(series, window=252):
         logret = np.log(series / series.shift(1)
                         ).replace([np.inf, -np.inf], float('NaN'))
         res = numpy_rolling_std(logret, window) * np.sqrt(window)
-    except Exception as e:
+    except Exception:
         res = nans(len(series))
 
     return pd.Series(index=series.index, data=res)
