@@ -109,7 +109,7 @@ def session(df, start='17:00', end='16:00'):
 
 def heikinashi(bars):
     openp, highp, lowp, closep = bars[
-        ['open','high','low','close']].T.values
+        ['open', 'high', 'low', 'close']].T.values
 
     ha_close = (openp + highp + lowp + closep) / 4
 
