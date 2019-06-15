@@ -93,7 +93,7 @@ class Datastore():
             Column('id', Integer, primary_key=True),
             Column('symbol', String(24), index=True),
             Column('symbol_group', String(18), index=True),
-            Column('asset_class', String(3), index=True),
+            Column('asset_class', String(4), index=True),
             Column('expiry', Date, index=True)
         )
 

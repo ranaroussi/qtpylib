@@ -236,7 +236,7 @@ def gen_symbol_group(sym):
 def gen_asset_class(sym):
     sym_class = str(sym).split("_")
     if len(sym_class) > 1:
-        return sym_class[-1].replace("CASH", "CSH")
+        return sym_class[-1]  #.replace("CASH", "CSH")
     return "STK"
 
 

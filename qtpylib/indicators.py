@@ -215,7 +215,7 @@ def atr(bars, window=14, exp=False):
         res = rolling_mean(tr, window)
 
     res = pd.Series(res)
-    return (res.shift(1) * (window - 1) + res) / window
+    return res  # (res.shift(1) * (window - 1) + res) / window
 
 
 # ---------------------------------------------
