@@ -145,9 +145,9 @@ def week_started_date(as_datetime=False):
 
 # ---------------------------------------------
 
-def create_ib_tuple(instrument):
+def create_ib_tuple(instrument, ibConn):
     """ create ib contract tuple """
-    from qtpylib import futures
+    # from qtpylib import futures
 
     if isinstance(instrument, str):
         instrument = instrument.upper()
@@ -155,9 +155,18 @@ def create_ib_tuple(instrument):
         if "FUT." not in instrument:
             # symbol stock
             instrument = (instrument, "STK", "SMART", "USD", "", 0.0, "")
-
         else:
-            # future contract
+            # continuous futures contract
+            symbol = instrument.split(".")[1]
+            if "@" in symbol:
+                symbol, exchange = symbol.split('@')
+            else:
+                exchange = "GLOBEX"
+
+            instrument = ibConn.createContinuousFuturesContract(
+                symbol, exchange, output="tuple")
+
+            """
             try:
                 symdata = instrument.split(".")
 
@@ -182,9 +191,9 @@ def create_ib_tuple(instrument):
                               spec['exchange'].upper(
                 ), spec['currency'].upper(),
                     int(expiry), 0.0, "")
-
             except Exception:
                 raise ValueError("Un-parsable contract tuple")
+            """
 
     # tuples without strike/right
     elif len(instrument) <= 7:
