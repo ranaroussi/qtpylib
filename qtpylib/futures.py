@@ -222,7 +222,7 @@ def get_active_contract(symbol, url=None, n=1):
 
 # -------------------------------------------
 def make_tuple(symbol, expiry=None, exchange=None):
-    if expiry == None:
+    if expiry is None:
         expiry = get_active_contract(symbol)
 
     contract = get_ib_futures(symbol, exchange)
