@@ -188,9 +188,9 @@ def create_ib_tuple(instrument, ibConn):
                     expiry = futures.get_active_contract(symdata[1])
 
                 instrument = (spec['symbol'].upper(), "FUT",
-                              spec['exchange'].upper(
-                ), spec['currency'].upper(),
-                    int(expiry), 0.0, "")
+                              spec['exchange'].upper(),
+                              spec['currency'].upper(),
+                              int(expiry), 0.0, "")
             except Exception:
                 raise ValueError("Un-parsable contract tuple")
             """
