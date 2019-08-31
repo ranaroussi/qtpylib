@@ -1,0 +1,50 @@
+title = "Algo Configuration"
+timezone = "US/Central"
+
+[services]
+datastore = "mysql://user:password@localhost:3306/qtpylib"
+# datastore = "pystore:///path/to/datastore"
+blotter = "192.168.1.29:12345"
+broker = "ib://127.0.0.1:4001/U1572426"
+
+[sms]
+provider = "nexmo"
+phones = []
+
+[backtest]
+output = "~/backtests/"
+data = "datastore"
+# data = "blotter"
+# data = "datastore"
+# data = "csv:///path/to/directory"
+# data = "hd5:///path/to/directory"
+# data = "pkl:///path/to/directory"
+cash = 1e5
+
+  [backtest.commission]
+   value = 0.001
+   type = "percent"
+
+  [backtest.slippage]
+   value = 0.02
+   type = "decimal"
+
+[events]
+tick = 0
+bars = "10T"
+book = false
+
+[history]
+tick = 10
+bars = 30
+preload = true
+futures = "continuous"
+
+[schedule]
+date_rules = "daily"
+date_offset = 0
+time_rules = "market"
+time_offset = 0
+calendar = "NYSE"
+half_days = true
+
