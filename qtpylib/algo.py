@@ -42,16 +42,12 @@ import json
 import time
 import zmq as _zmq
 import toml as _toml
+from pathlib import Path
 
 import multitasking
 import signal
 signal.signal(signal.SIGINT, multitasking.killall)
 
-try:
-    from pathlib import Path
-    Path().expanduser()
-except (ImportError, AttributeError):
-    from pathlib2 import Path
 
 # =============================================
 # check min, python version
@@ -141,7 +137,8 @@ class Algo:
             self.config["backtest"]["data"] = self.config[
                 "services"]["datastore"]
 
-        self.blotter = None
+        self._preloaded_history = False
+
         # self.record_ts = None
         # if self.record_output:
         #     self.recorder = tools.Recorder()
@@ -169,7 +166,7 @@ class Algo:
     @abstractmethod
     def on_tick(self):
         """
-        Invoked on every tick captured.
+        Invoked on every new tick.
         This is where you'll write your strategy logic for tick events.
         """
         pass
@@ -178,9 +175,8 @@ class Algo:
     @abstractmethod
     def on_bar(self):
         """
-        Invoked on every tick captured.
+        Invoked on every new bar.
         This is where you'll write your strategy logic for tick events.
-
         """
         pass
 
@@ -207,7 +203,6 @@ class Algo:
         pass
 
     # -----------------------------------
-
     def backtest(self, start, end=None, data=None):
         """
         data = "datastore"
@@ -226,37 +221,31 @@ class Algo:
         self.config["livemode"] = False
         self._start()
 
+    # -----------------------------------
     def run(self, output=None):
         self.config["livemode"] = True
         self._start()
 
     # -----------------------------------
-
     @multitasking.task
-    def _subscribe_to_blotter(self):
+    def _blotter_handler(self, socket, message):
         # load runtime/default data
         # symbols = list(self.instruments.keys())
+        """ handle socket messege """
 
-        # connect to zeromq self.socket
-        socket = _zmq.Context().socket(_zmq.SUB)
-        socket.setsockopt_string(_zmq.SUBSCRIBE, "")
-        socket.connect('tcp://127.0.0.1:' + str(self.args['zmqport']))
+        self.broker.prices = self.ticks['last']
 
-        try:
-            while True:
-                message = socket.recv_string()
-                print(message)
-                # if self.args["zmqtopic"] in message:
-
-        except (KeyboardInterrupt, SystemExit):
-            print("\n\n>>> Interrupted with Ctrl-c...")
-            print("(waiting for running tasks to be completed)\n")
-            print(".\n.\n.\n")
-            sys.exit(1)
+        if socket == "sub":
+            print("handling pub/sub blotter")
+        else:
+            self._preloaded_history = True
+            print("handling rep/req blotter")
 
     # -----------------------------------
-
     def _start(self):
+
+        # TODO show configuration and ask for confirmation to continue
+
         # init datastore
         self.datastore = self.init_datastore(
             self.config["services"]["datastore"])
@@ -269,34 +258,65 @@ class Algo:
 
         # init backtester
         if not self.config["livemode"]:
-            self.blotter_port = 1974
+            self._blotter_pubport = 32759
+            self._blotter_subport = 54321
+            self._blotter_server = "127.0.0.1"
             Blotter = tools.dynamic_import('blotters.backtest', 'Blotter')
-            self.blotter = Blotter(self.config["backtest"]["data"],
-                                   instruments=self.instruments,
-                                   zmqport=self.blotter_port)
+            blotter = Blotter(self.config["backtest"]["data"],
+                              instruments=self.instruments,
+                              port=self.blotter_pubport)
 
+            # request history
             if self.config["history"]["preload"]:
-                self.blotter.preload_history(self.config["history"])
+                blotter.preload_history(self.config["history"])
                 self.data = self.blotter.preloaded_data
 
+            blotter.run()
+
         else:
+
             blotter = tools.parse_protocol(self.config["services"]["blotter"])
-            self.blotter_port = blotter["port"]
+            self._blotter_pubport = blotter["port"]
+            self._blotter_subport = blotter["socket"]
+            self._blotter_server = blotter["server"]
 
+            talker = _zmq.Context().socket(_zmq.REQ)
+            talker.connect("tcp://%s:%s" % str(self._blotter_subport))
+
+            # register tickers with blotter
+            talker.send_string("tickers;<self.instruments>")
+            talker.recv_string()
+
+            # request history
             if self.config["history"]["preload"]:
-                # TODO: request history using zmq
-                while self.data is None:
-                    time.sleep(1)
+                talker.send_string("history;<self.instruments>")
+                message = talker.recv_string()
+                self._blotter_handler("req", message)
+                while not self._preloaded_history:
+                    time.sleep(.1)
 
-        # initialize listener
-        self._subscribe_to_blotter()
+            talker.disconnect()
 
-        # tell backtester to start sending data
-        # must be multi-processing method
-        if not self.config["livemode"]:
-            self.blotter.run()
+        # subscribe to blotter
+        subscriber = _zmq.Context().socket(_zmq.SUB)
+        subscriber.setsockopt_string(_zmq.SUBSCRIBE, "")
+        subscriber.connect('tcp://%s:%s' % (
+            self._blotter_server, str(self.blotter_pubport)))
 
-        print(json.dumps(self.config, indent=4, sort_keys=True))
+        try:
+            # tell backtester to start sending data
+            if not self.config["livemode"]:
+                self.blotter.run()
+
+            while True:
+                message = subscriber.recv_string()
+                self._blotter_handler("sub", message)
+
+        except (KeyboardInterrupt, SystemExit):
+            print("\n\n>>> Interrupted with Ctrl-c...")
+            print("(waiting for running tasks to be completed)\n")
+            print(".\n.\n.\n")
+            sys.exit(1)
 
 
 # =============================================
