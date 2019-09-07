@@ -19,6 +19,7 @@
 # limitations under the License.
 #
 
+from pandas.core.base import PandasObject
 import argparse
 import inspect
 import sys
@@ -138,6 +139,23 @@ class Algo:
         This is where you'll write your strategy logic for tick events.
         """
         pass
+
+    @classmethod
+    def assign(cls, name, dfi):
+        caller = "bars" or "ticks"
+
+        if not isinstance(dfi, pd.DataFrame):
+            dfi = pd.DataFrame(
+                index=caller.index, data=dfi,
+                columns=caller.columns.get_level_values(1)[:dfi.shape[1]])
+        dfi.columns = pd.MultiIndex.from_tuples([(name, col) for col in dfi])
+
+        clean_cols = set([col[0] or col in cls.bars.columns if col[0] != name])
+
+        if caller == "bars":
+            cls.bars = pd.concat([dfi, cls.bars[clean_cols]], axis=1)
+        else:
+            cls.ticks = pd.concat([dfi, cls.bars[clean_cols]], axis=1)
 
     # ---------------------------------------
     @abstractmethod
