@@ -60,38 +60,6 @@ tools.createLogger(__name__)
 
 # =============================================
 
-"""
-class MyAlgo(Algo):
-    pass
-
-strategy = MyAlgo(
-    config="algo.toml",
-    instruments = [
-        ticker("AAPL", ("AAPL", "STK", "SMART", "USD", "", 0.0, ""), "AAPL@NASDAQ")
-    ]
-
-# backtest
-strategy.backtest(None, None, None,
-                  data="csv://path/to/csv_directory")
-
-# live
-strategy.run()
-"""
-
-# =============================================
-
-
-class Ticker:
-    def __init__(self, name, broker=None, blotter=None):
-        self.name = name
-        self.broker = broker
-        self.blotter = blotter if blotter else broker
-
-    def __repr__(self):
-        return f'Ticker({self.name})'
-
-# =============================================
-
 
 class Algo:
 
