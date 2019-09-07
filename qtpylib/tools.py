@@ -77,6 +77,104 @@ class make_object:
 # ---------------------------------------------
 
 
+def init_datastore(db_string):
+    """
+    should be moved outside so blotter can use it as well
+    Datastore.__init__(db_string)
+    """
+    engine = db_string.split('://')[0]
+
+    if not engine:
+        # base methods (all are "pass")
+        datastore = dynamic_import('datastores.base', 'Datastore')
+    else:
+        datastore = dynamic_import('datastores.%s' % engine, 'Datastore')
+
+    datastore._URI_ = db_string
+    return datastore
+
+
+def init_broker(broker_string):
+    """
+    should be moved outside so blotter can use it as well
+    Broker.__init__(db_string)
+    """
+    broker = dynamic_import(
+        'brokers.%s' % broker_string.split('://')[0], 'Broker')
+    broker._URI_ = broker_string
+    return broker
+
+
+def parse_protocol(uri=None):
+    default = {
+        "string": uri,
+        "engine": None,
+        "server": None,
+        "port": None,
+        "socket": None,
+        "user": None,
+        "password": None,
+        "endpoint": None
+    }
+
+    if not uri:
+        return default
+
+    default["string"] = uri.replace('tcp://', 'zmq://')
+
+    if uri.isnumeric():
+        uri = "zmq://127.0.0.1:"+uri
+        default["string"] = uri
+
+    elif "://" not in uri and "." in uri:
+        uri = "zmq://"+uri
+        default["string"] = uri
+
+    if "://" not in uri:
+        default["engine"] = uri.lower()
+        return default
+
+    parts = str(uri).replace('tcp://', 'zmq://').split("://")
+    parts[0] = parts[0].lower()
+
+    if parts[0] in ("blotter", "datastore"):
+        default["engine"] = parts[0]
+        return default
+
+    default["engine"] = parts[0].lower()
+
+    if parts[0] in ("csv", "hd5", "pkl"):
+        default["server"] = parts[1]
+        return default
+
+    if parts[0] == "pystore":
+        default["endpoint"] = parts[1].split("/")[-1]
+        default["server"] = parts[1].replace("/" + default["endpoint"], "")
+        return default
+
+    if "@" in parts[1]:
+        credentials = parts[1].split("@")[0]
+        if ":" in credentials:
+            default["user"], default["password"] = credentials.split(":")
+        parts[1] = parts[1].split("@")[1]
+
+    if ":" in parts[1]:
+        server = parts[1].split(":")
+        default["server"] = server[0] if server[0] else "127.0.0.1"
+
+        if len(server) > 1:
+            default["port"] = int(server[1].split("/")[0])
+            if len(server) > 2:
+                default["socket"] = int(server[2].split("/")[0])
+
+    if "/" in parts[1]:
+        default["endpoint"] = parts[1].split("/")[1]
+
+    return default
+
+# ---------------------------------------------
+
+
 def read_single_argv(param, default=None):
     args = " ".join(sys.argv).strip().split(param)
     if len(args) > 1:
