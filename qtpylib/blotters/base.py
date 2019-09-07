@@ -33,6 +33,12 @@ from abc import ABCMeta, abstractmethod
 import tempfile
 import os
 
+import time
+import multitasking
+import signal
+signal.signal(signal.SIGINT, multitasking.killall)
+
+
 # =============================================
 # check min, python version
 if _sys.version_info < (3, 4):
@@ -45,8 +51,8 @@ class BaseBlotter():
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, blotter, datastore=None, instruments=None, zmqport=1245,
-                 **kwargs):
+    def __init__(self, blotter, datastore=None, instruments=None,
+                 pubport=55555, subport=55556, **kwargs):
 
         # settings
         self.name = str(self.__class__).split('.')[-1].split("'")[0]
@@ -67,12 +73,56 @@ class BaseBlotter():
         self.datastore = tools.init_datastore(datastore)
         self.datastore.connect()
 
-        # socket
-        self.socket = _zmq.Context(_zmq.REP).socket(_zmq.PUB)
-        self.socket.bind("tcp://*:%s" % str(zmqport))
-
         # backtester placeholder
         self.preloaded_data = None
+
+        # publisher socket (broadcasts to algos)
+        self.publisher = _zmq.Context().socket(_zmq.PUB)
+        self.publisher.bind("tcp://*:%s" % str(pubport))
+
+        # commnicator (communicates with algos)
+        self._listen_to_socket(subport)
+
+    # -------------------------------------------
+    @multitasking.task
+    def _listen_to_socket(self, subport):
+        socket = _zmq.Context().socket(_zmq.REP)
+        socket.bind("tcp://*:%s" % str(subport))
+
+        while True:
+            msg = socket.recv_string()
+            socket.send_string('[REPLY] %s' % msg)
+            time.sleep(1)
+
+    # -------------------------------------------
+    def broadcast(self, kind: str, data: dict) -> None:
+        def int64handler(o):
+            if isinstance(o, _np.int64):
+                try:
+                    return _pd.to_datetime(o, unit='ms').strftime('???')
+                except Exception:
+                    return int(o)
+            raise TypeError
+
+        try:
+            self.publisher.send_string("%s: %s: %s" % (
+                self.name, str(kind), _json.dumps(data, default=int64handler)))
+        except Exception:
+            pass
+
+    # -------------------------------------------
+    @abstractmethod
+    def preload_history(self):
+        """ used by backtester (simply split the data) """
+        pass
+
+    # -------------------------------------------
+    @abstractmethod
+    def run(self, *args, **kwargs):
+        """ placeholder: every blotter needs to implement this! """
+        pass
+
+
 
     """
     # -------------------------------------------
@@ -119,37 +169,4 @@ class BaseBlotter():
         tools.chmod(self.args_cache_file)
 
     """
-
-    # -------------------------------------------
-    def broadcast(self, kind: str, data: dict) -> None:
-        def int64handler(o):
-            if isinstance(o, _np.int64):
-                try:
-                    return _pd.to_datetime(o, unit='ms').strftime('???')
-                except Exception:
-                    return int(o)
-            raise TypeError
-
-        try:
-            self.socket.send_string("%s: %s: %s" % (
-                self.name, str(kind), _json.dumps(data, default=int64handler)))
-        except Exception:
-            pass
-
-    # -------------------------------------------
-    @abstractmethod
-    def preload_history(self):
-        """
-        placeholder: every blotter needs to implement this!
-
-        backtester: simply split the data
-        other: get from datastore and backfill from data source
-        """
-        pass
-
-    # -------------------------------------------
-    @abstractmethod
-    def run(self, *args, **kwargs):
-        """ placeholder: every blotter needs to implement this! """
-        pass
 
