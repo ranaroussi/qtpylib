@@ -23,8 +23,14 @@ from qtpylib.blotters import BaseBlotter
 from ezibpy import ezIBpy
 import time
 
+import multitasking
+import signal
+signal.signal(signal.SIGINT, multitasking.killall)
+
 
 class Blotter(BaseBlotter):
+
+    """ ib tws / gw """
 
     def run(self, *args, **kwargs):
 
@@ -46,6 +52,7 @@ class Blotter(BaseBlotter):
 
         self.logger.info("Connection established...")
 
+    @multitasking.task
     def ibCallback(self, caller, msg, **kwargs):
 
         # on event:
