@@ -4,8 +4,8 @@ timezone = "US/Central"
 [services]
 datastore = "mysql://user:password@localhost:3306/qtpylib"
 # datastore = "pystore:///path/to/datastore"
-blotter = "192.168.1.29:12345"
-broker = "ib://127.0.0.1:4001/U1572426"
+blotter = "tcp://192.168.1.29:55555:55556"
+broker = "ibgw://127.0.0.1:4001/U1572426"
 
 [sms]
 provider = "nexmo"
@@ -26,8 +26,8 @@ cash = 1e5
    type = "percent"
 
   [backtest.slippage]
-   value = 0.02
-   type = "decimal"
+   value = 2
+   type = "bps"
 
 [events]
 tick = 0
@@ -43,8 +43,7 @@ futures = "continuous"
 [schedule]
 date_rules = "daily"
 date_offset = 0
-time_rules = "market"
+time_rules = "market"  # premarket, postmarket
 time_offset = 0
 calendar = "NYSE"
 half_days = true
-
