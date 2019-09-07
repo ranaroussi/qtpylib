@@ -27,5 +27,10 @@ class MainBlotter(Blotter):
 
 # ===========================================
 if __name__ == "__main__":
-    blotter = MainBlotter()
+    blotter = MainBlotter(
+        blotter="ibgw://127.0.0.1:4001/U1572426",
+        # blotter="iqfeed://user:password@localhost:5561",
+        datastore="mysql://root@localhost/qtpyalchemy",
+        pubport=55555, subport=55556
+    )
     blotter.run()
