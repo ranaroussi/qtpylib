@@ -141,7 +141,7 @@ While the Blotter running in the background, write and execute your algorithm:
 
         def on_bar(self, instrument):
             # get instrument history
-            bars = instrument.get_bars(window=100)
+            bars = instrument.get_bars(lookback=100)
 
             # or get all instruments history
             # bars = self.bars[-20:]
