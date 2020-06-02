@@ -672,7 +672,7 @@ class Blotter():
 
             self._bars[symbol] = self._bars[symbol][-1:]
             _raw_bars.drop(_raw_bars.index[:], inplace=True)
-            self._raw_bars[symbol] = _raw_bars
+        self._raw_bars[symbol] = _raw_bars
 
     # -------------------------------------------
     def broadcast(self, data, kind):
