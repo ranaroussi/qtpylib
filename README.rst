@@ -13,7 +13,7 @@ QTPyLib, Pythonic Algorithmic Trading
     :target: https://pypi.python.org/pypi/qtpylib
     :alt: PyPi status
 
-.. image:: https://img.shields.io/travis/ranaroussi/qtpylib/master.svg?maxAge=1
+.. image:: https://img.shields.io/travis/ranaroussi/qtpylib/main.svg?maxAge=1
     :target: https://travis-ci.org/ranaroussi/qtpylib
     :alt: Travis-CI build status
 
