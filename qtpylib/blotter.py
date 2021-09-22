@@ -98,7 +98,7 @@ class Blotter():
             ZeroMQ Port to use (default: 12345)
         zmqtopic : str
             ZeroMQ string to use (default: _qtpylib_BLOTTERNAME_)
-        orderbook : str
+        orderbook : bool
             Get Order Book (Market Depth) data (default: False)
         dbhost : str
             MySQL server hostname (default: localhost)
@@ -110,7 +110,7 @@ class Blotter():
             MySQL server username (default: root)
         dbpass : str
             MySQL server password (default: none)
-        dbskip : str
+        dbskip : bool
             Skip MySQL logging (default: False)
     """
 
